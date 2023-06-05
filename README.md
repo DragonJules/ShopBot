@@ -103,7 +103,7 @@ It will then automatically open your browser and ask you to select a `Discord Se
 **I will here present a way of hosting your bot, for free.** But if you have another solution to do it, feel free to use it. If you use another solution, just keep in mind that I used a local database, so for the bot to work, the infrastructure must let it change content of files (`data/accounts.json`, `data/currenies.json`, `data/shops.json`). Otherwise, you can change the database system.
 
 First, open the folder of your bot and select the following: <br>
-<img src="https://cdn.discordapp.com/attachments/828211235853434890/1115353715596083220/image.png" width="400px"/> <br>
+<img src="https://cdn.discordapp.com/attachments/828211235853434890/1115355676068294727/image.png" width="400px"/> <br>
 And zip them.
 
 <br>
