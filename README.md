@@ -14,7 +14,7 @@ Let me introduce you **ShopBot**, this bot aims at helping you create your own s
 <sub><sup>(See [screenshots](#screenshots))</sup></sub>
 <br>
 
-#### Here is what the bot can do:
+### Here is what the bot can do:
 
 This bot uses the power of ***Slash Commands*** to let you interact with it with the **best UI** as possible (Embeds, Buttons, Select Menu). So you will **not have to worry** about remembering compex commands, the **bot does everything** for you, and prevents you from accidentally making errors.
 
