@@ -76,7 +76,7 @@ Open the command prompt from this path, and execute the following commands:
 npm i
 ```
 ```bash
-node index.js
+node configure.js
 ```
 
 It will ask you the `id` and the `token` of the bot, which you can find in the [Discord Developer Portal](https://discord.com/developers/applications):
