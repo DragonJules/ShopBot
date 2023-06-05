@@ -22,7 +22,7 @@ let configure = async () => {
     config.clientId = response.id.toString()
     config.token = response.token
 
-    await fs.writeFile('../config/config.json', JSON.stringify(config, null, 4))
+    await fs.writeFile('./config/config.json', JSON.stringify(config, null, 4))
 
 
     let discloudConfigFile = (await fs.readFile('./discloud.config')).toString()
