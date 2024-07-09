@@ -168,18 +168,18 @@ When it's done uploading, come back to the commands channel and send the command
 
 ##### What members of the discord can see:
 Shop <br>
-<img src="https://github.com/DragonJules/ShopBot/readme/assets/shop.png" height="320px"/>   <br>
+<img src="./readme/assets/shop.png" height="320px"/>   <br>
 Buy | Account <br>
-<img src="https://github.com/DragonJules/ShopBot/readme/assets/buy.png" height="200px"/>   <img src="https://github.com/DragonJules/ShopBot/readme/assets/account.png" height="200px"/>
+<img src="./readme/assets/buy.png" height="200px"/>   <img src="./readme/assets/account.png" height="200px"/>
 
 <br>
 
 ##### Examples of what you as an administrator can see:
 Create | Delete a currency: <br>
-<img src="https://github.com/DragonJules/ShopBot/readme/assets/create-currency.png" height="120px"/> <img src="https://github.com/DragonJules/ShopBot/readme/assets/delete-currency.png" height="120px"/> 
+<img src="./readme/assets/create-currency.png" height="120px"/> <img src="./readme/assets/remove-currency.png" height="120px"/> 
 
 Create | Delete a shop: <br>
-<img src="https://github.com/DragonJules/ShopBot/readme/assets/create-shop.png" height="166px"/> <img src="https://github.com/DragonJules/ShopBot/readme/assets/delete-shop.png" height="166px"/> 
+<img src="./readme/assets/create-shop.png" height="166px"/> <img src="./readme/assets/remove-shop.png" height="166px"/> 
 
 
 Configuring bot's commands permissions: <br>
