@@ -4,17 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "deploy": "node ./deploy-commands.js",
+    "dev": "nodemon .",
+    "start": "node ."
   },
-  "author": "ItzDragon#5299",
+  "author": "@roules_",
   "license": "GPL-3.0",
+  "devDependencies": {
+    "@discordjs/rest": "^2.3.0"
+  },
   "dependencies": {
-    "@discordjs/rest": "^1.5.0",
-    "discord.js": "^14.7.1",
-    "fs": "^0.0.1-security",
-    "uuid": "^9.0.0",
-    "open": "^9.1.0",
-    "opn": "^6.0.0",
-    "prompts": "^2.4.2"
+    "discord.js": "^14.15.3",
+    "uuid": "^10.0.0"
   }
 }

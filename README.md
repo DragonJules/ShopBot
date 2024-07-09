@@ -10,13 +10,13 @@
 ## Introduction
 
 Hi, I coded a cool bot for you.
-Let me introduce you **ShopBot**, this bot aims at helping you create your own shops and currencies to fit the needs of your community, your RP server, or anything you need.     
+Let me introduce you **ShopBot**, this bot aims at helping to you create your own shops and currencies to fit the needs of your community, your RP server, or anything you need.  
 <sub><sup>(See [screenshots](#screenshots))</sup></sub>
 <br>
 
 ### Here is what the bot can do:
 
-This bot uses the power of ***Slash Commands*** to let you interact with it with the **best UI** as possible (Embeds, Buttons, Select Menu). So you will **not have to worry** about remembering compex commands, the **bot does everything** for you, and prevents you from accidentally making errors.
+This bot uses the power of ***Slash Commands*** to let you interact with it with the **best UI** as possible (Embeds, Buttons, Select Menu). So you will **not have to worry** about remembering complex commands, the **bot does everything** for you, and prevents you from accidentally making errors.
 
 
 You can **create** **currencies**, then use them in **shops** you created, in which you can add **products**, with a name, a description and a price.
@@ -50,54 +50,61 @@ Now, let's configure your bot, caution, you need to do it carefully
 
 <br>
 
+## How to use
+This repo is the bot's source code, not a bot itself. <br>
+To use it, you must host it yourself. There are several methods to do this, some are free, some are paid (Be careful that your hosting solution allows file editing, sometimes called local database, otherwise all the bot's data will be lost if the server restarts). <br>
+Once you found the hoster for your bot, here are the steps to follow: <br>
+We will first create the bot :
+1. Go on [Discord Developer Portal](https://discord.com/developers/applications) and login
+2. Click **New Application**, give your bot a name, accept the ToS and developer policy
+3. In the **Installation** tab, untick **User Install**, and in **Install Link** select **None**
+4. Copy the **Application ID** from the **General Information** tab, save it for later.
+5. Select tab **Bot**, click **Reset Token**, copy the token, save it for later.
+6. Cutomize the bot as you want (Profile picture, banner, name...). Below **Authorization Flow**, untick **Public Bot**, tick **Server Members Intent** 
+7. Save changes.
+8. In the **OAuth2** tab, in **Scopes**, select **bot** and **application.commands**, then tick the following permissions:
+   * Read Messages/View Channels
+   * Send Messages
+   * Use Slash Commands
+9. Select **Guild Install** and copy the generated URL
+10. Follow this URL and add the bot to the server you want, accept everything, the bot should be added to your server !
 
-## How to configure
-
-First, you need to create a bot on the [Discord Developer Portal](https://discord.com/developers/applications):
-
-<img src="https://cdn.discordapp.com/attachments/828211235853434890/1109839595606122617/image.png" width="805px"/>
-
-Follow the instructions, choose a name, accept ToS, then open the `Bot` tab, `Add Bot` and confirm: <br>
-<img src="https://cdn.discordapp.com/attachments/828211235853434890/1109836792137515138/image.png" height="200px"/><img src="https://cdn.discordapp.com/attachments/828211235853434890/1109841614660186242/image.png" height="200px"/>
-
-Feel free to customize your bot's settings, like name or profile picture.
-
-<br>
-Then, download the <a href="https://github.com/DragonJules/ShopBot/archive/refs/heads/main.zip">code<a/>, and alongside install <a href="https://nodejs.org">Node.JS<a/> : <br>
-
-<img src="https://i.ibb.co/RHkSGCT/image.png" height="230px"/>     <img src="https://i.ibb.co/mbpYjy4/image.png" height="230px"/> <br>
-
-Once the **code** is downloaded, unzip it in a folder of your choice.
-
-Once **Node.JS** is installed, navigate to the folder where you put the bot's file.
-Open the command prompt from this path, and execute the following commands:
-
+Now, we can link the bot to the code, so you can start using it : 
+1. You need to have [Node.js](https://nodejs.org/en) installed on your machine.
+2. [Download my code](https://github.com/DragonJules/ShopBot/archive/refs/heads/main.zip) and extract it from the ZIP file (or clone the repo), open the folder where it's located, and open a terminal from here.
+3. Install the required packages and compile the code by executing the following command:
 ```bash
-npm i
+npm install
 ```
+4. In the bot folder, open the **config** folder, then open **config.json** in any text editor, fill it with the informations you saved previously, like following:
+```json
+{
+  "clientId": "[The Application ID you have saved]",
+  "token": "[The Token you have saved]",
+  "logChannelId": "[The ID of the channel the log should be sent in]",
+}
+```
+5. Replace "true" by "false", if you want the answers of the bot to be visible to everyone.
+
+Your Bot is ready to be uploaded on the server ! The following steps may vary depending on your hosting solution.
+1. Upload the whole **ShopBot-main** folder on the server.
+2. Create a routine for restarting the server. Such that the following command is executed from the bot's folder each time the server is restarted.
 ```bash
-node configure.js
+npm run start
+```
+3. Open a terminal from the bot' folder and execute the following command :
+```bash
+npm run deploy /a
+```
+4. Restart the server, or run the following command : 
+```bash
+npm run start
 ```
 
-It will ask you the `id` and the `token` of the bot, which you can find in the [Discord Developer Portal](https://discord.com/developers/applications):
+All done ! You did it, your bot should be working perfectly ! 
+If you have any problem with it, feel free to message me on Discord, or open an [issue on Github](https://github.com/DragonJules/ShopBot/issues)
 
-You can find the ID here: <br>
-<img src="https://i.ibb.co/R0xvPMX/image.png" height="250px"/><img src="https://cdn.discordapp.com/attachments/828211235853434890/1109840610728349746/image.png" height="250px"/>
-
-You can find the Token here: <br>
-<img src="https://cdn.discordapp.com/attachments/828211235853434890/1109836792137515138/image.png" height="271px"/><img src="https://cdn.discordapp.com/attachments/828211235853434890/1109836676135649410/image.png" height="271px"/> <br>
-Click on `Reset Token` and then click `Copy`: <br>
-<img src="https://cdn.discordapp.com/attachments/828211235853434890/1109836504265670676/image.png" width="615px"/> <br>
-
-Then put the value you copied in the `configure/index.js`: <br>
-<img src="https://cdn.discordapp.com/attachments/828211235853434890/1109837889384239196/image.png" width="615px"/>
-
-<br>
-
-It will then automatically open your browser and ask you to select a `Discord Server` you want the Bot on.
-<br>
-
----
+<!-- ---
 ## How to host
 
 **I will here present a way of hosting your bot, for free.** But if you have another solution to do it, feel free to use it. If you use another solution, just keep in mind that I used a local database, so for the bot to work, the infrastructure must let it change content of files (`data/accounts.json`, `data/currenies.json`, `data/shops.json`). Otherwise, you can change the database system.
@@ -114,7 +121,7 @@ Send the command `.upc` in the channel and follow the instructions (you will be 
 
 When it's done uploading, come back to the commands channel and send the command `.start`. Hopefully, the bot will start, if not, open an [issue on Github](https://github.com/DragonJules/ShopBot/issues)
 
-<br>
+<br> -->
 
 ---
 
@@ -161,22 +168,22 @@ When it's done uploading, come back to the commands channel and send the command
 
 ##### What members of the discord can see:
 Shop <br>
-<img src="https://cdn.discordapp.com/attachments/828211235853434890/1109862521495625728/image.png" height="320px"/>   <br>
+<img src="https://github.com/DragonJules/ShopBot/readme/assets/shop.png" height="320px"/>   <br>
 Buy | Account <br>
-<img src="https://cdn.discordapp.com/attachments/828211235853434890/1109863331562524731/image.png" height="200px"/>   <img src="https://cdn.discordapp.com/attachments/828211235853434890/1109862873318051982/image.png" height="200px"/>
+<img src="https://github.com/DragonJules/ShopBot/readme/assets/buy.png" height="200px"/>   <img src="https://github.com/DragonJules/ShopBot/readme/assets/account.png" height="200px"/>
 
 <br>
 
 ##### Examples of what you as an administrator can see:
 Create | Delete a currency: <br>
-<img src="https://cdn.discordapp.com/attachments/828211235853434890/1109864095705989171/image.png" height="120px"/> <img src="https://cdn.discordapp.com/attachments/828211235853434890/1109864226656354315/image.png" height="120px"/> 
+<img src="https://github.com/DragonJules/ShopBot/readme/assets/create-currency.png" height="120px"/> <img src="https://github.com/DragonJules/ShopBot/readme/assets/delete-currency.png" height="120px"/> 
 
 Create | Delete a shop: <br>
-<img src="https://cdn.discordapp.com/attachments/828211235853434890/1109866850403233904/image.png" height="166px"/> <img src="https://cdn.discordapp.com/attachments/828211235853434890/1109866859966255185/image.png" height="166px"/> 
+<img src="https://github.com/DragonJules/ShopBot/readme/assets/create-shop.png" height="166px"/> <img src="https://github.com/DragonJules/ShopBot/readme/assets/delete-shop.png" height="166px"/> 
 
 
 Configuring bot's commands permissions: <br>
-<img src="https://cdn.discordapp.com/attachments/828211235853434890/1109870248070500413/image.png" height="290px"/> <img src="https://cdn.discordapp.com/attachments/828211235853434890/1109871514267963524/image.png" height="290px"/>
+<img src="./readme/assets/bot-perms1.png" height="290px"/> <img src="./readme/assets/bot-perms2.png" height="290px"/>
 
 
 <sub><sup>The screenshots come from the project I originally created the bot for.</sup></sub>
