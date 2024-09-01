@@ -2,8 +2,7 @@
 
 ### Summary:
 - [Introduction](#introduction)
-- [How to configure](#how-to-configure)
-- [How to host](#how-to-host)
+- [How to use](#how-to-use)
 - [Commands](#commands)
 - [Screenshots](#screenshots)
 ---
