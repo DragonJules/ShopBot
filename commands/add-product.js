@@ -34,6 +34,9 @@ async function execute(interaction){
     const productName = interaction.options.getString('product-name').replace(/ /g, ' ')
     let productDescription = interaction.options.getString('product-description')
     const productPrice = interaction.options.getInteger('product-price')
+
+    if (productName.removeCustomEmojisString().length == 0) return await interaction.reply({ content: `The product name can't contain only custom emojis`, ephemeral: true })
+    if (productDescription.removeCustomEmojisString().length == 0) return await interaction.reply({ content: `The product description can't contain only custom emojis`, ephemeral: true })
     
 
     const selectShopMenu = new StringSelectMenuBuilder()

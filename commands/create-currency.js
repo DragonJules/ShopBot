@@ -19,7 +19,9 @@ const data = new SlashCommandBuilder()
 async function execute(interaction){
     const currencyName = interaction.options.getString('currency-name').replace(/ /g, ' ')
 
-    try {   
+    try {
+        if (currencyName.removeCustomEmojisString().length == 0) return await interaction.reply({ content: `The currency name can't contain only custom emojis`, ephemeral: true })
+        
         if (currencies.findIndex(currency => currency.name === currencyName) == -1) {
             currencies.push({name: currencyName, id: uuid()})
             await fs.writeFile('./data/currencies.json', JSON.stringify(currencies, null, 4))

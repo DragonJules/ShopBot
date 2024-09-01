@@ -18,6 +18,7 @@ async function execute(interaction){
 
     const shopName = interaction.options.getString('shop-name').replace(/ /g, ' ')
 
+    if (shopName.removeCustomEmojisString().length == 0) return await interaction.reply({ content: `The shop name can't contain only custom emojis`, ephemeral: true })
 
     const selectCurrencyMenu = new StringSelectMenuBuilder()
         .setCustomId('select-currency')

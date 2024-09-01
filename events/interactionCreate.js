@@ -738,7 +738,7 @@ module.exports = {
 
         try {
             await command.execute(interaction);
-            console.log(`${interaction.user.tag} in #${interaction.channel.name} triggered an interaction.`);
+            console.log(`${interaction.user.tag} (${interaction.user.id}) in #${interaction.channel.name} (${interaction.channel.id}) triggered an interaction (${interaction.commandName}).`);
         } catch (error) {
             console.error(error);
             await interaction.reply({ content: '❌ An error occured while executing this command', ephemeral: true });
