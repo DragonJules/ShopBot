@@ -82,8 +82,7 @@ npm install
   "token": "[The Token you have saved]",
   "logChannelId": "[The ID of the channel the log should be sent in]",
 }
-```
-5. Replace "true" by "false", if you want the answers of the bot to be visible to everyone.
+```
 
 Your Bot is ready to be uploaded on the server ! The following steps may vary depending on your hosting solution.
 1. Upload the whole **ShopBot-main** folder on the server.
