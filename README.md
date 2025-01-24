@@ -9,7 +9,7 @@
 ---
 ## Introduction
 
-Hi, I coded a cool bot for you.
+Hi 👋 I created a cool bot for you !
 Let me introduce you **ShopBot**, this bot aims at helping to you create your own shops and currencies to fit the needs of your community, your RP server, or anything you need.  
 <sub><sup>(See [screenshots](#screenshots))</sup></sub>
 <br>
@@ -194,6 +194,10 @@ I will after that add the following features, some of which have been suggested 
 - Inventory system
 - Discount codes 
 - Pagination system in shops
+- Custom emojis as currency name
+- New commands system, for easier use
+
+As soon as I start this I'll create a new branch for it on this repo.
 
 If you have a feature idea you think will fit this bot, feel free to suggest it [here](https://github.com/DragonJules/ShopBot/issues).
 
