@@ -5,6 +5,7 @@
 - [How to use](#how-to-use)
 - [Commands](#commands)
 - [Screenshots](#screenshots)
+- [Road Map](#roadmap)
 ---
 ## Introduction
 
@@ -185,6 +186,15 @@ Configuring bot's commands permissions: <br>
 
 
 <sub><sup>The screenshots come from the project I originally created the bot for.</sup></sub>
+
+
+## Road Map
+I plan to refactor the whole code base to migrate it to typescript and make it easier to update.
+I will after that add the following features, some of which were requested by users :
+- Inventory system
+-  
+
+
 
 
 If something is missing in this document, please open an [issue](https://github.com/DragonJules/ShopBot/issues).
