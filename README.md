@@ -192,9 +192,11 @@ Configuring bot's commands permissions: <br>
 I plan to refactor the whole code base to migrate it to typescript and make it easier to update.
 I will after that add the following features, some of which were requested by users :
 - Inventory system
--  
+- Discount codes 
+- Pagination system in shops
 
+If you have a feature idea you think will fit this bot, feel free to suggest it [here](https://github.com/DragonJules/ShopBot/issues).
 
-
+--- 
 
 If something is missing in this document, please open an [issue](https://github.com/DragonJules/ShopBot/issues).
