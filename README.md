@@ -190,7 +190,7 @@ Configuring bot's commands permissions: <br>
 
 ## Road Map
 I plan to refactor the whole code base to migrate it to typescript and make it easier to update.
-I will after that add the following features, some of which were requested by users :
+I will after that add the following features, some of which have been suggested by users :
 - Inventory system
 - Discount codes 
 - Pagination system in shops
