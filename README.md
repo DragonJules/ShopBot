@@ -83,7 +83,8 @@ npm install
   "token": "[The Token you have saved]",
   "logChannelId": "[The ID of the channel the log should be sent in]",
 }
-```
+```
+
 
 Your Bot is ready to be uploaded on the server ! The following steps may vary depending on your hosting solution.
 1. Upload the whole **ShopBot-main** folder on the server.
@@ -197,7 +198,7 @@ I will after that add the following features, some of which have been suggested 
 - Custom emojis as currency name
 - New commands system, for easier use
 
-As soon as I start this I'll create a new branch for it on this repo.
+See how it's going on [this branch](https://github.com/DragonJules/ShopBot/tree/shop-bot-2)
 
 If you have a feature idea you think will fit this bot, feel free to suggest it [here](https://github.com/DragonJules/ShopBot/issues).
 
