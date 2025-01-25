@@ -1,4 +1,4 @@
-# ShopBot
+# ShopBot 2
 
 ### Summary:
 - [Introduction](#introduction)
@@ -83,7 +83,8 @@ npm install
   "token": "[The Token you have saved]",
   "logChannelId": "[The ID of the channel the log should be sent in]",
 }
-```
+```
+
 
 Your Bot is ready to be uploaded on the server ! The following steps may vary depending on your hosting solution.
 1. Upload the whole **ShopBot-main** folder on the server.
