@@ -3,15 +3,38 @@ import fs from 'node:fs/promises'
 import wait from 'node:timers/promises'
 import config from '../../config/config.json'
 
-import { EmbedBuilder, StringSelectMenuBuilder, ActionRowBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle, ButtonBuilder, ButtonStyle, Interaction, Client, ChannelType } from 'discord.js'
+import { EmbedBuilder, StringSelectMenuBuilder, ActionRowBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle, ButtonBuilder, ButtonStyle, Interaction, Client, ChannelType, InteractionType } from 'discord.js'
 import { PrettyLog } from '../utils/pretty-log'
-import { replaceNonBreakableSpace } from '../utils/utils'
+import { replaceNonBreakableSpace, replyErrorMessage } from '../utils/utils'
 
 
 export const name = 'interactionCreate'
 
 
-export async function execute(client: Client, interaction: Interaction) {
+export async function execute(interaction: Interaction) {
+    if (interaction.type != InteractionType.ApplicationCommand) return
+    if (interaction.user.bot) return
+    
+    const client = interaction.client
+
+    if (interaction.isChatInputCommand()) {
+        const command = interaction.client.commands.get(interaction.commandName)
+        if (!command) return
+
+        if (interaction?.channel?.type === ChannelType.DM) return
+
+        try {
+            await command.execute(interaction.client, interaction)
+            PrettyLog.info(`${interaction.user.username} (${interaction.user.id}) in #${interaction?.channel?.name} (${interaction?.channel?.id}) triggered the command '/${interaction.commandName}'`)
+        } catch (error: unknown) {
+            console.error(error)
+            PrettyLog.error(`Failed to execute the command '/${interaction.commandName}' (user: ${interaction.user.username} (${interaction.user.id}) in #${interaction?.channel?.name} (${interaction?.channel?.id}))`)
+            
+            await replyErrorMessage(interaction)
+        }
+    }
+
+    
 //     if (interaction.isModalSubmit()) {
 //         if (interaction.customId === 'change-shop-name-modal') {
 //             const shopName = replaceNonBreakableSpace(interaction.fields.getTextInputValue('shop-name-input'))
@@ -706,25 +729,6 @@ export async function execute(client: Client, interaction: Interaction) {
 //             save(shops)
 
 //             await interaction.update({ content: `You succesfully changed **${shopName}**'s position to **${newPos}**`, components: [] })
-//         }
-//     }
-
-
-
-//     if (interaction.isChatInputCommand()) {
-//         const command = interaction.client.commands.get(interaction.commandName)
-//         if (!command) return
-
-//         if (interaction?.channel?.type === ChannelType.DM) return
-
-//         try {
-//             await command.execute(interaction.client, interaction)
-//             PrettyLog.info(`${interaction.user.username} (${interaction.user.id}) in #${interaction?.channel?.name} (${interaction?.channel?.id}) triggered the command '/${interaction.commandName}'`)
-//         } catch (error: unknown) {
-//             console.error(error)
-//             PrettyLog.error(`Failed to execute the command '/${interaction.commandName}' (user: ${interaction.user.username} (${interaction.user.id}) in #${interaction?.channel?.name} (${interaction?.channel?.id}))`)
-            
-//             await interaction.reply({ content: '❌ An error occured while executing this command', ephemeral: true })
 //         }
 //     }
 }

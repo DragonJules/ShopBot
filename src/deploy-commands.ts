@@ -2,8 +2,8 @@ import { REST } from '@discordjs/rest'
 import { RESTPostAPIChatInputApplicationCommandsJSONBody, Routes, SlashCommandBuilder, Snowflake } from 'discord.js'
 import fs from 'node:fs'
 import path from 'node:path'
-import { clientId, token } from '../../config/config.json'
-import { PrettyLog } from './pretty-log.js'
+import { clientId, token } from '../config/config.json'
+import { PrettyLog } from './utils/pretty-log.js'
 
 const commands: RESTPostAPIChatInputApplicationCommandsJSONBody[] = []
 const commandsPath = path.join(__dirname, 'commands')

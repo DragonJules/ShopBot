@@ -67,7 +67,7 @@ export class PrettyLog {
     private static async saveLogs(message: string) {
         try {
             const sanatizedMessage = message.replace(new RegExp('\x1b\\[\\d+m', 'gm'), '')
-            await fs.appendFile(path.join(__filename, '..', 'logs', 'log.txt'), `[${this.getNowTimeString()}] ${sanatizedMessage}\n`)
+            await fs.appendFile(path.join(__dirname, '..', '..', 'logs.txt'), `[${this.getNowTimeString()}] ${sanatizedMessage}\n`)
         } catch (error) {
             console.log(`Failed to save logs: ${error}`)
         }

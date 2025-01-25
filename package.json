@@ -2,12 +2,13 @@
   "name": "shopbot",
   "version": "2.0.0",
   "author": "@roules_",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "cleanbuild": "rm -r ./dist/* && tsc",
+    "cleanbuild": "rd /s /q \"dist\" && tsc",
     "dev": "concurrently \"tsc -w\" \"nodemon .\"",
     "start": "npm run build && node .",
+    "start-nobuild": "node .",
     "deploy": "npm run build && node ./dist/deploy-commands.js",
     "test": "npm run build && node ./dist/test.js",
     "simulate": "npm run build && node ./dist/database/drawing_simulation.js"

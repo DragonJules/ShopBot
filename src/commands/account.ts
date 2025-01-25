@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction, MessageFlags } from "discord.js"
+import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction, MessageFlags, Client } from "discord.js"
 import { getOrCreateAccount } from "../database/database-handler"
 import { replyErrorMessage } from "../utils/utils"
 
@@ -7,7 +7,7 @@ export const data = new SlashCommandBuilder()
     .setDescription('Shows account')
 
 
-export async function execute(interaction: ChatInputCommandInteraction){
+export async function execute(_client: Client, interaction: ChatInputCommandInteraction){
     const member = interaction.member
     if (!member) return replyErrorMessage(interaction)
 

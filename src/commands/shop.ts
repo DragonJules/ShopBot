@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder, StringSelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ChatInputCommandInteraction } from 'discord.js'
+import { SlashCommandBuilder, EmbedBuilder, StringSelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ChatInputCommandInteraction, Client } from 'discord.js'
 import { getShops } from '../database/database-handler'
 import { ellipsis, removeCustomEmojisString, replyErrorMessage } from '../utils/utils'
 
@@ -7,7 +7,7 @@ export const data = new SlashCommandBuilder()
     .setDescription('Displays the shop and allows you to buy product')
 
 
-export async function execute(interaction: ChatInputCommandInteraction){
+export async function execute(_client: Client, interaction: ChatInputCommandInteraction){
     const shops = getShops()
     if (!shops.size) return replyErrorMessage(interaction, 'There isn\'t any shop, use `/shops-manage create` to create a new one')
 

@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises'
 
-import { ChannelType, ChatInputCommandInteraction, MessageFlags, PermissionFlagsBits, SlashCommandBuilder } from 'discord.js'
+import { ChannelType, ChatInputCommandInteraction, Client, MessageFlags, PermissionFlagsBits, SlashCommandBuilder } from 'discord.js'
 import config from '../../config/config.json'
 
 const data = new SlashCommandBuilder()
@@ -15,7 +15,7 @@ const data = new SlashCommandBuilder()
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
 
 
-async function execute(interaction: ChatInputCommandInteraction) {
+async function execute(_client: Client, interaction: ChatInputCommandInteraction) {
     const chosenChannel = interaction.options.getChannel('channel')
 
     if (chosenChannel ==  null) return await interaction.reply({ content: '❌ An error has occured while executing this command, try again later', components: [] })
