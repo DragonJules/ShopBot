@@ -198,7 +198,7 @@ I will after that add the following features, some of which have been suggested 
 - Custom emojis as currency name
 - New commands system, for easier use
 
-As soon as I start this I'll create a new branch for it on this repo.
+All those changes will be made on this branch.
 
 If you have a feature idea you think will fit this bot, feel free to suggest it [here](https://github.com/DragonJules/ShopBot/issues).
 
