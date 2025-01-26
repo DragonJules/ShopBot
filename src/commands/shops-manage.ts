@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, PermissionFlagsBits, Client, ChatInputCommandInteraction, StringSelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from "discord.js"
 import { getCurrencies, getShops } from "../database/database-handler"
-import { ellipsis, removeCustomEmojisString, replaceNonBreakableSpace, replyErrorMessage } from "../utils/utils"
+import { replyErrorMessage } from "../utils/utils"
 
 export const data = new SlashCommandBuilder()
     .setName('shops-manage') 
@@ -35,10 +35,10 @@ async function createShop(_client: Client, interaction: ChatInputCommandInteract
     const currencies = getCurrencies()
     if (!currencies.size) return await replyErrorMessage(interaction, 'There isn\'t any currency, so you can\'t create a new shop, use `/currencies-manage create` to create a new currency')
     
-    const shopName = replaceNonBreakableSpace(interaction.options.getString('shop-name'))
+    const shopName = interaction.options.getString('shop-name')?.replaceNonBreakableSpace()
     if (shopName == null) return replyErrorMessage(interaction)
 
-    if (removeCustomEmojisString(shopName).length == 0) return replyErrorMessage(interaction, 'The shop name can\'t contain only custom emojis')
+    if (shopName.removeCustomEmojis().length == 0) return replyErrorMessage(interaction, 'The shop name can\'t contain only custom emojis')
 
     const selectCurrencyMenu = new StringSelectMenuBuilder()
         .setCustomId('select-currency')
@@ -46,7 +46,7 @@ async function createShop(_client: Client, interaction: ChatInputCommandInteract
     
     currencies.forEach(currency => {
         selectCurrencyMenu.addOptions({
-            label: ellipsis(removeCustomEmojisString(currency.name), 100),
+            label: currency.name.removeCustomEmojis().ellipsis(100),
             value: currency.id
         })
     })
@@ -79,7 +79,7 @@ async function removeShop(_client: Client, interaction: ChatInputCommandInteract
     
     shops.forEach(shop => {
         selectShopMenu.addOptions({
-            label: ellipsis(removeCustomEmojisString(shop.name), 100),
+            label: shop.name.removeCustomEmojis().ellipsis(100),
             value: shop.id
         })
     })
@@ -111,7 +111,7 @@ async function reorderShops(_client: Client, interaction: ChatInputCommandIntera
     
     shops.forEach(shop => {
         selectShopMenu.addOptions({
-            label: ellipsis(removeCustomEmojisString(shop.name), 100),
+            label: shop.name.removeCustomEmojis().ellipsis(100),
             value: shop.id
         })
     })

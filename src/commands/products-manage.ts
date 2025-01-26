@@ -1,6 +1,6 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, Client, MessageFlags, PermissionFlagsBits, SlashCommandBuilder, StringSelectMenuBuilder } from "discord.js"
 import { getShops } from "../database/database-handler"
-import { ellipsis, removeCustomEmojisString, replaceNonBreakableSpace, replyErrorMessage } from "../utils/utils"
+import { replyErrorMessage } from "../utils/utils"
 
 export const data = new SlashCommandBuilder()
     .setName('products-manage') 
@@ -81,14 +81,14 @@ async function addProduct(_client: Client, interaction: ChatInputCommandInteract
     const shops = getShops()
     if (!shops.size) return replyErrorMessage(interaction, 'There isn\'t any shop with products, use `/shops-manage create` to create a new shop')
         
-        const productName = replaceNonBreakableSpace(interaction.options.getString('product-name'))
-        let productDescription = interaction.options.getString('product-description')
+        const productName = interaction.options.getString('product-name')?.replaceNonBreakableSpace()
+        const productDescription = interaction.options.getString('product-description')?.replaceNonBreakableSpace()
         const productPrice = interaction.options.getInteger('product-price')
 
         if (!productName || !productPrice || !productDescription) return replyErrorMessage(interaction)
     
-        if (removeCustomEmojisString(productName).length == 0) return replyErrorMessage(interaction, 'The product name can\'t contain only custom emojis')
-        if (removeCustomEmojisString(productDescription).length == 0) return replyErrorMessage(interaction, 'The product description can\'t contain only custom emojis')
+        if (productName.removeCustomEmojis().length == 0) return replyErrorMessage(interaction, 'The product name can\'t contain only custom emojis')
+        if (productDescription.removeCustomEmojis().length == 0) return replyErrorMessage(interaction, 'The product description can\'t contain only custom emojis')
         
     
         const selectShopMenu = new StringSelectMenuBuilder()
@@ -107,12 +107,12 @@ async function addProduct(_client: Client, interaction: ChatInputCommandInteract
     
         shops.forEach(shop => {
             selectShopMenu.addOptions({
-                label: ellipsis(removeCustomEmojisString(shop.name), 100),
+                label: shop.name.removeCustomEmojis().ellipsis(100),
                 value: shop.id
             })
         })
     
-        let descString = (productDescription) ? `. Description: **${replaceNonBreakableSpace(productDescription)}**` : ''
+        let descString = (productDescription) ? `. Description: **${productDescription.replaceNonBreakableSpace()}**` : ''
     
         await interaction.reply({ content: `Add Product: **${productName}** for **${productPrice}** in **[Select Shop]**${descString}`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectShopMenu), submitButton], flags: MessageFlags.Ephemeral })
 }
@@ -126,7 +126,7 @@ async function removeProduct(_client: Client, interaction: ChatInputCommandInter
  
     shops.forEach(shop => {
         selectShopMenu.addOptions({
-            label: ellipsis(removeCustomEmojisString(shop.name), 100),
+            label: shop.name.removeCustomEmojis().ellipsis(100),
             value: shop.id
         })
     })
@@ -150,16 +150,19 @@ async function updateProduct(_client: Client, interaction: ChatInputCommandInter
     const subcommand = interaction.options.getSubcommand()
     if (!subcommand) return replyErrorMessage(interaction)
 
-    let updateOption = (subcommand == 'change-name') ? 'Name' : (subcommand == 'change-description') ? 'Description' : 'Price'
-    let updateOptionValue = (subcommand == 'change-name') ? replaceNonBreakableSpace(interaction.options.getString('new-name')) : (subcommand == 'change-description') ? replaceNonBreakableSpace(interaction.options.getString('new-description')) : interaction.options.getInteger('new-price')
+    const updateOption = getUpdateOption(subcommand) //= (subcommand == 'change-name') ? 'Name' : (subcommand == 'change-description') ? 'Description' : 'Price'
+    const updateOptionValue = getUpdateOptionValue(interaction, subcommand) //= (subcommand == 'change-name') ? interaction.options.getString('new-name') : (subcommand == 'change-description') ? interaction.options.getString('new-description')?.replaceNonBreakableSpace() : interaction.options.getInteger('new-price').replaceNonBreakableSpace()
     
+    if (updateOption === '' || updateOptionValue === '') return replyErrorMessage(interaction)
+
+
     const selectShopMenu = new StringSelectMenuBuilder()
         .setCustomId('select-shop')
         .setPlaceholder('Select a shop')
     
     shops.forEach(shop => {
         selectShopMenu.addOptions({
-            label: ellipsis(removeCustomEmojisString(shop.name), 100),
+            label: shop.name.removeCustomEmojis().ellipsis(100),
             value: shop.id
         })
     })
@@ -174,4 +177,30 @@ async function updateProduct(_client: Client, interaction: ChatInputCommandInter
     )
 
     await interaction.reply({ content: `Update product from **[Select Shop]**. New **${updateOption}**: **${updateOptionValue}**`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectShopMenu), submitButton], flags: MessageFlags.Ephemeral })
+}
+
+function getUpdateOption(subcommand: string): string {
+    switch (subcommand) {
+        case 'change-name':
+            return 'Name'
+        case 'change-description':
+            return 'Description'
+        case 'change-price':
+            return 'Price'
+        default:
+            return ''
+    }
+}
+
+function getUpdateOptionValue(interaction: ChatInputCommandInteraction, subcommand: string): string {
+    switch (subcommand) {
+        case 'change-name':
+            return interaction.options.getString('new-name')?.replaceNonBreakableSpace() || ''
+        case 'change-description':
+            return interaction.options.getString('new-description')?.replaceNonBreakableSpace() || ''
+        case 'change-price':
+            return `${interaction.options.getInteger('new-price')}`
+        default:
+            return ''
+    }
 }

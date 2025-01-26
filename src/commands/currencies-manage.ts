@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, PermissionFlagsBits, Client, ChatInputCommandInteraction, StringSelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from "discord.js"
-import { ellipsis, removeCustomEmojisString, replaceNonBreakableSpace, replyErrorMessage } from "../utils/utils"
+import { replyErrorMessage } from "../utils/utils"
 import { DatabaseError } from "../database/database-types"
 import { createCurrency, getCurrencies } from "../database/database-handler"
 
@@ -29,12 +29,11 @@ export async function execute(_client: Client, interaction: ChatInputCommandInte
 }
 
 export async function createCurrencyCommand(_client: Client, interaction: ChatInputCommandInteraction) {
-    let currencyName = replaceNonBreakableSpace(interaction.options.getString('currency-name'))
+    const currencyName = interaction.options.getString('currency-name')?.replaceNonBreakableSpace()
     if (currencyName == null) return replyErrorMessage(interaction)
-
-
+    
     try {
-        if (removeCustomEmojisString(currencyName).length == 0) return replyErrorMessage(interaction, 'The currency name can\'t contain only custom emojis')
+        if (currencyName.removeCustomEmojis().length == 0) return replyErrorMessage(interaction, 'The currency name can\'t contain only custom emojis')
         
         createCurrency(currencyName)
 
@@ -57,7 +56,7 @@ export async function removeCurrency(_client: Client, interaction: ChatInputComm
 
     currencies.forEach(currency => {
         selectCurrencyMenu.addOptions({
-            label: ellipsis(removeCustomEmojisString(currency.name), 100),
+            label: currency.name.removeCustomEmojis().ellipsis(100),
             value: currency.id
         })
     })

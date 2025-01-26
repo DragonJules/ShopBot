@@ -5,7 +5,7 @@ import config from '../../config/config.json'
 
 import { EmbedBuilder, StringSelectMenuBuilder, ActionRowBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle, ButtonBuilder, ButtonStyle, Interaction, Client, ChannelType, InteractionType } from 'discord.js'
 import { PrettyLog } from '../utils/pretty-log'
-import { replaceNonBreakableSpace, replyErrorMessage } from '../utils/utils'
+import { replyErrorMessage } from '../utils/utils'
 
 
 export const name = 'interactionCreate'
@@ -37,7 +37,7 @@ export async function execute(interaction: Interaction) {
     
 //     if (interaction.isModalSubmit()) {
 //         if (interaction.customId === 'change-shop-name-modal') {
-//             const shopName = replaceNonBreakableSpace(interaction.fields.getTextInputValue('shop-name-input'))
+//             const shopName = interaction.fields.getTextInputValue('shop-name-input').replaceNonBreakableSpace()
             
 //             const newMessage = interaction.message.content.replace(interaction.message.content.match(/\*\*[^ ]+\*\*/g)[0], `**${shopName}**`)
 //             interaction.update(newMessage)
@@ -141,7 +141,7 @@ export async function execute(interaction: Interaction) {
             
 //             shops.forEach(shop => {
 //                 selectShopMenu.addOptions({
-//                     label: shop.name.removeCustomEmojisString().cut(100),
+//                     label: shop.name.removeCustomEmojis().cut(100),
 //                     value: shop.id
 //                 })
 //             })
@@ -176,7 +176,7 @@ export async function execute(interaction: Interaction) {
             
 //             shops.forEach(shop => {
 //                 selectShopMenu.addOptions({
-//                     label: shop.name.removeCustomEmojisString().cut(100),
+//                     label: shop.name.removeCustomEmojis().cut(100),
 //                     value: shop.id
 //                 })
 //             })
@@ -205,8 +205,8 @@ export async function execute(interaction: Interaction) {
 
 //     if (interaction.isButton()) {
 //         if (interaction.customId === 'submit-shop-new-product') {
-//             const shopName = replaceNonBreakableSpace(interaction.message.content.match(/\*\*\[[^ ]+\]\*\*/g)[0].replace(/\*|\[|\]/g, ''))
-//             const productName = replaceNonBreakableSpace(interaction.message.content.match(/\*\*[^ ]+\*\*/g)[0].replace(/\*/g, ''))
+//             const shopName = interaction.message.content.match(/\*\*\[[^ ]+\]\*\*/g)[0].replace(/\*|\[|\]/g, '').replaceNonBreakableSpace()
+//             const productName = interaction.message.content.match(/\*\*[^ ]+\*\*/g)[0].replace(/\*/g, '').replaceNonBreakableSpace()
 //             const productPrice = parseInt(interaction.message.content.match(/\*\*[^ ]+\*\*/g)[1].replace(/\*/g, ''))
 //             const productDescription = interaction.message.content.match(/\*\*[^ ]+\*\*/g)[3]
 
@@ -229,8 +229,8 @@ export async function execute(interaction: Interaction) {
 //         }
 
 //         if (interaction.customId === 'submit-currency-new-shop') {
-//             const shopName = replaceNonBreakableSpace(interaction.message.content.match(/\*\*[^ ]+\*\*/g)[0].replace(/\*/g, ''))
-//             const currencyName = replaceNonBreakableSpace(interaction.message.content.match(/\*\*\[[^ ]+\]\*\*/g)[0].replace(/\*|\[|\]/g, ''))
+//             const shopName = interaction.message.content.match(/\*\*[^ ]+\*\*/g)[0].replace(/\*/g, '').replaceNonBreakableSpace()
+//             const currencyName = interaction.message.content.match(/\*\*\[[^ ]+\]\*\*/g)[0].replace(/\*|\[|\]/g, '').replaceNonBreakableSpace()
 
 //             try {
 //                 shops.push({name: shopName, currency: currencyName, id: uuid(), products: []})
@@ -252,7 +252,7 @@ export async function execute(interaction: Interaction) {
 //         if (interaction.customId === 'submit-currency-give') {
 //             const target = interaction.message.mentions.members.first()
 //             const amount = parseInt(interaction.message.content.match(/\*\*\d+\*\*/)[0].replace(/\*/g, ''))
-//             const currencyName = replaceNonBreakableSpace(interaction.message.content.match(/\*\*\[[^ ]+\]\*\*/g)[0].replace(/\*|\[|\]/g, ''))
+//             const currencyName = interaction.message.content.match(/\*\*\[[^ ]+\]\*\*/g)[0].replace(/\*|\[|\]/g, '').replaceNonBreakableSpace()
 
 //             try {
 //                 let account = accounts.find(account => account['user-id'] === target.id)
@@ -291,7 +291,7 @@ export async function execute(interaction: Interaction) {
 //         if (interaction.customId === 'submit-currency-take') {
 //             const target = interaction.message.mentions.members.first()
 //             const amount = interaction.message.content.match(/\*\*[^ ]+\*\*/g)[0].replace(/\*/g, '')
-//             const currencyName = replaceNonBreakableSpace(interaction.message.content.match(/\*\*\[[^ ]+\]\*\*/g)[0].replace(/\*|\[|\]/g, ''))
+//             const currencyName = interaction.message.content.match(/\*\*\[[^ ]+\]\*\*/g)[0].replace(/\*|\[|\]/g, '').replaceNonBreakableSpace()
 
 //             const userAccount = accounts.find(account => account['user-id'] === target.id)
 //             if (!userAccount) return await interaction.update({ content: '❌ This user has no account', components: [] })
@@ -345,7 +345,7 @@ export async function execute(interaction: Interaction) {
         
 
 //         if (interaction.customId === 'submit-currency-remove') {
-//             const currencyName = replaceNonBreakableSpace(interaction.message.content.match(/\*\*\[[^ ]+\]\*\*/g)[0].replace(/\*|\[|\]/g, ''))
+//             const currencyName = interaction.message.content.match(/\*\*\[[^ ]+\]\*\*/g)[0].replace(/\*|\[|\]/g, '').replaceNonBreakableSpace()
 
 //             try {
 //                 currencies.splice(currencies.findIndex(currency => currency === currencyName), 1)
@@ -395,7 +395,7 @@ export async function execute(interaction: Interaction) {
 
 //             selectedShop.products.forEach(product => {
 //                 selectProductMenu.addOptions({
-//                     label: product.name.removeCustomEmojisString().cut(100),
+//                     label: product.name.removeCustomEmojis().cut(100),
 //                     value: product.id
 //                 })
 //             })
@@ -423,7 +423,7 @@ export async function execute(interaction: Interaction) {
         
 //             shops.forEach(shop => {
 //                 selectShopMenu.addOptions({
-//                     label: shop.name.removeCustomEmojisString().cut(100),
+//                     label: shop.name.removeCustomEmojis().cut(100),
 //                     value: shop.id
 //                 })
 //             })
@@ -458,9 +458,9 @@ export async function execute(interaction: Interaction) {
 
 //         // update product
 //         if (interaction.customId === 'submit-shop-update-product') {
-//             const shopName = replaceNonBreakableSpace(interaction.message.content.match(/\*\*\[[^ ]+\]\*\*/g)[0].replace(/\*|\[|\]/g, ''))
+//             const shopName = interaction.message.content.match(/\*\*\[[^ ]+\]\*\*/g)[0].replace(/\*|\[|\]/g, '').replaceNonBreakableSpace()
 //             const updateOption = interaction.message.content.match(/\*\*[^ ]+\*\*/g)[1].replace(/\*/g, '')
-//             const updateOptionValue = replaceNonBreakableSpace(interaction.message.content.match(/\*\*[^ ]+\*\*/g)[2].replace(/\*/g, ''))
+//             const updateOptionValue = interaction.message.content.match(/\*\*[^ ]+\*\*/g)[2].replace(/\*/g, '').replaceNonBreakableSpace()
 //             const selectedShop = shops.find(shop => shop.name === shopName)
 
 //             const selectProductMenu = new StringSelectMenuBuilder()
@@ -471,7 +471,7 @@ export async function execute(interaction: Interaction) {
 
 //             selectedShop.products.forEach(product => {
 //                 selectProductMenu.addOptions({
-//                     label: product.name.removeCustomEmojisString().cut(100),
+//                     label: product.name.removeCustomEmojis().cut(100),
 //                     value: product.id
 //                 })
 //             })
@@ -501,7 +501,7 @@ export async function execute(interaction: Interaction) {
         
 //             shops.forEach(shop => {
 //                 selectShopMenu.addOptions({
-//                     label: shop.name.removeCustomEmojisString().cut(100),
+//                     label: shop.name.removeCustomEmojis().cut(100),
 //                     value: shop.id
 //                 })
 //             })
@@ -519,10 +519,10 @@ export async function execute(interaction: Interaction) {
 //         }
 
 //         if (interaction.customId === 'submit-product-update-product') {
-//             const productName = replaceNonBreakableSpace(interaction.message.content.match(/\*\*\[[^ ]+\]\*\*/g)[0].replace(/\*|\[|\]/g, ''))
+//             const productName = interaction.message.content.match(/\*\*\[[^ ]+\]\*\*/g)[0].replace(/\*|\[|\]/g, '').replaceNonBreakableSpace()
 //             const shopName = interaction.message.content.match(/\*\*[^ ]+\*\*/g)[1].replace(/\*/g, '')
 //             const updateOption = interaction.message.content.match(/\*\*[^ ]+\*\*/g)[2].replace(/\*/g, '')
-//             const updateOptionValue = replaceNonBreakableSpace(interaction.message.content.match(/\*\*[^ ]+\*\*/g)[3].replace(/\*/g, ''))
+//             const updateOptionValue = interaction.message.content.match(/\*\*[^ ]+\*\*/g)[3].replace(/\*/g, '').replaceNonBreakableSpace()
 
 //             const selectedShop = shops.find(shop => shop.name === shopName)
 //             const productToUpdtate = selectedShop.products.find(product => product.name === productName)
@@ -550,7 +550,7 @@ export async function execute(interaction: Interaction) {
 
 //             selectedShop.products.forEach(product => {
 //                 selectProductMenu.addOptions({
-//                     label: product.name.removeCustomEmojisString().cut(100),
+//                     label: product.name.removeCustomEmojis().cut(100),
 //                     description: `${product.price} ${selectedShop.currency}`,
 //                     value: product.id
 //                 })
@@ -644,7 +644,7 @@ export async function execute(interaction: Interaction) {
         
 //             shops.forEach(shop => {
 //                 selectShopMenu.addOptions({
-//                     label: shop.name.removeCustomEmojisString().cut(100),
+//                     label: shop.name.removeCustomEmojis().cut(100),
 //                     value: shop.id
 //                 })
 //             })

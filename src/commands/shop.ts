@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder, StringSelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ChatInputCommandInteraction, Client } from 'discord.js'
 import { getShops } from '../database/database-handler'
-import { ellipsis, removeCustomEmojisString, replyErrorMessage } from '../utils/utils'
+import { replyErrorMessage } from '../utils/utils'
 
 export const data = new SlashCommandBuilder()
     .setName('shop')
@@ -37,7 +37,7 @@ export async function execute(_client: Client, interaction: ChatInputCommandInte
     
     shops.forEach(shop => {
         selectShopMenu.addOptions({
-            label: ellipsis(removeCustomEmojisString(shop.name), 100),
+            label: shop.name.removeCustomEmojis().ellipsis(100),
             value: shop.id
         })
     })
