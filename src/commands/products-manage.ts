@@ -150,11 +150,10 @@ async function updateProduct(_client: Client, interaction: ChatInputCommandInter
     const subcommand = interaction.options.getSubcommand()
     if (!subcommand) return replyErrorMessage(interaction)
 
-    const updateOption = getUpdateOption(subcommand) //= (subcommand == 'change-name') ? 'Name' : (subcommand == 'change-description') ? 'Description' : 'Price'
-    const updateOptionValue = getUpdateOptionValue(interaction, subcommand) //= (subcommand == 'change-name') ? interaction.options.getString('new-name') : (subcommand == 'change-description') ? interaction.options.getString('new-description')?.replaceNonBreakableSpace() : interaction.options.getInteger('new-price').replaceNonBreakableSpace()
+    const updateOption = getUpdateOption(subcommand)
+    const updateOptionValue = getUpdateOptionValue(interaction, subcommand)
     
     if (updateOption === '' || updateOptionValue === '') return replyErrorMessage(interaction)
-
 
     const selectShopMenu = new StringSelectMenuBuilder()
         .setCustomId('select-shop')
@@ -199,7 +198,7 @@ function getUpdateOptionValue(interaction: ChatInputCommandInteraction, subcomma
         case 'change-description':
             return interaction.options.getString('new-description')?.replaceNonBreakableSpace() || ''
         case 'change-price':
-            return `${interaction.options.getInteger('new-price')}`
+            return `${interaction.options.getInteger('new-price') || ''}`
         default:
             return ''
     }
