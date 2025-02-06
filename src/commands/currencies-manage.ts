@@ -2,6 +2,7 @@ import { SlashCommandBuilder, PermissionFlagsBits, Client, ChatInputCommandInter
 import { replyErrorMessage } from "../utils/utils"
 import { DatabaseError } from "../database/database-types"
 import { createCurrency, getCurrencies } from "../database/database-handler"
+import { CurrencyRemoveFlow } from "../user-flows/currencies-flows"
 
 export const data = new SlashCommandBuilder()
     .setName('currencies-manage') 
@@ -24,8 +25,17 @@ export const data = new SlashCommandBuilder()
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     
 
-export async function execute(_client: Client, interaction: ChatInputCommandInteraction) {
+export async function execute(client: Client, interaction: ChatInputCommandInteraction) {
     const subCommand = interaction.options.getSubcommand()
+
+    switch (subCommand) {
+        case 'create':
+            return await createCurrencyCommand(client, interaction)
+        case 'remove':
+            return await removeCurrency(client, interaction)
+        default:
+            return await replyErrorMessage(interaction)
+    }
 }
 
 export async function createCurrencyCommand(_client: Client, interaction: ChatInputCommandInteraction) {
@@ -46,35 +56,6 @@ export async function createCurrencyCommand(_client: Client, interaction: ChatIn
 }
 
 export async function removeCurrency(_client: Client, interaction: ChatInputCommandInteraction) {
-    const currencies = getCurrencies()
-    if (currencies.size == 0) return replyErrorMessage(interaction, 'There isn\'t any currency, so you can\'t remove one, use `/currencies-manage create` to create a new currency')
-        
-    const selectCurrencyMenu = new StringSelectMenuBuilder()
-        .setCustomId('select-currency')
-        .setPlaceholder('Select a currency')
-    
-
-    currencies.forEach(currency => {
-        selectCurrencyMenu.addOptions({
-            label: currency.name.removeCustomEmojis().ellipsis(100),
-            value: currency.id
-        })
-    })
-
-    const submitButton = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-            .setCustomId('submit-currency-remove')
-            .setLabel('Remove Currency')
-            .setEmoji({name: '⛔'})
-            .setStyle(ButtonStyle.Danger)
-            .setDisabled(true)
-    )
-
-
-    await interaction.reply({ 
-        content: `Remove **[Select Currency]**, ⚠️ __**it will also remove shops using this currency and take it from user's accounts**__`, 
-        components: [new ActionRowBuilder<StringSelectMenuBuilder>().setComponents(selectCurrencyMenu), submitButton],
-        flags: MessageFlags.Ephemeral 
-    })
-    
+    const currencyRemoveFlow = new CurrencyRemoveFlow()
+    currencyRemoveFlow.start(interaction)
 }

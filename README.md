@@ -195,7 +195,7 @@ I will after that add the following features, some of which have been suggested 
 - Inventory system
 - Discount codes 
 - Pagination system in shops
-- Custom emojis as currency name
+- Custom emojis as currency name or ability to add an emoji in addition to currency name
 - New commands system, for easier use
 
 All those changes will be made on this branch.

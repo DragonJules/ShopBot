@@ -48,8 +48,19 @@ export async function execute(interaction: BaseInteraction) {
 }
 
 
-function handleSlashCommand(interaction: ChatInputCommandInteraction) {
-
+async function handleSlashCommand(interaction: ChatInputCommandInteraction) {
+    const command = interaction.client.commands.get(interaction.commandName)
+    if (!command) return
+    if (interaction?.channel?.type === ChannelType.DM) return
+    try {
+        await command.execute(interaction.client, interaction)
+        PrettyLog.info(`${interaction.user.username} (${interaction.user.id}) in #${interaction?.channel?.name} (${interaction?.channel?.id}) triggered the command '/${interaction.commandName}'`)
+    } catch (error: unknown) {
+        console.error(error)
+        PrettyLog.error(`Failed to execute the command '/${interaction.commandName}' (user: ${interaction.user.username} (${interaction.user.id}) in #${interaction?.channel?.name} (${interaction?.channel?.id}))`)
+        
+        await replyErrorMessage(interaction)
+    }
 }
 
 function handleModalSubmit(interaction: ModalSubmitInteraction) {

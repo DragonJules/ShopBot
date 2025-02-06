@@ -3,5 +3,4 @@ node_modules
 dist
 src/test.ts
 logs.txt
-config/config.json
 .temp
