@@ -1,8 +1,8 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, MessageFlags, StringSelectMenuBuilder } from "discord.js";
-import { Currency } from "../database/database-types";
-import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent, UserFlow, UserFlowComponentBuilder } from "./user-flow";
-import { getCurrencies } from "../database/database-handler";
-import { replyErrorMessage } from "../utils/utils";
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, Message, MessageComponentInteraction, MessageFlags, StringSelectMenuBuilder, StringSelectMenuInteraction } from "discord.js";
+import { Currency, DatabaseError } from "../database/database-types";
+import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent, UserFlow, UserFlowComponentBuilder, UserFlowInteraction } from "./user-flow";
+import { getCurrencies, removeCurrency } from "../database/database-handler";
+import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils";
 
 
 export class CurrencyRemoveFlow extends UserFlow {
@@ -10,15 +10,17 @@ export class CurrencyRemoveFlow extends UserFlow {
     protected components: Map<string, ExtendedComponent> = new Map()
     private selectedCurrency: Currency | null = null
 
-    start(interaction: ChatInputCommandInteraction) {
+    async start(interaction: ChatInputCommandInteraction) {
         const currencies = getCurrencies()
         if (currencies.size == 0) return replyErrorMessage(interaction, 'There isn\'t any currency, so you can\'t remove one. \n-# Use `/currencies-manage create` to create a new currency')    
 
         this.selectedCurrency = null
 
         this.initComponents()
+        this.updateComponents()
 
-        interaction.reply({ content: this.getMessage(), components: this.getComponents(), flags: MessageFlags.Ephemeral })
+        const response = await interaction.reply({ content: this.getMessage(), components: this.getComponentRows(), flags: MessageFlags.Ephemeral, withResponse: true })
+        this.createComponentsCollectors(response)
     }
 
     initComponents(): void {
@@ -26,16 +28,19 @@ export class CurrencyRemoveFlow extends UserFlow {
             `${this.id}+select-currency`,
             'Select a currency',
             getCurrencies(),
-            this.updateInteraction,
+            (interaction: StringSelectMenuInteraction, selectedCurrency: Currency): void => {
+                this.selectedCurrency = selectedCurrency
+                this.updateInteraction(interaction)
+            },
             120_000
         )
 
         const submitButton = new ExtendedButtonComponent(`${this.id}+submit`, new ButtonBuilder()
-            .setLabel('Remove Shop')
+            .setLabel('Remove Currency')
             .setEmoji({name: '⛔'})
             .setStyle(ButtonStyle.Danger)
             .setDisabled(this.selectedCurrency == null),
-            this.updateInteraction,
+            (interaction) => this.success(interaction),
             120_000
         )
 
@@ -49,8 +54,27 @@ export class CurrencyRemoveFlow extends UserFlow {
 
     protected updateComponents(): void {
         const submitButton = this.components.get(`${this.id}+submit`)
-        if (submitButton instanceof ExtendedButtonComponent) {
-            submitButton.toggle(this.selectedCurrency != null)
+        if (!(submitButton instanceof ExtendedButtonComponent)) return
+
+        submitButton.toggle(this.selectedCurrency != null) 
+    }
+
+    protected success(interaction: ButtonInteraction): void {
+        const submitButton = this.components.get(`${this.id}+submit`)
+        if (!(submitButton instanceof ExtendedButtonComponent)) return
+
+        submitButton.toggle(false)
+
+        // TODO : take currency from accounts owning it
+        // TODO : remove currency from shops using it
+        try {
+            if (!this.selectedCurrency) return
+            removeCurrency(this.selectedCurrency.id)
+            updateAsSuccessMessage(interaction, `You succesfully removed the currency **${this.selectedCurrency.name}**`)
+            console.log('tf')
+        } catch (error) {
+            updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
+            return 
         }
         
     }

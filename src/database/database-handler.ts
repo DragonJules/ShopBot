@@ -17,9 +17,9 @@ const save = (database: Database) => new Promise<boolean>(async (resolve, reject
     }
 })
 
-const accountsDatabase = new AccountsDatabase(accounts, 'data/database.json')
-const currenciesDatabase = new CurrenciesDatabase(currencies, 'data/database.json')
-const shopsDatabase = new ShopsDatabase(shops, 'data/database.json')
+const accountsDatabase = new AccountsDatabase(accounts, 'data/accounts.json')
+const currenciesDatabase = new CurrenciesDatabase(currencies, 'data/currencies.json')
+const shopsDatabase = new ShopsDatabase(shops, 'data/shops.json')
 
 /**
  * What this needs to handle :
@@ -85,10 +85,11 @@ export function getCurrencies(): Map<string, Currency> {
 }
 
 export function getCurrencyId(currencyName: string): string | undefined {
+    let currencyId: string | undefined = undefined
     currenciesDatabase.currencies.forEach(currency => {
-        if (currency.name === currencyName) return currency.id
+        if (currency.name == currencyName) return currencyId = currency.id
     })
-    return undefined 
+    return currencyId 
 }
 
 export function getCurrencyName(currencyId: string): string | undefined {
@@ -96,7 +97,7 @@ export function getCurrencyName(currencyId: string): string | undefined {
 }
 
 export async function createCurrency(currencyName: string) {
-    if (currenciesDatabase.currencies.has(getCurrencyId(currencyName)!)) throw new DatabaseError('Currency already exists')
+    if (currenciesDatabase.currencies.has(getCurrencyId(currencyName) || '')) throw new DatabaseError('Currency already exists')
     
     const newCurrencyId = uuidv4()
 
@@ -127,7 +128,7 @@ export function getShopName(shopId: string): string | undefined {
 }
 
 export async function createShop(shopName: string, description: string, currencyId: string) {
-    if (shopsDatabase.shops.has(getShopId(shopName)!)) throw new DatabaseError('Shop already exists')
+    if (shopsDatabase.shops.has(getShopId(shopName) || '')) throw new DatabaseError('Shop already exists')
     if (!currenciesDatabase.currencies.has(currencyId)) throw new DatabaseError('Currency does not exist')
 
     const newShopId = uuidv4()    

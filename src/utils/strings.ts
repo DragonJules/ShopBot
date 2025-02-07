@@ -1,5 +1,5 @@
 interface String {
-    ellipsis(max : number) : string;
+    ellipsis(max: number) : string;
     removeCustomEmojis() : string;
     replaceNonBreakableSpace() : string
 }

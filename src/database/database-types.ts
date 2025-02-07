@@ -3,27 +3,23 @@ import { Snowflake } from "discord.js"
 export class DatabaseError extends Error {
     constructor(message: string) {
         super(message)
-        this.name = "CustomError"
+        this.name = "DatabaseError"
         Object.setPrototypeOf(this, DatabaseError.prototype);
     }
 }
 
 export interface DatabaseJSONBody {}
 
-export class Database {
+export abstract class Database {
     public path: string
 
     public constructor (databaseRaw: DatabaseJSONBody, path: string) {
         this.path = path
     }
     
-    public toJSON (): DatabaseJSONBody {
-        return ''
-    }
+    public abstract toJSON(): DatabaseJSONBody 
     
-    protected parseRaw (databaseRaw: DatabaseJSONBody): unknown {
-        return null
-    }
+    protected abstract parseRaw(databaseRaw: DatabaseJSONBody): unknown 
 }
 
 export interface Currency {
@@ -81,7 +77,7 @@ export interface CurrenciesDatabaseJSONBody extends DatabaseJSONBody {
 export class CurrenciesDatabase extends Database {
     public currencies: Map<string, Currency>
 
-    public constructor (databaseRaw: DatabaseJSONBody, path: string) {
+    public constructor (databaseRaw: CurrenciesDatabaseJSONBody, path: string) {
         super(databaseRaw, path)
 
         this.currencies = this.parseRaw(databaseRaw)	
