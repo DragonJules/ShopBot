@@ -24,7 +24,7 @@ export class CurrencyRemoveFlow extends UserFlow {
     }
 
     initComponents(): void {
-        const currencySelect = new ExtendedStringSelectMenuComponent(
+        const currencySelect = new ExtendedStringSelectMenuComponent<Currency>(
             `${this.id}+select-currency`,
             'Select a currency',
             getCurrencies(),
@@ -35,11 +35,12 @@ export class CurrencyRemoveFlow extends UserFlow {
             120_000
         )
 
-        const submitButton = new ExtendedButtonComponent(`${this.id}+submit`, new ButtonBuilder()
-            .setLabel('Remove Currency')
-            .setEmoji({name: '⛔'})
-            .setStyle(ButtonStyle.Danger)
-            .setDisabled(this.selectedCurrency == null),
+        const submitButton = new ExtendedButtonComponent(`${this.id}+submit`, 
+            new ButtonBuilder()
+                .setLabel('Remove Currency')
+                .setEmoji({name: '⛔'})
+                .setStyle(ButtonStyle.Danger)
+                .setDisabled(this.selectedCurrency == null),
             (interaction) => this.success(interaction),
             120_000
         )
@@ -59,7 +60,7 @@ export class CurrencyRemoveFlow extends UserFlow {
         submitButton.toggle(this.selectedCurrency != null) 
     }
 
-    protected success(interaction: ButtonInteraction): void {
+    protected async success(interaction: ButtonInteraction) {
         const submitButton = this.components.get(`${this.id}+submit`)
         if (!(submitButton instanceof ExtendedButtonComponent)) return
 
@@ -69,11 +70,10 @@ export class CurrencyRemoveFlow extends UserFlow {
         // TODO : remove currency from shops using it
         try {
             if (!this.selectedCurrency) return
-            removeCurrency(this.selectedCurrency.id)
-            updateAsSuccessMessage(interaction, `You succesfully removed the currency **${this.selectedCurrency.name}**`)
-            console.log('tf')
+            await removeCurrency(this.selectedCurrency.id)
+            await updateAsSuccessMessage(interaction, `You succesfully removed the currency **${this.selectedCurrency.name}**`)
         } catch (error) {
-            updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
+            await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
             return 
         }
         

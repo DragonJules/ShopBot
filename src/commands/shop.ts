@@ -9,7 +9,7 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(_client: Client, interaction: ChatInputCommandInteraction){
     const shops = getShops()
-    if (!shops.size) return replyErrorMessage(interaction, 'There isn\'t any shop, use `/shops-manage create` to create a new one')
+    if (!shops.size) return replyErrorMessage(interaction, 'There isn\'t any shop.\n-# Use `/shops-manage create` to create a new one')
 
     const selectedShop = shops.entries().next().value?.[1]!
     const shopName = selectedShop.name

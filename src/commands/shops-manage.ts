@@ -1,6 +1,7 @@
 import { SlashCommandBuilder, PermissionFlagsBits, Client, ChatInputCommandInteraction, StringSelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from "discord.js"
 import { getCurrencies, getShops } from "../database/database-handler"
 import { replyErrorMessage } from "../utils/utils"
+import { ShopCreateFlow, ShopRemoveFlow } from "../user-flows/shops-flows"
 
 export const data = new SlashCommandBuilder()
     .setName('shops-manage') 
@@ -29,71 +30,23 @@ export const data = new SlashCommandBuilder()
 export async function execute(_client: Client, interaction: ChatInputCommandInteraction) {
     const subCommand = interaction.options.getSubcommand()
 
-}
+    switch (subCommand) {
+        case 'create':
+            const createShopFlow = new ShopCreateFlow()
+            createShopFlow.start(interaction)    
 
-async function createShop(_client: Client, interaction: ChatInputCommandInteraction) {
-    const currencies = getCurrencies()
-    if (!currencies.size) return await replyErrorMessage(interaction, 'There isn\'t any currency, so you can\'t create a new shop, use `/currencies-manage create` to create a new currency')
-    
-    const shopName = interaction.options.getString('shop-name')?.replaceNonBreakableSpace()
-    if (shopName == null) return replyErrorMessage(interaction)
+            return
+        case 'remove':
+            const removeShopFlow = new ShopRemoveFlow()
+            removeShopFlow.start(interaction)
 
-    if (shopName.removeCustomEmojis().length == 0) return replyErrorMessage(interaction, 'The shop name can\'t contain only custom emojis')
+            return
+        case 'reorder':
+            return
+        default:
+            return await replyErrorMessage(interaction)
+    }
 
-    const selectCurrencyMenu = new StringSelectMenuBuilder()
-        .setCustomId('select-currency')
-        .setPlaceholder('Select a currency')
-    
-    currencies.forEach(currency => {
-        selectCurrencyMenu.addOptions({
-            label: currency.name.removeCustomEmojis().ellipsis(100),
-            value: currency.id
-        })
-    })
-
-    const buttons = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-            .setCustomId('submit-currency-new-shop')
-            .setLabel('Submit')
-            .setEmoji('✅')
-            .setStyle(ButtonStyle.Success)
-            .setDisabled(true),
-        new ButtonBuilder()
-            .setCustomId('change-shop-name')
-            .setLabel('Change Shop Name')
-            .setStyle(ButtonStyle.Secondary)
-    )
-    
-    
-    await interaction.reply({ content: `Create the shop **${shopName}** with the Currency **[Select Currency]**`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectCurrencyMenu), buttons], flags: MessageFlags.Ephemeral })
-    
-}
-
-async function removeShop(_client: Client, interaction: ChatInputCommandInteraction) {
-    const shops = getShops()
-    if (!shops.size) return replyErrorMessage(interaction, 'There isn\'t any shop, use `/shops-manage create` to create a new one')
-
-    const selectShopMenu = new StringSelectMenuBuilder()
-        .setCustomId('select-shop')
-        .setPlaceholder('Select a shop')
-    
-    shops.forEach(shop => {
-        selectShopMenu.addOptions({
-            label: shop.name.removeCustomEmojis().ellipsis(100),
-            value: shop.id
-        })
-    })
-
-    const submitButton = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-            .setCustomId('submit-shop-remove')
-            .setLabel('Remove Shop')
-            .setEmoji({name: '⛔'})
-            .setStyle(ButtonStyle.Danger)
-            .setDisabled(true)
-    )
-    
-    await interaction.reply({ content: `Remove **[Select Shop]**`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectShopMenu), submitButton], flags: MessageFlags.Ephemeral })
 }
 
 async function reorderShops(_client: Client, interaction: ChatInputCommandInteraction) {

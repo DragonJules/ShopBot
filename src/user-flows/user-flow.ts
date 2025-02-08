@@ -1,8 +1,8 @@
-import { ActionRowBuilder, ChatInputCommandInteraction, ButtonBuilder, StringSelectMenuOptionBuilder, StringSelectMenuBuilder, ComponentType, InteractionCallbackResponse, MessageComponentType, MessageComponentInteraction, ReadonlyCollection, StringSelectMenuInteraction, ButtonInteraction } from "discord.js";
+import { ActionRowBuilder, ChatInputCommandInteraction, ButtonBuilder, StringSelectMenuOptionBuilder, StringSelectMenuBuilder, ComponentType, InteractionCallbackResponse, MessageComponentType, MessageComponentInteraction, ReadonlyCollection, StringSelectMenuInteraction, ButtonInteraction, ModalSubmitInteraction } from "discord.js";
 import { Currency, Shop } from "../database/database-types";
 import { getCurrencies } from "../database/database-handler";
 
-export type UserFlowInteraction = ChatInputCommandInteraction | MessageComponentInteraction
+export type UserFlowInteraction = ChatInputCommandInteraction | MessageComponentInteraction | ModalSubmitInteraction
 export type UserFlowComponentBuilder = ButtonBuilder | StringSelectMenuBuilder
 
 export abstract class UserFlow {
@@ -41,7 +41,7 @@ export abstract class UserFlow {
 
     protected async updateInteraction(interaction: UserFlowInteraction) {
         this.updateComponents()
-        if (interaction.isMessageComponent()) {
+        if (interaction.isMessageComponent() || (interaction.isModalSubmit() && interaction.isFromMessage())) {
             interaction.update({ content: this.getMessage(), components: this.getComponentRows() })
             return
         }
@@ -102,9 +102,7 @@ export class ExtendedButtonComponent extends ExtendedComponent {
         this.callback(interaction)
     }
 
-    onEnd(collected: ReadonlyCollection<string, MessageComponentInteraction>): void {
-        
-    }
+    onEnd(collected: ReadonlyCollection<string, MessageComponentInteraction>): void {}
 
     toggle(enabled?: boolean) {
         if (enabled == undefined) enabled = !this.component.data.disabled
@@ -112,16 +110,18 @@ export class ExtendedButtonComponent extends ExtendedComponent {
     }
 }
 
-export class ExtendedStringSelectMenuComponent extends ExtendedComponent {
+export class ExtendedStringSelectMenuComponent<T extends Currency | Shop> extends ExtendedComponent {
     componentType = ComponentType.StringSelect
     customId: string
     component: StringSelectMenuBuilder
-    callback: (interaction: StringSelectMenuInteraction, selectedCurrency: Currency) => void
+    map: Map<string, T>
+    callback: (interaction: StringSelectMenuInteraction, selected: T) => void
     time: number
 
-    constructor(customId: string, label: string, map: Map<string, Currency | Shop>, callback: (interaction: StringSelectMenuInteraction, selectedCurrency: Currency) => void, time: number) {
+    constructor(customId: string, label: string, map: Map<string, T>, callback: (interaction: StringSelectMenuInteraction, selected: T) => void, time: number) {
         super()
         this.customId = customId
+        this.map = map
         this.component = this.createSelectMenu(customId, label, map)
 
         this.callback = callback
@@ -131,17 +131,15 @@ export class ExtendedStringSelectMenuComponent extends ExtendedComponent {
     onCollect(interaction: StringSelectMenuInteraction): void {
         if (!interaction.isStringSelectMenu()) return
 
-        const currency = getCurrencies().get(interaction.values[0])
-        if (currency == undefined) return
+        const selected = this.map.get(interaction.values[0])
+        if (selected == undefined) return
 
-        this.callback(interaction, currency)
+        this.callback(interaction, selected)    
     }
 
-    onEnd(collected: ReadonlyCollection<string, MessageComponentInteraction>): void {
-        
-    }
+    onEnd(collected: ReadonlyCollection<string, MessageComponentInteraction>): void {}
 
-    private createSelectMenu(id: string, label: string, map: Map<string, Currency | Shop>): StringSelectMenuBuilder {
+    private createSelectMenu(id: string, label: string, map: Map<string, T>): StringSelectMenuBuilder {
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId(id)
             .setPlaceholder(label)
@@ -152,10 +150,10 @@ export class ExtendedStringSelectMenuComponent extends ExtendedComponent {
 
     private getStringSelectOptions(map: Map<string, Currency | Shop>): StringSelectMenuOptionBuilder[] {
         const options: StringSelectMenuOptionBuilder[] = []
-        map.forEach(value => {
+        map.forEach((value, key) => {
             options.push(new StringSelectMenuOptionBuilder()
                 .setLabel(value.name.removeCustomEmojis().ellipsis(100))
-                .setValue(value.id)
+                .setValue(key)
             )
         })
         
