@@ -1,7 +1,7 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, Client, MessageFlags, PermissionFlagsBits, SlashCommandBuilder, StringSelectMenuBuilder } from "discord.js"
 import { getShops } from "../database/database-handler"
 import { replyErrorMessage } from "../utils/utils"
-import { AddProductFlow, RemoveProductFlow } from "../user-flows/product-flows"
+import { AddProductFlow, RemoveProductFlow, UpdateOption, UpdateProductFlow } from "../user-flows/product-flows"
 
 export const data = new SlashCommandBuilder()
     .setName('products-manage') 
@@ -38,7 +38,7 @@ export const data = new SlashCommandBuilder()
         .setName('update')
         .setDescription('Updates the product name')
         .addSubcommand(subcommand => subcommand
-            .setName('name')
+            .setName(UpdateOption.NAME)
             .setDescription('Change Name. You will select the product later')
             .addStringOption(option => option
                 .setName('new-name')
@@ -49,7 +49,7 @@ export const data = new SlashCommandBuilder()
             )
         )
         .addSubcommand(subcommand => subcommand
-            .setName('description')
+            .setName(UpdateOption.DESCRIPTION)
             .setDescription('Change Description. You will select the product later')
             .addStringOption(option => option
                 .setName('new-description')
@@ -60,7 +60,7 @@ export const data = new SlashCommandBuilder()
             )
         )
         .addSubcommand(subcommand => subcommand
-            .setName('price')
+            .setName(UpdateOption.PRICE)
             .setDescription('Change Price. You will select the product later')
             .addIntegerOption(option => option
                 .setName('new-price')
@@ -75,6 +75,7 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(_client: Client, interaction: ChatInputCommandInteraction) {
     const subCommand = interaction.options.getSubcommand()
+    const subCommandGroup = interaction.options.getSubcommandGroup()
 
     switch (subCommand) {
         case 'add':
@@ -86,71 +87,14 @@ export async function execute(_client: Client, interaction: ChatInputCommandInte
             removeProductFlow.start(interaction)
 
             break
-        case 'update':
-            break
         default:
+            if (subCommandGroup == 'update') {
+                const updateProductFlow = new UpdateProductFlow()
+                updateProductFlow.start(interaction)
+                
+                break
+            }
+            
             return await replyErrorMessage(interaction)
-    }
-}
-
-
-async function updateProduct(_client: Client, interaction: ChatInputCommandInteraction) {
-    const shops = getShops()
-    if (!shops.size) return replyErrorMessage(interaction, `There isn't any shop with products./n-# Use \`/shops-manage create\` to create a new shop, and \`/products-manage add\` to add products`)
-
-    const subcommand = interaction.options.getSubcommand()
-    if (!subcommand) return replyErrorMessage(interaction)
-
-    const updateOption = getUpdateOption(subcommand)
-    const updateOptionValue = getUpdateOptionValue(interaction, subcommand)
-    
-    if (updateOption === '' || updateOptionValue === '') return replyErrorMessage(interaction)
-
-    const selectShopMenu = new StringSelectMenuBuilder()
-        .setCustomId('select-shop')
-        .setPlaceholder('Select a shop')
-    
-    shops.forEach(shop => {
-        selectShopMenu.addOptions({
-            label: shop.name.removeCustomEmojis().ellipsis(100),
-            value: shop.id
-        })
-    })
-
-    const submitButton = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-            .setCustomId('submit-shop-update-product')
-            .setLabel('Submit Shop')
-            .setEmoji('✅')
-            .setStyle(ButtonStyle.Success)
-            .setDisabled(true)
-    )
-
-    await interaction.reply({ content: `Update product from **[Select Shop]**. New **${updateOption}**: **${updateOptionValue}**`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectShopMenu), submitButton], flags: MessageFlags.Ephemeral })
-}
-
-function getUpdateOption(subcommand: string): string {
-    switch (subcommand) {
-        case 'change-name':
-            return 'Name'
-        case 'change-description':
-            return 'Description'
-        case 'change-price':
-            return 'Price'
-        default:
-            return ''
-    }
-}
-
-function getUpdateOptionValue(interaction: ChatInputCommandInteraction, subcommand: string): string {
-    switch (subcommand) {
-        case 'change-name':
-            return interaction.options.getString('new-name')?.replaceNonBreakableSpace() || ''
-        case 'change-description':
-            return interaction.options.getString('new-description')?.replaceNonBreakableSpace() || ''
-        case 'change-price':
-            return `${interaction.options.getInteger('new-price') || ''}`
-        default:
-            return ''
     }
 }
