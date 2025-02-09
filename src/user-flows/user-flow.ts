@@ -1,5 +1,5 @@
-import { ActionRowBuilder, ChatInputCommandInteraction, ButtonBuilder, StringSelectMenuOptionBuilder, StringSelectMenuBuilder, ComponentType, InteractionCallbackResponse, MessageComponentType, MessageComponentInteraction, ReadonlyCollection, StringSelectMenuInteraction, ButtonInteraction, ModalSubmitInteraction } from "discord.js";
-import { Currency, Shop } from "../database/database-types";
+import { ActionRowBuilder, ChatInputCommandInteraction, ButtonBuilder, StringSelectMenuOptionBuilder, StringSelectMenuBuilder, ComponentType, InteractionCallbackResponse, MessageComponentType, MessageComponentInteraction, ReadonlyCollection, StringSelectMenuInteraction, ButtonInteraction, ModalSubmitInteraction, InteractionCollector } from "discord.js";
+import { Currency, Product, Shop } from "../database/database-types";
 import { getCurrencies } from "../database/database-handler";
 
 export type UserFlowInteraction = ChatInputCommandInteraction | MessageComponentInteraction | ModalSubmitInteraction
@@ -54,6 +54,12 @@ export abstract class UserFlow {
         })
     }
 
+    protected destroyComponentsCollectors(): void {
+        this.components.forEach((component) => {
+            component.destroyCollector()
+        })
+    }
+
     protected abstract success(interaction: UserFlowInteraction): void
 }
 
@@ -64,6 +70,8 @@ export abstract class ExtendedComponent {
     protected abstract callback: (...args: any[]) => void
     abstract time: number
 
+    protected collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> | null = null
+
     protected abstract onCollect(interaction: MessageComponentInteraction): void
     protected abstract onEnd(collected: ReadonlyCollection<string, MessageComponentInteraction>): void
 
@@ -71,10 +79,18 @@ export abstract class ExtendedComponent {
         const filter = (interaction: MessageComponentInteraction) => interaction.customId === this.customId
         const collector = response.resource?.message?.createMessageComponentCollector({ componentType: this.componentType as MessageComponentType, time: this.time, filter })
 
+        this.collector = collector as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>
+
         if (collector == undefined) return
 
         collector.on('collect', (interaction) => this.onCollect(interaction))
         collector.on('end', (collected) => this.onEnd(collected))
+    }
+
+    public destroyCollector() {
+        if (this.collector == null) return
+
+        this.collector.stop()
     }
 
     getComponent(): UserFlowComponentBuilder {
@@ -110,7 +126,7 @@ export class ExtendedButtonComponent extends ExtendedComponent {
     }
 }
 
-export class ExtendedStringSelectMenuComponent<T extends Currency | Shop> extends ExtendedComponent {
+export class ExtendedStringSelectMenuComponent<T extends Currency | Shop | Product> extends ExtendedComponent {
     componentType = ComponentType.StringSelect
     customId: string
     component: StringSelectMenuBuilder
@@ -148,7 +164,7 @@ export class ExtendedStringSelectMenuComponent<T extends Currency | Shop> extend
         return selectMenu
     }
 
-    private getStringSelectOptions(map: Map<string, Currency | Shop>): StringSelectMenuOptionBuilder[] {
+    private getStringSelectOptions(map: Map<string, T>): StringSelectMenuOptionBuilder[] {
         const options: StringSelectMenuOptionBuilder[] = []
         map.forEach((value, key) => {
             options.push(new StringSelectMenuOptionBuilder()
@@ -158,5 +174,10 @@ export class ExtendedStringSelectMenuComponent<T extends Currency | Shop> extend
         })
         
         return options
+    }
+
+    public updateMap(map: Map<string, T>) {
+        this.map = map
+        this.component.setOptions(this.getStringSelectOptions(map))
     }
 }

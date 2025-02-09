@@ -30,12 +30,13 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
 
     switch (subCommand) {
         case 'create':
-            return await createCurrencyCommand(client, interaction)
+            await createCurrencyCommand(client, interaction)
+            break
         case 'remove':
             const currencyRemoveFlow = new CurrencyRemoveFlow()
             currencyRemoveFlow.start(interaction)
 
-            return 
+            break 
         default:
             return await replyErrorMessage(interaction)
     }

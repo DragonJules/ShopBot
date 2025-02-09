@@ -34,6 +34,14 @@ export interface Product {
     price: number
 }
 
+export interface ProductOptions {
+    name: string
+    description: string
+    price: number
+}
+
+export type ProductOptionsOptional = Partial<ProductOptions>
+
 export interface Balance<Item> {
     item: Item
     amount: number
@@ -80,7 +88,7 @@ export class CurrenciesDatabase extends Database {
     public constructor (databaseRaw: CurrenciesDatabaseJSONBody, path: string) {
         super(databaseRaw, path)
 
-        this.currencies = this.parseRaw(databaseRaw)	
+        this.currencies = this.parseRaw(databaseRaw)
     }
 
     public toJSON(): CurrenciesDatabaseJSONBody {
@@ -88,7 +96,7 @@ export class CurrenciesDatabase extends Database {
         return currencies
     }
 
-    protected parseRaw(databaseRaw: DatabaseJSONBody): Map<string, Currency> {
+    protected parseRaw(databaseRaw: CurrenciesDatabaseJSONBody): Map<string, Currency> {
         return new Map(Object.entries(databaseRaw))
     }
 }
@@ -98,29 +106,40 @@ export interface Shop {
     name: string
     description: string
     currency: Currency
-    products: Product[]
+    products: Map<string, Product>
 }
 
 export interface ShopsDatabaseJSONBody extends DatabaseJSONBody {
-    [shopId: Snowflake]: Shop
+    [shopId: Snowflake]: Omit<Shop, 'products'> & { products: {[productId: string]: Product} }
 }
 
 export class ShopsDatabase extends Database {
     public shops: Map<string, Shop>
 
-    public constructor (databaseRaw: DatabaseJSONBody, path: string) {
+    public constructor (databaseRaw: ShopsDatabaseJSONBody, path: string) {
         super(databaseRaw, path)
 
         this.shops = this.parseRaw(databaseRaw)
     }
 
     public toJSON(): ShopsDatabaseJSONBody {
-        const shops: ShopsDatabaseJSONBody = Object.fromEntries(this.shops)
-        return shops
+        const shopsJSON: ShopsDatabaseJSONBody = {}
+
+        this.shops.forEach((shop, shopId) => {
+            shopsJSON[shopId] = { ...shop, products: Object.fromEntries(shop.products) }
+        })
+
+        return shopsJSON
     }
 
-    protected parseRaw(databaseRaw: DatabaseJSONBody): Map<string, Shop> {
-        return new Map(Object.entries(databaseRaw))
+    protected parseRaw(databaseRaw: ShopsDatabaseJSONBody): Map<string, Shop> {
+        const shops: Map<string, Shop> = new Map()
+
+        for (const [shopId, shop] of Object.entries(databaseRaw)) {
+            shops.set(shopId, { ...shop, products: new Map(Object.entries(shop.products)) })
+        }
+
+        return shops
     }
 
 }

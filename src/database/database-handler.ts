@@ -1,5 +1,5 @@
 import { Snowflake } from 'discord.js'
-import { Account, AccountsDatabase, CurrenciesDatabase, Currency, Database, DatabaseError, Shop, ShopsDatabase } from "./database-types"
+import { Account, AccountsDatabase, CurrenciesDatabase, Currency, Database, DatabaseError, Product, ProductOptions, ProductOptionsOptional, Shop, ShopsDatabase } from "./database-types"
 import fs from 'node:fs/promises'
 import { v4 as uuidv4 } from 'uuid';
 
@@ -26,11 +26,11 @@ const shopsDatabase = new ShopsDatabase(shops, 'data/shops.json')
  * ✅ 1. get and return account 
  * ✅ 2. create account
  * ✅ 3. update account (money and inv)
- * ✅4. create and remove currency
- * 5. create, update and remove product
- * ✅6. create and remove shop
+ * ✅ 4. create and remove currency
+ * ✅ 5. create, update and remove product
+ * ✅ 6. create and remove shop
  * 7. reorder shops
- * 8. get and return shops
+ * ✅ 8. get and return shops
  */
 
 
@@ -138,7 +138,7 @@ export async function createShop(shopName: string, description: string, currency
         name: shopName, 
         description,
         currency: currenciesDatabase.currencies.get(currencyId)!,
-        products: []
+        products: new Map()
     })
 
     save(shopsDatabase)
@@ -150,3 +150,49 @@ export async function removeShop(shopId: string) {
     shopsDatabase.shops.delete(shopId)
     save(shopsDatabase)
 }
+
+export async function updateShopName(shopId: string, name: string) {
+    if (!shopsDatabase.shops.has(shopId)) throw new DatabaseError('Shop does not exist')
+
+    shopsDatabase.shops.get(shopId)!.name = name
+    await save(shopsDatabase)
+}
+
+export async function updateShopDescription(shopId: string, description: string) {
+    if (!shopsDatabase.shops.has(shopId)) throw new DatabaseError('Shop does not exist')
+
+    shopsDatabase.shops.get(shopId)!.description = description
+    await save(shopsDatabase)
+}
+
+export async function addProduct(shopId: string, options: ProductOptions) {
+    if (!shopsDatabase.shops.has(shopId)) throw new DatabaseError('Shop does not exist')
+
+    const { name, description, price } = options
+    const id = uuidv4()
+
+    shopsDatabase.shops.get(shopId)!.products.set(id, { id, name, description, price })
+    await save(shopsDatabase)
+}
+
+export async function removeProduct(shopId: string, productId: string) {
+    if (!shopsDatabase.shops.has(shopId)) throw new DatabaseError('Shop does not exist')
+
+    shopsDatabase.shops.get(shopId)!.products.delete(productId)
+    await save(shopsDatabase)
+}
+export async function updateProduct(shopId: string, productId: string, options: ProductOptionsOptional) {
+    if (!shopsDatabase.shops.has(shopId)) throw new DatabaseError('Shop does not exist')
+    
+    const { name, description, price } = options
+    const product = shopsDatabase.shops.get(shopId)!.products.get(productId)
+
+    if (!product) throw new DatabaseError('Product does not exist')
+
+    if (name) product.name = name
+    if (description) product.description = description
+    if (price) product.price = price
+
+    await save(shopsDatabase)
+}
+

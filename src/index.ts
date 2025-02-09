@@ -23,20 +23,6 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds] })
 registerCommands(client)
 registerEvents(client)
 
-// Object.defineProperty(Array.prototype, 'move', {
-//     value: function (old_index: any, new_index: number) {
-//         if (new_index >= this.length) {
-//             var k = new_index - this.length + 1
-//             while (k--) {
-//                 this.push(undefined)
-//             }
-//         }
-//         this.splice(new_index, 0, this.splice(old_index, 1)[0])
-//         return this
-//     },
-//     enumerable: false
-// })
-
 async function registerCommands(client: Client) {
 	client.commands = new Collection()
 	const commandsPath = path.join(__dirname, 'commands')
@@ -68,5 +54,9 @@ async function registerEvents(client: Client<boolean>) {
 	PrettyLog.logLoadStep('Events registered')
 }
 
-
 client.login(config.token)
+
+
+process.on('unhandledRejection', PrettyLog.error)
+process.on('uncaughtException', PrettyLog.error)
+process.on('uncaughtExceptionMonitor', PrettyLog.error)

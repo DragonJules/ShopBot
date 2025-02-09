@@ -50,7 +50,7 @@ export class CurrencyRemoveFlow extends UserFlow {
     }
     
     getMessage(): string {
-        return `Remove **[${this.selectedCurrency?.name || 'Select Currency'}]**, ⚠️ __**it will also remove shops using this currency and take it from user's accounts**__`
+        return `Remove **[${this.selectedCurrency?.name || 'Select Currency'}]**, ⚠️ __**it will also remove shops using this currency and take it from user's accounts**__`
     }
 
     protected updateComponents(): void {

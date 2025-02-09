@@ -77,7 +77,7 @@ async function viewAccount(_client: Client, interaction: ChatInputCommandInterac
         })
     }
     else {
-        accountEmbed.addFields({name: '\u200b', value: `**  ** ***❌${user} doesn\'t have any money***\n** **`})
+        accountEmbed.addFields({name: '\u200b', value: `**  ** ***❌${user} doesn\'t have any money***\n** **`})
     }
 
     await interaction.reply({ content: `Here is ${user} account:`, embeds: [accountEmbed], flags: MessageFlags.Ephemeral })
@@ -89,7 +89,7 @@ async function viewInventory(_client: Client, interaction: ChatInputCommandInter
 
 async function giveMoney(_client: Client, interaction: ChatInputCommandInteraction) {
     const currencies = getCurrencies()
-    if (!currencies.size) return replyErrorMessage(interaction, 'There isn\'t any currency, so you can\'t give money, use `/currencies-manage create` to create a new currency')
+    if (!currencies.size) return replyErrorMessage(interaction, 'There isn\'t any currency, so you can\'t give money./n-# Use `/currencies-manage create` to create a new currency')
 
     const target = interaction.options.getUser('target')
     const amount = interaction.options.getInteger('amount')
@@ -117,13 +117,13 @@ async function giveMoney(_client: Client, interaction: ChatInputCommandInteracti
     )
 
 
-    await interaction.reply({ content: `Give **${amount}** **[Select Currency]** to **${target}**`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectCurrencyMenu), submitButton], flags: MessageFlags.Ephemeral })
+    await interaction.reply({ content: `Give **${amount}** **[Select Currency]** to **${target}**`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectCurrencyMenu), submitButton], flags: MessageFlags.Ephemeral })
     
 }
 
 async function takeMoney(_client: Client, interaction: ChatInputCommandInteraction) {
     const currencies = getCurrencies()
-    if (!currencies.size) return replyErrorMessage(interaction, 'There isn\'t any currency, so you can\'t give money, use `/currencies-manage create` to create a new currency')
+    if (!currencies.size) return replyErrorMessage(interaction, 'There isn\'t any currency, so you can\'t give money./n-# Use `/currencies-manage create` to create a new currency')
 
     const target = interaction.options.getUser('target')
     const amount = interaction.options.getInteger('amount')
@@ -161,6 +161,6 @@ async function takeMoney(_client: Client, interaction: ChatInputCommandInteracti
     )
 
 
-    await interaction.reply({ content: `Take **${amount}** **[Select Currency]** from **<@${target.id}>**'s account`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectCurrencyMenu), submitButton], flags: MessageFlags.Ephemeral })
+    await interaction.reply({ content: `Take **${amount}** **[Select Currency]** from **<@${target.id}>**'s account`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectCurrencyMenu), submitButton], flags: MessageFlags.Ephemeral })
     
 }

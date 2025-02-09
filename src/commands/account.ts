@@ -25,7 +25,7 @@ export async function execute(_client: Client, interaction: ChatInputCommandInte
         })
     }
     else {
-        accountEmbed.addFields({name: '\u200b', value: '**  ** ***❌ You don\'t have any money***\n** **'})
+        accountEmbed.addFields({name: '\u200b', value: '**  ** ***❌ You don\'t have any money***\n** **'})
     }
 
     await interaction.reply({ content: `Here is your account:`, components: [], embeds: [accountEmbed], flags: MessageFlags.Ephemeral })

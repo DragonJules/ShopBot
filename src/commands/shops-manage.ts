@@ -33,16 +33,14 @@ export async function execute(_client: Client, interaction: ChatInputCommandInte
     switch (subCommand) {
         case 'create':
             const createShopFlow = new ShopCreateFlow()
-            createShopFlow.start(interaction)    
-
-            return
+            createShopFlow.start(interaction)
+            break
         case 'remove':
             const removeShopFlow = new ShopRemoveFlow()
             removeShopFlow.start(interaction)
-
-            return
+            break
         case 'reorder':
-            return
+            break
         default:
             return await replyErrorMessage(interaction)
     }
@@ -51,7 +49,7 @@ export async function execute(_client: Client, interaction: ChatInputCommandInte
 
 async function reorderShops(_client: Client, interaction: ChatInputCommandInteraction) {
     const shops = getShops()
-    if (!shops.size) return await interaction.reply({ content: `❌ There isn't any shop, use \`/create-shop\` to create a new one`, flags: MessageFlags.Ephemeral })
+    if (!shops.size) return await interaction.reply({ content: `❌ There isn't any shop./n-# Use \`/create-shop\` to create a new one`, flags: MessageFlags.Ephemeral })
 
     let newPos = 0 + 1
     const selectedShop = shops.entries().next().value?.[1]!
@@ -87,6 +85,6 @@ async function reorderShops(_client: Client, interaction: ChatInputCommandIntera
             .setStyle(ButtonStyle.Success)
     )
 
-    await interaction.reply({ content: `Change position of **[${shopName}]** to __**${newPos}**__`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectShopMenu), buttons], flags: MessageFlags.Ephemeral })
+    await interaction.reply({ content: `Change position of **[${shopName}]** to __**${newPos}**__`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectShopMenu), buttons], flags: MessageFlags.Ephemeral })
 
 }

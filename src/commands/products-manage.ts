@@ -1,6 +1,7 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, Client, MessageFlags, PermissionFlagsBits, SlashCommandBuilder, StringSelectMenuBuilder } from "discord.js"
 import { getShops } from "../database/database-handler"
 import { replyErrorMessage } from "../utils/utils"
+import { AddProductFlow, RemoveProductFlow } from "../user-flows/product-flows"
 
 export const data = new SlashCommandBuilder()
     .setName('products-manage') 
@@ -74,78 +75,28 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(_client: Client, interaction: ChatInputCommandInteraction) {
     const subCommand = interaction.options.getSubcommand()
+
+    switch (subCommand) {
+        case 'add':
+            const addProductFlow = new AddProductFlow()
+            addProductFlow.start(interaction)
+            break
+        case 'remove':
+            const removeProductFlow = new RemoveProductFlow()
+            removeProductFlow.start(interaction)
+
+            break
+        case 'update':
+            break
+        default:
+            return await replyErrorMessage(interaction)
+    }
 }
 
-
-async function addProduct(_client: Client, interaction: ChatInputCommandInteraction) {
-    const shops = getShops()
-    if (!shops.size) return replyErrorMessage(interaction, 'There isn\'t any shop with products, use `/shops-manage create` to create a new shop')
-        
-        const productName = interaction.options.getString('product-name')?.replaceNonBreakableSpace()
-        const productDescription = interaction.options.getString('product-description')?.replaceNonBreakableSpace()
-        const productPrice = interaction.options.getInteger('product-price')
-
-        if (!productName || !productPrice || !productDescription) return replyErrorMessage(interaction)
-    
-        if (productName.removeCustomEmojis().length == 0) return replyErrorMessage(interaction, 'The product name can\'t contain only custom emojis')
-        if (productDescription.removeCustomEmojis().length == 0) return replyErrorMessage(interaction, 'The product description can\'t contain only custom emojis')
-        
-    
-        const selectShopMenu = new StringSelectMenuBuilder()
-            .setCustomId('select-shop')
-            .setPlaceholder('Select a shop')
-    
-    
-        const submitButton = new ActionRowBuilder<ButtonBuilder>().addComponents(
-            new ButtonBuilder()
-                .setCustomId('submit-shop-new-product')
-                .setLabel('Submit')
-                .setEmoji('✅')
-                .setStyle(ButtonStyle.Success)
-                .setDisabled(true)
-        )
-    
-        shops.forEach(shop => {
-            selectShopMenu.addOptions({
-                label: shop.name.removeCustomEmojis().ellipsis(100),
-                value: shop.id
-            })
-        })
-    
-        let descString = (productDescription) ? `. Description: **${productDescription.replaceNonBreakableSpace()}**` : ''
-    
-        await interaction.reply({ content: `Add Product: **${productName}** for **${productPrice}** in **[Select Shop]**${descString}`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectShopMenu), submitButton], flags: MessageFlags.Ephemeral })
-}
-
-async function removeProduct(_client: Client, interaction: ChatInputCommandInteraction) {
-    const shops = getShops()
-    if (!shops.size) return replyErrorMessage(interaction, `There isn't any shop, so you can't remove a product, use \`/shops-manage create\` to create a new shop, and \`/products-manage add\` to add products`)
-    const selectShopMenu = new StringSelectMenuBuilder()
-        .setCustomId('select-shop')
-        .setPlaceholder('Select a shop')
- 
-    shops.forEach(shop => {
-        selectShopMenu.addOptions({
-            label: shop.name.removeCustomEmojis().ellipsis(100),
-            value: shop.id
-        })
-    })
-
-    const submitButton = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-            .setCustomId('submit-shop-remove-product')
-            .setLabel('Submit Shop')
-            .setEmoji('✅')
-            .setStyle(ButtonStyle.Success)
-            .setDisabled(true)
-    )
-
-    await interaction.reply({ content: `Remove product from **[Select Shop]**`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectShopMenu), submitButton], flags: MessageFlags.Ephemeral })
-}
 
 async function updateProduct(_client: Client, interaction: ChatInputCommandInteraction) {
     const shops = getShops()
-    if (!shops.size) return replyErrorMessage(interaction, `There isn't any shop with products, use \`/shops-manage create\` to create a new shop, and \`/products-manage add\` to add products`)
+    if (!shops.size) return replyErrorMessage(interaction, `There isn't any shop with products./n-# Use \`/shops-manage create\` to create a new shop, and \`/products-manage add\` to add products`)
 
     const subcommand = interaction.options.getSubcommand()
     if (!subcommand) return replyErrorMessage(interaction)
@@ -175,7 +126,7 @@ async function updateProduct(_client: Client, interaction: ChatInputCommandInter
             .setDisabled(true)
     )
 
-    await interaction.reply({ content: `Update product from **[Select Shop]**. New **${updateOption}**: **${updateOptionValue}**`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectShopMenu), submitButton], flags: MessageFlags.Ephemeral })
+    await interaction.reply({ content: `Update product from **[Select Shop]**. New **${updateOption}**: **${updateOptionValue}**`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectShopMenu), submitButton], flags: MessageFlags.Ephemeral })
 }
 
 function getUpdateOption(subcommand: string): string {

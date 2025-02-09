@@ -30,7 +30,7 @@ export class ShopCreateFlow extends UserFlow {
     }
 
     protected override getMessage(): string {
-        return `Create the shop **${this.shopName || 'No name specified'}** with the Currency **[${this.selectedCurrency?.name || 'No currency selected'}]**`
+        return `Create the shop **${this.shopName || 'No name specified'}** with the Currency **[${this.selectedCurrency?.name || 'No currency selected'}]**`
     }
 
     protected override initComponents(): void {
@@ -109,7 +109,7 @@ export class ShopCreateFlow extends UserFlow {
             
             await createShop(this.shopName, '', this.selectedCurrency.id)
 
-            await updateAsSuccessMessage(interaction, `You succesfully created the shop **${this.shopName}** with the currency **${this.selectedCurrency.name}**. \n-# Use \`/shops-manage remove\` to remove it`)
+            await updateAsSuccessMessage(interaction, `You succesfully created the shop **${this.shopName}** with the currency **${this.selectedCurrency.name}**. \n-# Use \`/shops-manage remove\` to remove it`)
 
         } catch (error) {
             await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
@@ -126,7 +126,7 @@ export class ShopRemoveFlow extends UserFlow {
 
     public override async start(interaction: ChatInputCommandInteraction) {
         const shops = getShops()
-        if (!shops.size) return replyErrorMessage(interaction, 'There isn\'t any shop, use `/shops-manage create` to create a new one')
+        if (!shops.size) return replyErrorMessage(interaction, 'There isn\'t any shop./n-# Use `/shops-manage create` to create a new one')
 
         this.initComponents()
         this.updateComponents()
@@ -153,7 +153,6 @@ export class ShopRemoveFlow extends UserFlow {
 
         const submitButton = new ExtendedButtonComponent(`${this.id}+submit`,
             new ButtonBuilder()
-                .setCustomId('submit-shop-remove')
                 .setLabel('Remove Shop')
                 .setEmoji({name: '⛔'})
                 .setStyle(ButtonStyle.Danger)

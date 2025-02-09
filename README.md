@@ -3,7 +3,7 @@
 ### Summary:
 - [Introduction](#introduction)
 - [How to use](#how-to-use)
-- [Commands](#commands)
+- [Documentation](#documentation)
 - [Screenshots](#screenshots)
 - [Road Map](#roadmap)
 ---
@@ -46,7 +46,6 @@ If you love the bot, feel free to support me:
 ---
 <br>
 Now, let's configure your bot, caution, you need to do it carefully
-
 
 <br>
 
@@ -104,77 +103,81 @@ npm run start
 All done ! You did it, your bot should be working perfectly ! 
 If you have any problem with it, feel free to message me on Discord, or open an [issue on Github](https://github.com/DragonJules/ShopBot/issues)
 
-<!-- ---
-## How to host
-
-**I will here present a way of hosting your bot, for free.** But if you have another solution to do it, feel free to use it. If you use another solution, just keep in mind that I used a local database, so for the bot to work, the infrastructure must let it change content of files (`data/accounts.json`, `data/currenies.json`, `data/shops.json`). Otherwise, you can change the database system.
-
-First, open the folder of your bot and select the following: <br>
-<img src="https://cdn.discordapp.com/attachments/828211235853434890/1115355676068294727/image.png" width="400px"/> <br>
-And zip them.
-
-<br>
-
-Then, join the [Discloud Server](https://discord.gg/rktxF6hgYg), follow server's instructions, and go to the commands channel: <br>
-<img src="https://cdn.discordapp.com/attachments/1109845198147702896/1109845264908427264/image.png" width="200px"/> <br>
-Send the command `.upc` in the channel and follow the instructions (you will be asked to join another channel and send the zip file)
-
-When it's done uploading, come back to the commands channel and send the command `.start`. Hopefully, the bot will start, if not, open an [issue on Github](https://github.com/DragonJules/ShopBot/issues)
-
-<br> -->
-
 ---
 
-## Commands
+## Documentation
 
-#### Here are all the commands available for the bot.
+### Here are all the commands available for the bot.
 
-**Commands for everyone:** <br>
+#### Commands for everyone:
 
-*• Shows the account*
-  `/account` <br>
+*• Show user's account*
+  `/account` <br>
  
-*• Displays the shops*
+*• Display the shops*
   `/shop` 
 
 <br>
 
-**Admin commands:**
+#### Admin commands:
 `/set-log-channel`
 
-*• Creation commands*
-    `/create-currency`
-    `/create-shop` 
-    `/add-product`
+*• Manage Currencies*
+```
+  /currencies-manage
+    | create <name>
+    | remove
+```
 
-*• Update commands*
-    `/update-product`
-    `/reorder-shops`
+*• Manage Shops*
+```
+  /shops-manage
+    | create <name>
+    | remove
+    | edit (not implemented yet)
+    | reorder
+```
 
-*• Remove commands*
-    `/remove-currency`
-    `/remove-shop`
-    `/remove-product`
+*• Manage products*
+```
+  /products-manage
+    | add <name> <price> <description>
+    | remove
+    | update <name/price/description> <new-value>
+```
 
-*• User management commands*
-    `/give`
-    `/take`
-    `/display-account`
+*• Manage users*
+```
+  /user-manage
+    | view-account <target>
+    | view-inventory <target>
+    | give <target> <amount>
+    | take <target> <amount>
+```
+
+#### How to use admin commands ?
+Commands that require selecting a specific Shop or Currency will prompt you to do so with a drop-down list after you executed the command.
+For example, when creating a shop (`/shops-manage create <name>`) you select the currency after sending the command, and then the shop is created.
+When you give some amount of any currency to a user, you first specify the amount and then select the currency. 
+When deleting any shop or currency, you also do select it after sending the command.
+
+This for you not to have to remember the name of each currency and shop to manage them.
+
+The use of those command is made as intuitive as possible using Discord's slash-commands and message components.
+If you encounter any issue with a command, you can open an [issue](https://github.com/DragonJules/ShopBot/issues).
 
 
 ## Screenshots 
 
-
-
-##### What members of the discord can see:
+### What members of the discord can see:
 Shop <br>
-<img src="./readme/assets/shop.png" height="320px"/>   <br>
+<img src="./readme/assets/shop.png" height="320px"/>   <br>
 Buy | Account <br>
-<img src="./readme/assets/buy.png" height="200px"/>   <img src="./readme/assets/account.png" height="200px"/>
+<img src="./readme/assets/buy.png" height="200px"/>   <img src="./readme/assets/account.png" height="200px"/>
 
 <br>
 
-##### Examples of what you as an administrator can see:
+### Examples of what you as an administrator can see:
 Create | Delete a currency: <br>
 <img src="./readme/assets/create-currency.png" height="120px"/> <img src="./readme/assets/remove-currency.png" height="120px"/> 
 

@@ -8,16 +8,6 @@ import { PrettyLog } from '../utils/pretty-log'
 import { replyErrorMessage } from '../utils/utils'
 import { ChatInputCommandInteraction } from 'discord.js'
 
-
-/**
- * What this should do:
- * 1. handle interactions of type:
- *     a. slash command
- *     b. modal
- *     c. string select menu
- * 
- */
-
 export const name = 'interactionCreate'
 
 export async function execute(interaction: BaseInteraction) {
@@ -28,21 +18,6 @@ export async function execute(interaction: BaseInteraction) {
 
     if (interaction.isChatInputCommand()) {
         handleSlashCommand(interaction)
-        return
-    }
-
-    if (interaction.isStringSelectMenu()) {
-        handleStringSelectMenu(interaction)
-        return
-    }
-
-    if (interaction.isModalSubmit()) {
-        handleModalSubmit(interaction)
-        return
-    }
-    
-    if (interaction.isButton()) {
-        handleButton(interaction)
         return
     }
 }
@@ -61,16 +36,4 @@ async function handleSlashCommand(interaction: ChatInputCommandInteraction) {
         
         await replyErrorMessage(interaction)
     }
-}
-
-function handleModalSubmit(interaction: ModalSubmitInteraction) {
-    
-}
-
-function handleStringSelectMenu(interaction: StringSelectMenuInteraction) {
-    
-}
-
-function handleButton(interaction: ButtonInteraction) {
-
 }
