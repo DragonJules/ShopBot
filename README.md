@@ -148,7 +148,7 @@ If you have any problem with it, feel free to message me on Discord, or open an 
 
 *• Manage users*
 ```
-  /user-manage
+  /accounts-manage
     | view-account <target>
     | view-inventory <target>
     | give <target> <amount>

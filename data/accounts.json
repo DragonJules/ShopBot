@@ -1,6 +1,14 @@
 {
     "628298729405022216": {
-        "currencies": [],
-        "inventory": []
+        "currencies": {
+            "d9997bc7-ce3b-491b-92de-cfa5afd7e955": {
+                "item": {
+                    "id": "d9997bc7-ce3b-491b-92de-cfa5afd7e955",
+                    "name": "Dollar"
+                },
+                "amount": 805
+            }
+        },
+        "inventory": {}
     }
 }

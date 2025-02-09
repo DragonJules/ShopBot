@@ -1,6 +1,7 @@
-import { ActionRowBuilder, ChatInputCommandInteraction, ButtonBuilder, StringSelectMenuOptionBuilder, StringSelectMenuBuilder, ComponentType, InteractionCallbackResponse, MessageComponentType, MessageComponentInteraction, ReadonlyCollection, StringSelectMenuInteraction, ButtonInteraction, ModalSubmitInteraction, InteractionCollector } from "discord.js";
+import { ActionRowBuilder, ChatInputCommandInteraction, ButtonBuilder, StringSelectMenuOptionBuilder, StringSelectMenuBuilder, ComponentType, InteractionCallbackResponse, MessageComponentType, MessageComponentInteraction, ReadonlyCollection, StringSelectMenuInteraction, ButtonInteraction, ModalSubmitInteraction, InteractionCollector, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import { Currency, Product, Shop } from "../database/database-types";
 import { getCurrencies } from "../database/database-handler";
+import { replyErrorMessage, updateAsErrorMessage } from "../utils/utils";
 
 export type UserFlowInteraction = ChatInputCommandInteraction | MessageComponentInteraction | ModalSubmitInteraction
 export type UserFlowComponentBuilder = ButtonBuilder | StringSelectMenuBuilder
@@ -41,11 +42,22 @@ export abstract class UserFlow {
 
     protected async updateInteraction(interaction: UserFlowInteraction) {
         this.updateComponents()
-        if (interaction.isMessageComponent() || (interaction.isModalSubmit() && interaction.isFromMessage())) {
-            interaction.update({ content: this.getMessage(), components: this.getComponentRows() })
-            return
+        if (interaction.deferred) return await interaction.editReply({ content: this.getMessage(), components: this.getComponentRows() })
+
+        try {
+            if (interaction.isMessageComponent() || (interaction.isModalSubmit() && interaction.isFromMessage())) {
+                interaction.update({ content: this.getMessage(), components: this.getComponentRows() })
+                return
+            }
+            interaction.editReply({ content: this.getMessage(), components: this.getComponentRows() })
+        } catch (error) {
+            if (interaction.replied) {
+                updateAsErrorMessage(interaction)
+            }
+            else {
+                replyErrorMessage(interaction)
+            }
         }
-        interaction.editReply({ content: this.getMessage(), components: this.getComponentRows() })
     }
 
     protected createComponentsCollectors(response: InteractionCallbackResponse): void {
@@ -57,6 +69,12 @@ export abstract class UserFlow {
     protected destroyComponentsCollectors(): void {
         this.components.forEach((component) => {
             component.destroyCollector()
+        })
+    }
+
+    protected disableComponents(): void {
+        this.components.forEach((component) => {
+            component.toggle(false)
         })
     }
 
@@ -96,6 +114,11 @@ export abstract class ExtendedComponent {
     getComponent(): UserFlowComponentBuilder {
         return this.component
     }
+
+    toggle(enabled?: boolean) {
+        if (enabled == undefined) enabled = !this.component.data.disabled
+        this.component.setDisabled(!enabled)
+    }
 } 
 
 export class ExtendedButtonComponent extends ExtendedComponent {
@@ -119,11 +142,6 @@ export class ExtendedButtonComponent extends ExtendedComponent {
     }
 
     onEnd(collected: ReadonlyCollection<string, MessageComponentInteraction>): void {}
-
-    toggle(enabled?: boolean) {
-        if (enabled == undefined) enabled = !this.component.data.disabled
-        this.component.setDisabled(!enabled)
-    }
 }
 
 export class ExtendedStringSelectMenuComponent<T extends Currency | Shop | Product> extends ExtendedComponent {
@@ -180,4 +198,31 @@ export class ExtendedStringSelectMenuComponent<T extends Currency | Shop | Produ
         this.map = map
         this.component.setOptions(this.getStringSelectOptions(map))
     }
+}
+
+export async function showConfirmationModal(interaction: MessageComponentInteraction | ChatInputCommandInteraction): Promise<[ModalSubmitInteraction, boolean]> {
+    const modalId = 'confirmation-modal'
+
+    const modal = new ModalBuilder()
+        .setCustomId(modalId)
+        .setTitle('⚠️ Are you sure?')
+
+    const confirmationInput = new TextInputBuilder()
+        .setCustomId('confirm-empty-input')
+        .setLabel('This action can\'t be undone')
+        .setPlaceholder('Enter \'Yes\' to confirm')
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true)
+
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(confirmationInput))
+
+    await interaction.showModal(modal)
+
+    const filter = (interaction: ModalSubmitInteraction) => interaction.customId === modalId;
+    const modalSubmit = await interaction.awaitModalSubmit({ filter, time: 120_000 })
+    
+    if (!modalSubmit.isFromMessage()) return [modalSubmit, false]
+    await modalSubmit.deferUpdate()
+
+    return [modalSubmit, modalSubmit.fields.getTextInputValue('confirm-empty-input').toLowerCase().substring(0, 3) == 'yes']
 }

@@ -19,7 +19,7 @@ export async function execute(_client: Client, interaction: ChatInputCommandInte
         .setColor('Gold')
         .setFooter({ text: 'ShopBot', iconURL: interaction.client.user.displayAvatarURL()})
 
-    if (userAccount.currencies.length) {       
+    if (userAccount.currencies.size) {       
         userAccount.currencies.forEach(currency => {
             accountEmbed.addFields({name: currency.amount.toString(), value: currency.item.name, inline: true})
         })

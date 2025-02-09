@@ -38,7 +38,7 @@ export async function getOrCreateAccount(id: Snowflake): Promise<Account> {
     let account = accountsDatabase.accounts.get(id)
 
     if (!account) {
-        accountsDatabase.accounts.set(id, { currencies: [], inventory: [] })
+        accountsDatabase.accounts.set(id, { currencies: new Map(), inventory: new Map() })
         await save(accountsDatabase)
         account = accountsDatabase.accounts.get(id)!
     }
@@ -51,10 +51,10 @@ export async function setAccountCurrencyAmount(id: Snowflake, currencyId: string
     
     if (!currenciesDatabase.currencies.has(currencyId)) throw new DatabaseError('Currency does not exist')
 
-    let currencyBalance = account.currencies.find(balance => balance.item.id === currencyId)
+    let currencyBalance = account.currencies.get(currencyId)
 
     if (!currencyBalance) {
-        account.currencies.push(
+        account.currencies.set(currencyId, 
             { 
                 item: { 
                     id: currencyId, 
@@ -70,13 +70,32 @@ export async function setAccountCurrencyAmount(id: Snowflake, currencyId: string
     await save(accountsDatabase)
 }
 
-export async function setAccountItemAmount(id: Snowflake, productId: string, amount: number) {
+export async function setAccountItemAmount(id: Snowflake, product: Product, amount: number) {
     const account = await getOrCreateAccount(id)
-    let productBalance = account.inventory.find(balance => balance.item.id === productId)
+    let productBalance = account.inventory.get(product.id)
 
-    if (!productBalance) return
+    if (!productBalance) {
+        account.inventory.set(product.id, 
+            { 
+                item: product, 
+                amount 
+            }
+        )
+    }
+    else {
+        productBalance.amount = amount
+    }
 
-    productBalance.amount = amount
+    await save(accountsDatabase)
+}
+
+export async function emptyAccount(id: Snowflake, empty: 'currencies' | 'inventory' | 'all') {
+    const account = accountsDatabase.accounts.get(id)
+    if (!account) throw new DatabaseError('Account does not exist')
+
+    if (empty === 'currencies' || empty === 'all') account.currencies.clear()
+    if (empty === 'inventory' || empty === 'all') account.inventory.clear()
+
     await save(accountsDatabase)
 }
 
@@ -171,7 +190,7 @@ export async function addProduct(shopId: string, options: ProductOptions) {
     const { name, description, price } = options
     const id = uuidv4()
 
-    shopsDatabase.shops.get(shopId)!.products.set(id, { id, name, description, price })
+    shopsDatabase.shops.get(shopId)!.products.set(id, { id, shopId, name, description, price })
     await save(shopsDatabase)
 }
 

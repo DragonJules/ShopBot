@@ -8,7 +8,8 @@ export async function replyErrorMessage(interaction: UserFlowInteraction, errorM
 export async function updateAsErrorMessage(interaction: UserFlowInteraction, errorMessage?: string) {
     const message = getErrorMessage(errorMessage)
 
-    if (interaction.isMessageComponent()) return await interaction.update({ content: message, components: [] })
+    if (interaction.deferred) return await interaction.editReply({ content: message, components: [] })
+    if (interaction.isMessageComponent() || (interaction.isModalSubmit() && interaction.isFromMessage())) return await interaction.update({ content: message, components: [] })
     return await interaction.editReply({ content: message, components: [] })
 }
 
@@ -19,7 +20,8 @@ export async function replySuccessMessage(interaction: UserFlowInteraction, succ
 export async function updateAsSuccessMessage(interaction: UserFlowInteraction, succesMessage: string) {
     const message = getSuccessMessage(succesMessage)
 
-    if (interaction.isMessageComponent()) return await interaction.update({ content: message, components: [] })
+    if (interaction.deferred) return await interaction.editReply({ content: message, components: [] })
+    if (interaction.isMessageComponent() || (interaction.isModalSubmit() && interaction.isFromMessage())) return await interaction.update({ content: message, components: [] })
     return await interaction.editReply({ content: message, components: [] })
 }
 

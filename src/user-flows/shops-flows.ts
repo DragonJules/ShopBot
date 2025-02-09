@@ -103,6 +103,8 @@ export class ShopCreateFlow extends UserFlow {
     }
 
     protected override async success(interaction: ButtonInteraction) {
+        this.disableComponents()
+
         try {
             if (!this.shopName) return updateAsErrorMessage(interaction, 'No shop name')
             if (!this.selectedCurrency) return updateAsErrorMessage(interaction, 'No selected currency')
@@ -174,6 +176,8 @@ export class ShopRemoveFlow extends UserFlow {
 
 
     protected override async success(interaction: ButtonInteraction) {
+        this.disableComponents()
+
         try {
             if (!this.selectedShop) return updateAsErrorMessage(interaction, 'No selected shop')
             

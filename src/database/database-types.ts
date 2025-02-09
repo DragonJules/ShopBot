@@ -29,6 +29,7 @@ export interface Currency {
 
 export interface Product {
     id: string
+    shopId: string
     name: string
     description: string
     price: number
@@ -48,12 +49,15 @@ export interface Balance<Item> {
 }
 
 export interface Account {
-    currencies: Balance<Currency>[]
-    inventory: Balance<Product>[]
+    currencies: Map<string, Balance<Currency>>
+    inventory: Map<string, Balance<Product>>
 }
 
 export interface AccountsDatabaseJSONBody extends DatabaseJSONBody {
-    [userId: Snowflake]: Account
+    [userId: Snowflake]: {
+        currencies: {[currencyId: string]: Balance<Currency>},
+        inventory: {[productId: string]: Balance<Product>}
+    }
 }
 
 
@@ -67,12 +71,23 @@ export class AccountsDatabase extends Database {
     }
 
     public toJSON(): AccountsDatabaseJSONBody {
-        const accounts: AccountsDatabaseJSONBody = Object.fromEntries(this.accounts)
-        return accounts
+        const accountsJSON: AccountsDatabaseJSONBody = {}
+
+        this.accounts.forEach((account, userId) => {
+            accountsJSON[userId] = { currencies: Object.fromEntries(account.currencies), inventory: Object.fromEntries(account.inventory) }
+        })
+
+        return accountsJSON
     }
 
     protected parseRaw(databaseRaw: AccountsDatabaseJSONBody): Map<Snowflake, Account> {
-        return new Map(Object.entries(databaseRaw))
+        const accounts: Map<Snowflake, Account> = new Map()
+
+        for (const [userId, { currencies, inventory }] of Object.entries(databaseRaw)) {
+            accounts.set(userId, { currencies: new Map(Object.entries(currencies)), inventory: new Map(Object.entries(inventory)) })
+        }
+
+        return accounts
     }
 
 }

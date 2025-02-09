@@ -1,9 +1,10 @@
 import { SlashCommandBuilder, PermissionFlagsBits, Client, ChatInputCommandInteraction, EmbedBuilder, StringSelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from "discord.js"
 import { getCurrencies, getOrCreateAccount } from "../database/database-handler"
 import { replyErrorMessage } from "../utils/utils"
+import { AccountGiveFlow, AccountTakeFlow } from "../user-flows/accounts-flows"
 
 export const data = new SlashCommandBuilder()
-    .setName('user-manage') 
+    .setName('accounts-manage') 
     .setDescription('Manage your users')
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addSubcommand(subcommand => subcommand
@@ -56,8 +57,29 @@ export const data = new SlashCommandBuilder()
         )
     )
 
-export async function execute(_client: Client, interaction: ChatInputCommandInteraction) {
+export async function execute(client: Client, interaction: ChatInputCommandInteraction) {
     const subCommand = interaction.options.getSubcommand()
+
+    switch (subCommand) {
+        case 'view-account':
+            await viewAccount(client, interaction)
+            break
+        case 'view-inventory':
+            await viewInventory(client, interaction)
+            break
+        case 'give':
+            const accountGiveFlow = new AccountGiveFlow()
+            accountGiveFlow.start(interaction)    
+
+            break
+        case 'take':
+            const accountTakeFlow = new AccountTakeFlow()
+            accountTakeFlow.start(interaction)
+            
+            break
+        default:
+            return await replyErrorMessage(interaction)
+    }
 }
 
 async function viewAccount(_client: Client, interaction: ChatInputCommandInteraction) {
@@ -71,7 +93,7 @@ async function viewAccount(_client: Client, interaction: ChatInputCommandInterac
         .setColor('Gold')
         .setFooter({ text: 'ShopBot', iconURL: interaction.client.user.displayAvatarURL()})
 
-    if (userAccount.currencies.length) {       
+    if (userAccount.currencies.size) {       
         userAccount.currencies.forEach(currency => {
             accountEmbed.addFields({name: currency.amount.toString(), value: currency.item.name, inline: true})
         })
@@ -85,82 +107,4 @@ async function viewAccount(_client: Client, interaction: ChatInputCommandInterac
 
 async function viewInventory(_client: Client, interaction: ChatInputCommandInteraction) {
 
-}
-
-async function giveMoney(_client: Client, interaction: ChatInputCommandInteraction) {
-    const currencies = getCurrencies()
-    if (!currencies.size) return replyErrorMessage(interaction, 'There isn\'t any currency, so you can\'t give money./n-# Use `/currencies-manage create` to create a new currency')
-
-    const target = interaction.options.getUser('target')
-    const amount = interaction.options.getInteger('amount')
-
-    if (!target || !amount) return replyErrorMessage(interaction)
-
-    const selectCurrencyMenu = new StringSelectMenuBuilder()
-        .setCustomId('select-currency')
-        .setPlaceholder('Select a currency')
-    
-    currencies.forEach(currency => {
-        selectCurrencyMenu.addOptions({
-            label: currency.name.removeCustomEmojis().ellipsis(100),
-            value: currency.id
-        })
-    })
-
-    const submitButton = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-            .setCustomId('submit-currency-give')
-            .setLabel('Submit')
-            .setEmoji('✅')
-            .setStyle(ButtonStyle.Success)
-            .setDisabled(true)
-    )
-
-
-    await interaction.reply({ content: `Give **${amount}** **[Select Currency]** to **${target}**`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectCurrencyMenu), submitButton], flags: MessageFlags.Ephemeral })
-    
-}
-
-async function takeMoney(_client: Client, interaction: ChatInputCommandInteraction) {
-    const currencies = getCurrencies()
-    if (!currencies.size) return replyErrorMessage(interaction, 'There isn\'t any currency, so you can\'t give money./n-# Use `/currencies-manage create` to create a new currency')
-
-    const target = interaction.options.getUser('target')
-    const amount = interaction.options.getInteger('amount')
-
-    if (!target || !amount) return replyErrorMessage(interaction)
-
-    const selectCurrencyMenu = new StringSelectMenuBuilder()
-        .setCustomId('select-currency')
-        .setPlaceholder('Select a currency')
-    
-    currencies.forEach(currency => {
-        selectCurrencyMenu.addOptions({
-            label: currency.name.removeCustomEmojis().ellipsis(100),
-            value: currency.id
-        })
-    })
-
-    const submitButton = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-            .setCustomId('submit-currency-take')
-            .setLabel('Submit')
-            .setEmoji('✅')
-            .setStyle(ButtonStyle.Success)
-            .setDisabled(true),
-
-        new ButtonBuilder()
-            .setCustomId('take-all-of-currency')
-            .setLabel('Take All Of Selected Currency')
-            .setStyle(ButtonStyle.Secondary),
-
-        new ButtonBuilder()
-            .setCustomId('empty-account')
-            .setLabel('Empty Account')
-            .setStyle(ButtonStyle.Danger)
-    )
-
-
-    await interaction.reply({ content: `Take **${amount}** **[Select Currency]** from **<@${target.id}>**'s account`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectCurrencyMenu), submitButton], flags: MessageFlags.Ephemeral })
-    
 }

@@ -239,6 +239,8 @@ export class RemoveProductFlow extends UserFlow {
     }
 
     protected async success(interaction: UserFlowInteraction) {
+        this.disableComponents()
+
         try {
             if (!this.selectedShop) return updateAsErrorMessage(interaction, 'No selected shop')
             if (!this.selectedProduct) return updateAsErrorMessage(interaction, 'No selected product')
@@ -416,6 +418,8 @@ export class UpdateProductFlow extends UserFlow {
     }
 
     protected async success(interaction: UserFlowInteraction) {
+        this.disableComponents()
+
         try {
             if (!this.selectedShop) return updateAsErrorMessage(interaction, 'No selected shop')
             if (!this.selectedProduct) return updateAsErrorMessage(interaction, 'No selected product')

@@ -1,6 +1,6 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, Message, MessageComponentInteraction, MessageFlags, StringSelectMenuBuilder, StringSelectMenuInteraction } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, Message, MessageComponentInteraction, MessageFlags, ModalSubmitInteraction, StringSelectMenuBuilder, StringSelectMenuInteraction } from "discord.js";
 import { Currency, DatabaseError } from "../database/database-types";
-import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent, UserFlow, UserFlowComponentBuilder, UserFlowInteraction } from "./user-flow";
+import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent, showConfirmationModal, UserFlow, UserFlowComponentBuilder, UserFlowInteraction } from "./user-flow";
 import { getCurrencies, removeCurrency } from "../database/database-handler";
 import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils";
 
@@ -41,7 +41,13 @@ export class CurrencyRemoveFlow extends UserFlow {
                 .setEmoji({name: '⛔'})
                 .setStyle(ButtonStyle.Danger)
                 .setDisabled(this.selectedCurrency == null),
-            (interaction) => this.success(interaction),
+            async (interaction: ButtonInteraction) => {
+                const [modalSubmitInteraction, confirmed] = await showConfirmationModal(interaction)
+                
+                if (confirmed) return this.success(modalSubmitInteraction)
+                
+                this.updateInteraction(modalSubmitInteraction)
+            },
             120_000
         )
 
@@ -60,11 +66,8 @@ export class CurrencyRemoveFlow extends UserFlow {
         submitButton.toggle(this.selectedCurrency != null) 
     }
 
-    protected async success(interaction: ButtonInteraction) {
-        const submitButton = this.components.get(`${this.id}+submit`)
-        if (!(submitButton instanceof ExtendedButtonComponent)) return
-
-        submitButton.toggle(false)
+    protected async success(interaction: ButtonInteraction | ModalSubmitInteraction) {
+        this.disableComponents()
 
         // TODO : take currency from accounts owning it
         // TODO : remove currency from shops using it
