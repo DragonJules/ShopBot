@@ -7,6 +7,9 @@
             "id": "d9997bc7-ce3b-491b-92de-cfa5afd7e955",
             "name": "Dollar"
         },
+        "discountCodes": {
+            "FUZE50": 50
+        },
         "products": {
             "20d038ab-7dab-4ced-85f2-c38a9076687a": {
                 "id": "20d038ab-7dab-4ced-85f2-c38a9076687a",
@@ -39,6 +42,7 @@
             "id": "d9997bc7-ce3b-491b-92de-cfa5afd7e955",
             "name": "Dollar"
         },
+        "discountCodes": {},
         "products": {
             "869a3fce-4d4a-4bf5-9a98-f704f73c2af8": {
                 "id": "869a3fce-4d4a-4bf5-9a98-f704f73c2af8",

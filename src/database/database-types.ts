@@ -121,6 +121,7 @@ export interface Shop {
     name: string
     description: string
     currency: Currency
+    discountCodes: {[code: string]: number}
     products: Map<string, Product>
 }
 

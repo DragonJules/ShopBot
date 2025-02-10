@@ -145,6 +145,7 @@ export async function createShop(shopName: string, description: string, currency
         name: shopName, 
         description,
         currency: currenciesDatabase.currencies.get(currencyId)!,
+        discountCodes: {},
         products: new Map()
     })
 
@@ -171,6 +172,21 @@ export async function updateShopDescription(shopId: string, description: string)
     shopsDatabase.shops.get(shopId)!.description = description
     await save(shopsDatabase)
 }
+
+export async function createDiscountCode(shopId: string, discountCode: string, discountAmount: number) {
+    if (!shopsDatabase.shops.has(shopId)) throw new DatabaseError('Shop does not exist')
+
+    shopsDatabase.shops.get(shopId)!.discountCodes[discountCode] = discountAmount
+    await save(shopsDatabase)
+}
+
+export async function removeDiscountCode(shopId: string, discountCode: string) {
+    if (!shopsDatabase.shops.has(shopId)) throw new DatabaseError('Shop does not exist')
+
+    delete shopsDatabase.shops.get(shopId)!.discountCodes[discountCode]
+    await save(shopsDatabase)
+}
+
 
 export async function addProduct(shopId: string, options: ProductOptions) {
     if (!shopsDatabase.shops.has(shopId)) throw new DatabaseError('Shop does not exist')

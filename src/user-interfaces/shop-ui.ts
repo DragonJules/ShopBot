@@ -1,4 +1,4 @@
-import { APIEmbed, APIEmbedField, ButtonBuilder, ButtonInteraction, ButtonStyle, Colors, EmbedBuilder, InteractionCallbackResponse, MessageFlags, StringSelectMenuInteraction } from "discord.js";
+import { ActionRowBuilder, APIEmbed, APIEmbedField, ButtonBuilder, ButtonInteraction, ButtonStyle, Colors, EmbedBuilder, InteractionCallbackResponse, MessageFlags, ModalBuilder, ModalSubmitInteraction, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from "discord.js";
 import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent } from "./extended-components";
 import { EmbedUserInterface, MessageUserInterface, UserInterfaceInteraction } from "./user-interfaces";
 import { getOrCreateAccount, getShops, setAccountCurrencyAmount, setAccountItemAmount } from "../database/database-handler";
@@ -219,6 +219,9 @@ export class BuyProductUserInterface extends MessageUserInterface {
     private selectedShop: Shop
     private selectedProduct: Product | null = null
 
+    private discountCode?: string = undefined
+    private discount: number = 0
+
     constructor (selectedShop: Shop) {
         super()
         this.selectedShop = selectedShop
@@ -235,7 +238,8 @@ export class BuyProductUserInterface extends MessageUserInterface {
     }
 
     protected override getMessage(): string {
-        return `Buy **[${this.selectedProduct?.name || 'Select Product'}]** from **${this.selectedShop.name}**`
+        const discountCodeString = this.discountCode ? `\nDiscount code: **${this.discountCode}**` : ''
+        return `Buy **[${this.selectedProduct?.name || 'Select Product'}]** from **${this.selectedShop.name}**.${discountCodeString}`
     }
 
     protected override initComponents(): void {
@@ -260,8 +264,19 @@ export class BuyProductUserInterface extends MessageUserInterface {
             120_000
         )
 
+        const discountCodeButton = new ExtendedButtonComponent(
+            `${this.id}+discount-code`,
+            new ButtonBuilder()
+                .setLabel('I have a discount code')
+                .setEmoji({name: '🎁'})
+                .setStyle(ButtonStyle.Secondary),
+            (interaction: ButtonInteraction) => this.handleSetDiscountCodeInteraction(interaction),
+            120_000
+        )
+
         this.components.set(selectProductMenu.customId, selectProductMenu)
         this.components.set(buyButton.customId, buyButton)
+        this.components.set(discountCodeButton.customId, discountCodeButton)
     }
 
     protected override updateComponents(): void {
@@ -271,22 +286,60 @@ export class BuyProductUserInterface extends MessageUserInterface {
         }
     }
 
+    private async handleSetDiscountCodeInteraction(interaction: ButtonInteraction) {
+        const modalId = `${this.id}+set-discount-code-modal`
+
+        const modal = new ModalBuilder()
+            .setCustomId(modalId)
+            .setTitle('Set Discount Code')
+        
+        const discountCodeInput = new TextInputBuilder()
+            .setCustomId('discount-code-input')
+            .setLabel('Discount Code')
+            .setPlaceholder('XXXXXXX')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(true)
+            .setMaxLength(8)
+            .setMinLength(6)
+
+        modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(discountCodeInput))
+
+        await interaction.showModal(modal)
+
+        const filter = (interaction: ModalSubmitInteraction) => interaction.customId === modalId;
+        const modalSubmit = await interaction.awaitModalSubmit({ filter, time: 120_000 })
+        
+        const input = modalSubmit.fields.getTextInputValue('discount-code-input')
+        if (!input) return this.updateInteraction(modalSubmit)
+
+        const shopDiscountCodes = this.selectedShop.discountCodes
+        if (!shopDiscountCodes[input]) return this.updateInteraction(modalSubmit)
+
+        this.discountCode = input
+        this.discount = shopDiscountCodes[input]
+        this.updateInteraction(modalSubmit)
+    }
+
     private async buyProduct(interaction: UserInterfaceInteraction) {
         if (!this.selectedProduct) return
         try {
             const user = await getOrCreateAccount(interaction.user.id)
             
             const userCurrencyAmount = user.currencies.get(this.selectedShop.currency.id)?.amount || 0
-            if (userCurrencyAmount < this.selectedProduct.price) return replyErrorMessage(interaction, `You don\'t have enough ${this.selectedShop.currency.name} to buy this product`)
+            const price = this.selectedProduct.price * (1 - this.discount / 100)
+
+            if (userCurrencyAmount < price) return replyErrorMessage(interaction, `You don\'t have enough ${this.selectedShop.currency.name} to buy this product`)
             
-            setAccountCurrencyAmount(interaction.user.id, this.selectedShop.currency.id, userCurrencyAmount - this.selectedProduct.price)
+            setAccountCurrencyAmount(interaction.user.id, this.selectedShop.currency.id, userCurrencyAmount - price)
 
             const productCurrencyAmount = user.inventory.get(this.selectedProduct.id)?.amount || 0
             setAccountItemAmount(interaction.user.id, this.selectedProduct, productCurrencyAmount + 1)
 
-            await updateAsSuccessMessage(interaction, `You succesfully bought **${this.selectedProduct.name}** in **${this.selectedShop.name}**`)
+            const priceString = (this.discount == 0) ? `**${price} ${this.selectedShop.currency.name}**` : `~~${this.selectedProduct.price}~~ **${price} ${this.selectedShop.currency.name}**`
 
-            logToDiscord(interaction, `${interaction.member} purchased **${this.selectedProduct.name}** from **${this.selectedShop.name}** for **${this.selectedProduct.price} ${this.selectedShop.currency.name}**`)
+            await updateAsSuccessMessage(interaction, `You succesfully bought **${this.selectedProduct.name}** in **${this.selectedShop.name}** for ${priceString}`)
+
+            logToDiscord(interaction, `${interaction.member} purchased **${this.selectedProduct.name}** from **${this.selectedShop.name}** for ${priceString}** with discount code ${this.discountCode ? this.discountCode : 'none'}`)
         } catch (error) {
             await replyErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
         }

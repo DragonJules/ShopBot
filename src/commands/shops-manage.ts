@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, PermissionFlagsBits, Client, ChatInputCommandInteraction, StringSelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from "discord.js"
 import { getCurrencies, getShops } from "../database/database-handler"
 import { replyErrorMessage } from "../utils/utils"
-import { ShopCreateFlow, ShopRemoveFlow, ShopUpdateFlow, ShopUpdateOption } from "../user-flows/shops-flows"
+import { DiscountCodeCreateFlow, DiscountCodeRemoveFlow, ShopCreateFlow, ShopRemoveFlow, ShopUpdateFlow, ShopUpdateOption } from "../user-flows/shops-flows"
 
 export const data = new SlashCommandBuilder()
     .setName('shops-manage') 
@@ -32,32 +32,53 @@ export const data = new SlashCommandBuilder()
         .setDescription('Reorder shops')
     )
     .addSubcommandGroup(subcommandgroup => subcommandgroup
-            .setName('edit')
-            .setDescription('Edit a shop')
-            .addSubcommand(subcommand => subcommand
-                .setName(ShopUpdateOption.NAME)
-                .setDescription('Change Name. You will select the shop later')
-                .addStringOption(option => option
-                    .setName('new-name')
-                    .setDescription('The new name of the shop')
-                    .setRequired(true)
-                    .setMaxLength(120)
-                    .setMinLength(1)
-                )
+        .setName('edit')
+        .setDescription('Edit a shop')
+        .addSubcommand(subcommand => subcommand
+            .setName(ShopUpdateOption.NAME)
+            .setDescription('Change Name. You will select the shop later')
+            .addStringOption(option => option
+                .setName('new-name')
+                .setDescription('The new name of the shop')
+                .setRequired(true)
+                .setMaxLength(120)
+                .setMinLength(1)
             )
-            .addSubcommand(subcommand => subcommand
-                .setName(ShopUpdateOption.DESCRIPTION)
-                .setDescription('Change Description. You will select the shop later')
-                .addStringOption(option => option
-                    .setName('new-description')
-                    .setRequired(true)
-                    .setDescription('The new description of the shop')
-                    .setMaxLength(512)
-                    .setMinLength(1)
-                )
-            )
-
         )
+        .addSubcommand(subcommand => subcommand
+            .setName(ShopUpdateOption.DESCRIPTION)
+            .setDescription('Change Description. You will select the shop later')
+            .addStringOption(option => option
+                .setName('new-description')
+                .setRequired(true)
+                .setDescription('The new description of the shop')
+                .setMaxLength(512)
+                .setMinLength(1)
+            )
+        )
+    )
+    .addSubcommand(subcommand => subcommand
+        .setName('create-discount-code')
+        .setDescription('Create a discount code')
+        .addStringOption(option => option
+            .setName('code')
+            .setDescription('The discount code')
+            .setRequired(true)
+            .setMaxLength(8)
+            .setMinLength(6)
+        )
+        .addIntegerOption(option => option
+            .setName('amount')
+            .setDescription('The amount of the discount (in %)')
+            .setRequired(true)
+            .setMaxValue(100)
+            .setMinValue(1)
+        )
+    )
+    .addSubcommand(subcommand => subcommand
+        .setName('remove-discount-code')
+        .setDescription('Remove a discount code')
+    )
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
 
 export async function execute(_client: Client, interaction: ChatInputCommandInteraction) {
@@ -74,6 +95,16 @@ export async function execute(_client: Client, interaction: ChatInputCommandInte
             removeShopFlow.start(interaction)
             break
         case 'reorder':
+            break
+        case 'create-discount-code':
+            const createDiscountCodeFlow = new DiscountCodeCreateFlow()
+            createDiscountCodeFlow.start(interaction)    
+
+            break
+        case 'remove-discount-code':
+            const removeDiscountCodeFlow = new DiscountCodeRemoveFlow()
+            removeDiscountCodeFlow.start(interaction)
+
             break
         default:
             if (subCommandGroup == 'edit') {

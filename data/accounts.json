@@ -6,7 +6,7 @@
                     "id": "d9997bc7-ce3b-491b-92de-cfa5afd7e955",
                     "name": "Dollar"
                 },
-                "amount": 100
+                "amount": 97.5
             }
         },
         "inventory": {
@@ -67,6 +67,16 @@
                     "name": "Super Expensive Quantum Physics book",
                     "description": "",
                     "price": 770
+                },
+                "amount": 1
+            },
+            "54940be1-3d10-4ea5-91b6-2e12cc02603a": {
+                "item": {
+                    "id": "54940be1-3d10-4ea5-91b6-2e12cc02603a",
+                    "shopId": "22b6f8dd-3ab7-41eb-9e99-6ba6370e8441",
+                    "name": "Between Past and Future",
+                    "description": "Hannah Arendt",
+                    "price": 5
                 },
                 "amount": 1
             }

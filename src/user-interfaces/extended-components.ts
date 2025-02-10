@@ -65,7 +65,7 @@ export class ExtendedButtonComponent extends ExtendedComponent {
     onEnd(collected: ReadonlyCollection<string, MessageComponentInteraction>): void {}
 }
 
-export class ExtendedStringSelectMenuComponent<T extends Currency | Shop | Product> extends ExtendedComponent {
+export class ExtendedStringSelectMenuComponent<T extends Currency | Shop | Product | string> extends ExtendedComponent {
     componentType = ComponentType.StringSelect
     customId: string
     component: StringSelectMenuBuilder
@@ -106,8 +106,10 @@ export class ExtendedStringSelectMenuComponent<T extends Currency | Shop | Produ
     private getStringSelectOptions(map: Map<string, T>): StringSelectMenuOptionBuilder[] {
         const options: StringSelectMenuOptionBuilder[] = []
         map.forEach((value, key) => {
+            const label = (typeof value === 'string') ? value : value.name.removeCustomEmojis().ellipsis(100)
+
             options.push(new StringSelectMenuOptionBuilder()
-                .setLabel(value.name.removeCustomEmojis().ellipsis(100))
+                .setLabel(label)
                 .setValue(key)
             )
         })

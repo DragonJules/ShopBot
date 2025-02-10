@@ -1,6 +1,6 @@
 # ShopBot 2
 
-### Summary:
+## Summary:
 - [Introduction](#introduction)
 - [How to use](#how-to-use)
 - [Documentation](#documentation)
@@ -195,7 +195,7 @@ Configuring bot's commands permissions: <br>
 I plan to refactor the whole code base to migrate it to typescript and make it easier to update.
 I will after that add the following features, some of which have been suggested by users :
 - ✅ Inventory system
-- Discount codes 
+- ✅ Discount codes 
 - ✅ Pagination system in shops
 - Custom emojis as currency name or ability to add an emoji in addition to currency name
 - ✅ New commands system, for easier use
