@@ -19,7 +19,7 @@ export const data = new SlashCommandBuilder()
     )
     .addSubcommand(subcommand => subcommand
         .setName('give')
-        .setDescription('Gives money to user')
+        .setDescription('Give money to target')
         .addUserOption(option => option
             .setName('target')
             .setDescription('The user you want to give money')
@@ -35,7 +35,7 @@ export const data = new SlashCommandBuilder()
     )
     .addSubcommand(subcommand => subcommand
         .setName('take')
-        .setDescription('Takes money from the user\'s inventory')
+        .setDescription('Take money from target')
         .addUserOption(option => option
             .setName('target')
             .setDescription('The user you want to take money')

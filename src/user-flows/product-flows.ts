@@ -262,7 +262,7 @@ enum UpdateProductFlowStage {
     SELECT_PRODUCT
 }
 
-export enum UpdateOption {
+export enum ProductUpdateOption {
     NAME = 'name',
     DESCRIPTION = 'description',
     PRICE = 'price'
@@ -275,7 +275,7 @@ export class UpdateProductFlow extends UserFlow {
     private stage: UpdateProductFlowStage = UpdateProductFlowStage.SELECT_SHOP
     private componentsByStage: Map<UpdateProductFlowStage, Map<string, ExtendedComponent>> = new Map()
 
-    private updateOption: UpdateOption | null = null
+    private updateOption: ProductUpdateOption | null = null
     private updateOptionValue: string | null = null
 
     private selectedShop: Shop | null = null
@@ -288,11 +288,10 @@ export class UpdateProductFlow extends UserFlow {
         if (!shops.size) return replyErrorMessage(interaction, `There isn't any shop with products./n-# Use \`/shops-manage create\` to create a new shop, and \`/products-manage add\` to add products`)
 
         const subcommand = interaction.options.getSubcommand()
-        if (!subcommand || Object.values(UpdateOption).indexOf(subcommand as UpdateOption) == -1) return replyErrorMessage(interaction, 'Unknown subcommand')
-        this.updateOption = subcommand as UpdateOption
+        if (!subcommand || Object.values(ProductUpdateOption).indexOf(subcommand as ProductUpdateOption) == -1) return replyErrorMessage(interaction, 'Unknown subcommand')
+        this.updateOption = subcommand as ProductUpdateOption
 
         this.updateOptionValue = this.getUpdateValue(interaction, subcommand)
-
 
         this.initComponents()
         this.updateComponents()
@@ -427,11 +426,13 @@ export class UpdateProductFlow extends UserFlow {
             if (!this.updateOption || !this.updateOptionValue) return updateAsErrorMessage(interaction, 'No selected update option')
             
             const updateOption: Record<string, string | number> = {}
-            updateOption[this.updateOption.toString()] = (this.updateOption == UpdateOption.PRICE) ? Number(this.updateOptionValue) : this.updateOptionValue
+            updateOption[this.updateOption.toString()] = (this.updateOption == ProductUpdateOption.PRICE) ? Number(this.updateOptionValue) : this.updateOptionValue
+
+            const oldName = this.selectedProduct.name
 
             await updateProduct(this.selectedShop.id, this.selectedProduct.id, updateOption)
 
-            await updateAsSuccessMessage(interaction, `You succesfully updated the product **${this.selectedProduct.name}** from the shop **${this.selectedShop.name}**`)
+            await updateAsSuccessMessage(interaction, `You succesfully updated the product **${oldName}** from the shop **${this.selectedShop.name}**. \nNew **${this.updateOption}**: **${this.updateOptionValue}**`)
 
         } catch (error) {
             await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
@@ -441,11 +442,11 @@ export class UpdateProductFlow extends UserFlow {
 
     private getUpdateValue(interaction: ChatInputCommandInteraction, subcommand: string): string {
         switch (subcommand) {
-            case UpdateOption.NAME:
+            case ProductUpdateOption.NAME:
                 return interaction.options.getString('new-name')?.replaceNonBreakableSpace() || ''
-            case UpdateOption.DESCRIPTION:
+            case ProductUpdateOption.DESCRIPTION:
                 return interaction.options.getString('new-description')?.replaceNonBreakableSpace() || ''
-            case UpdateOption.PRICE:
+            case ProductUpdateOption.PRICE:
                 return`${interaction.options.getNumber('new-price')?.toFixed(2) || ''}`
             default:
                 return ''

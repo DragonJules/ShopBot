@@ -5,7 +5,7 @@ import config from '../../config/config.json'
 
 const data = new SlashCommandBuilder()
     .setName('set-log-channel')
-    .setDescription('Sets (or changes) the channel in which logs are sent')
+    .setDescription('Set (or edit) the channel in which logs are sent')
     .addChannelOption(option => option
         .setName('channel')
         .setDescription('The log channel')

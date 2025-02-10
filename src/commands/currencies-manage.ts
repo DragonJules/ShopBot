@@ -9,7 +9,7 @@ export const data = new SlashCommandBuilder()
     .setDescription('Manage your currencies')
     .addSubcommand(subcommand => subcommand
         .setName('create')
-        .setDescription('Creates a new Currency')
+        .setDescription('Create a new currency')
         .addStringOption(option => option
             .setName('name')
             .setDescription('The name of the currency')
@@ -20,7 +20,7 @@ export const data = new SlashCommandBuilder()
     )
     .addSubcommand(subcommand => subcommand
         .setName('remove')
-        .setDescription('Removes the Selected Shop')
+        .setDescription('Remove the selected currency')
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     

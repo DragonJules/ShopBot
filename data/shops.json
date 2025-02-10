@@ -1,8 +1,8 @@
 {
     "22b6f8dd-3ab7-41eb-9e99-6ba6370e8441": {
         "id": "22b6f8dd-3ab7-41eb-9e99-6ba6370e8441",
-        "name": "Library",
-        "description": "Here you can buy books of all types",
+        "name": "Bookshop",
+        "description": "The small bookshop in the downtown. Here you can buy and read books of all types.",
         "currency": {
             "id": "d9997bc7-ce3b-491b-92de-cfa5afd7e955",
             "name": "Dollar"

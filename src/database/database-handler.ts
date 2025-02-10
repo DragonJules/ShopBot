@@ -21,18 +21,6 @@ const accountsDatabase = new AccountsDatabase(accounts, 'data/accounts.json')
 const currenciesDatabase = new CurrenciesDatabase(currencies, 'data/currencies.json')
 const shopsDatabase = new ShopsDatabase(shops, 'data/shops.json')
 
-/**
- * What this needs to handle :
- * ✅ 1. get and return account 
- * ✅ 2. create account
- * ✅ 3. update account (money and inv)
- * ✅ 4. create and remove currency
- * ✅ 5. create, update and remove product
- * ✅ 6. create and remove shop
- * 7. reorder shops
- * ✅ 8. get and return shops
- */
-
 
 export async function getOrCreateAccount(id: Snowflake): Promise<Account> {
     let account = accountsDatabase.accounts.get(id)

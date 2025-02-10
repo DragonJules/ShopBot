@@ -5,7 +5,7 @@ import { AccountUserInterface } from "../user-interfaces/account-ui"
 
 export const data = new SlashCommandBuilder()
     .setName('account')
-    .setDescription('Shows account')
+    .setDescription('Display your account')
 
 
 export async function execute(_client: Client, interaction: ChatInputCommandInteraction){

@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, PermissionFlagsBits, Client, ChatInputCommandInteraction, StringSelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from "discord.js"
 import { getCurrencies, getShops } from "../database/database-handler"
 import { replyErrorMessage } from "../utils/utils"
-import { ShopCreateFlow, ShopRemoveFlow } from "../user-flows/shops-flows"
+import { ShopCreateFlow, ShopRemoveFlow, ShopUpdateFlow, ShopUpdateOption } from "../user-flows/shops-flows"
 
 export const data = new SlashCommandBuilder()
     .setName('shops-manage') 
@@ -25,16 +25,44 @@ export const data = new SlashCommandBuilder()
     )
     .addSubcommand(subcommand => subcommand
         .setName('remove')
-        .setDescription('Removes the Selected Shop')
+        .setDescription('Remove the selected shop')
     )
     .addSubcommand(subcommand => subcommand
         .setName('reorder')
-        .setDescription('Allows you to reorder shops')
+        .setDescription('Reorder shops')
     )
+    .addSubcommandGroup(subcommandgroup => subcommandgroup
+            .setName('edit')
+            .setDescription('Edit a shop')
+            .addSubcommand(subcommand => subcommand
+                .setName(ShopUpdateOption.NAME)
+                .setDescription('Change Name. You will select the shop later')
+                .addStringOption(option => option
+                    .setName('new-name')
+                    .setDescription('The new name of the shop')
+                    .setRequired(true)
+                    .setMaxLength(120)
+                    .setMinLength(1)
+                )
+            )
+            .addSubcommand(subcommand => subcommand
+                .setName(ShopUpdateOption.DESCRIPTION)
+                .setDescription('Change Description. You will select the shop later')
+                .addStringOption(option => option
+                    .setName('new-description')
+                    .setRequired(true)
+                    .setDescription('The new description of the shop')
+                    .setMaxLength(512)
+                    .setMinLength(1)
+                )
+            )
+
+        )
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
 
 export async function execute(_client: Client, interaction: ChatInputCommandInteraction) {
     const subCommand = interaction.options.getSubcommand()
+    const subCommandGroup = interaction.options.getSubcommandGroup()
 
     switch (subCommand) {
         case 'create':
@@ -48,6 +76,12 @@ export async function execute(_client: Client, interaction: ChatInputCommandInte
         case 'reorder':
             break
         default:
+            if (subCommandGroup == 'edit') {
+                const editShopFlow = new ShopUpdateFlow()
+                editShopFlow.start(interaction)
+                break
+            }
+
             return await replyErrorMessage(interaction, 'Invalid subcommand')
     }
 

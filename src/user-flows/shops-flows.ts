@@ -1,5 +1,5 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, MessageFlags, ModalBuilder, ModalSubmitInteraction, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from "discord.js";
-import { createShop, getCurrencies, getShops, removeShop } from "../database/database-handler";
+import { createShop, getCurrencies, getShops, removeShop, updateShopDescription, updateShopName } from "../database/database-handler";
 import { Currency, DatabaseError, Shop } from "../database/database-types";
 import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent } from "../user-interfaces/extended-components";
 import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils";
@@ -189,6 +189,118 @@ export class ShopRemoveFlow extends UserFlow {
         catch (error) {
             await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
             return 
+        }
+    }
+}
+
+// TODO export class ShopReorderFlow extends UserFlow {}
+
+export enum ShopUpdateOption {
+    NAME = 'name',
+    DESCRIPTION = 'description'
+}
+
+export class ShopUpdateFlow extends UserFlow {
+    public override id: string = 'shop-update'
+    protected override components: Map<string, ExtendedComponent> = new Map()
+
+    private selectedShop: Shop | null = null
+
+    private updateOption: ShopUpdateOption | null = null
+    private updateOptionValue: string | null = null
+
+    public override async start(interaction: ChatInputCommandInteraction) {
+        const shops = getShops()
+        if (!shops.size) return replyErrorMessage(interaction, 'There isn\'t any shop./n-# Use `/shops-manage create` to create a new one')
+
+        const subcommand = interaction.options.getSubcommand()
+        if (!subcommand || Object.values(ShopUpdateOption).indexOf(subcommand as ShopUpdateOption) == -1) return replyErrorMessage(interaction, 'Unknown subcommand')
+        this.updateOption = subcommand as ShopUpdateOption
+
+        this.updateOptionValue = this.getUpdateValue(interaction, subcommand)
+
+        this.initComponents()
+        this.updateComponents()
+
+        const response = await interaction.reply({ content: this.getMessage(), components: this.getComponentRows(), flags: MessageFlags.Ephemeral, withResponse: true })
+        this.createComponentsCollectors(response)
+    }
+
+    protected override getMessage(): string {
+        return `Update **[${this.selectedShop?.name || 'Select Shop'}]**.\n**New ${this.updateOption}**: **${this.updateOptionValue}**`
+    }
+
+    protected override initComponents(): void {
+        const shopSelectMenu = new ExtendedStringSelectMenuComponent<Shop>(
+            `${this.id}+select-shop`,
+            'Select a shop',
+            getShops(),
+            (interaction: StringSelectMenuInteraction, selected: Shop): void => {
+                this.selectedShop = selected
+                this.updateInteraction(interaction)
+            },
+            120_000
+        )
+
+        const submitButton = new ExtendedButtonComponent(`${this.id}+submit`,
+            new ButtonBuilder()
+                .setLabel('Update Shop')
+                .setEmoji({name: '✅'})
+                .setStyle(ButtonStyle.Success)
+                .setDisabled(true),
+            (interaction: ButtonInteraction) => this.success(interaction),
+            120_000
+        )
+
+        this.components.set(shopSelectMenu.customId, shopSelectMenu)
+        this.components.set(submitButton.customId, submitButton)
+    }
+
+    protected override updateComponents(): void {
+        const submitButton = this.components.get(`${this.id}+submit`)
+        if (!(submitButton instanceof ExtendedButtonComponent)) return
+
+        submitButton.toggle(this.selectedShop != null)
+    }
+
+    protected override async success(interaction: ButtonInteraction) {
+        this.disableComponents()
+
+        try {
+            if (!this.selectedShop) return updateAsErrorMessage(interaction, 'No selected shop')
+            if (!this.updateOption || !this.updateOptionValue) return updateAsErrorMessage(interaction, 'No selected update option')
+            
+            const oldName = this.selectedShop.name
+
+            switch (this.updateOption) {
+                case ShopUpdateOption.NAME:
+                    await updateShopName(this.selectedShop.id, this.updateOptionValue)
+                    break
+                case ShopUpdateOption.DESCRIPTION:
+                    await updateShopDescription(this.selectedShop.id, this.updateOptionValue)
+                    break
+                default:
+                    await updateAsErrorMessage(interaction, 'Unknown update option')
+                    return
+            }
+
+            await updateAsSuccessMessage(interaction, `You succesfully updated the shop **${oldName}**.\n New **${this.updateOption}**: **${this.updateOptionValue}**`)
+        }
+        catch (error) {
+            await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
+            return 
+        }
+    }
+
+
+    private getUpdateValue(interaction: ChatInputCommandInteraction, subcommand: string): string {
+        switch (subcommand) {
+            case ShopUpdateOption.NAME:
+                return interaction.options.getString('new-name')?.replaceNonBreakableSpace() || ''
+            case ShopUpdateOption.DESCRIPTION:
+                return interaction.options.getString('new-description')?.replaceNonBreakableSpace() || ''
+            default:
+                return ''
         }
     }
 }

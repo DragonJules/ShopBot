@@ -1,14 +1,14 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, Client, MessageFlags, PermissionFlagsBits, SlashCommandBuilder, StringSelectMenuBuilder } from "discord.js"
 import { getShops } from "../database/database-handler"
 import { replyErrorMessage } from "../utils/utils"
-import { AddProductFlow, RemoveProductFlow, UpdateOption, UpdateProductFlow } from "../user-flows/product-flows"
+import { AddProductFlow, RemoveProductFlow, ProductUpdateOption, UpdateProductFlow } from "../user-flows/product-flows"
 
 export const data = new SlashCommandBuilder()
     .setName('products-manage') 
     .setDescription('Manage your products')
     .addSubcommand(subcommand => subcommand
         .setName('add')
-        .setDescription('Starts the product adding process')
+        .setDescription('Add a new product')
         .addStringOption(option => option
             .setName('name')
             .setDescription('The name of the product')
@@ -35,10 +35,10 @@ export const data = new SlashCommandBuilder()
         .setDescription('Remove a product')
     )
     .addSubcommandGroup(subcommandgroup => subcommandgroup
-        .setName('update')
-        .setDescription('Updates the product name')
+        .setName('edit')
+        .setDescription('Edit a product')
         .addSubcommand(subcommand => subcommand
-            .setName(UpdateOption.NAME)
+            .setName(ProductUpdateOption.NAME)
             .setDescription('Change Name. You will select the product later')
             .addStringOption(option => option
                 .setName('new-name')
@@ -49,7 +49,7 @@ export const data = new SlashCommandBuilder()
             )
         )
         .addSubcommand(subcommand => subcommand
-            .setName(UpdateOption.DESCRIPTION)
+            .setName(ProductUpdateOption.DESCRIPTION)
             .setDescription('Change Description. You will select the product later')
             .addStringOption(option => option
                 .setName('new-description')
@@ -60,7 +60,7 @@ export const data = new SlashCommandBuilder()
             )
         )
         .addSubcommand(subcommand => subcommand
-            .setName(UpdateOption.PRICE)
+            .setName(ProductUpdateOption.PRICE)
             .setDescription('Change Price. You will select the product later')
             .addNumberOption(option => option
                 .setName('new-price')

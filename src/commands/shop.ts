@@ -3,7 +3,7 @@ import { ShopUserInterface } from '../user-interfaces/shop-ui'
 
 export const data = new SlashCommandBuilder()
     .setName('shop')
-    .setDescription('Displays the shop and allows you to buy product')
+    .setDescription('Display shops and buy products')
 
 
 export async function execute(_client: Client, interaction: ChatInputCommandInteraction){
