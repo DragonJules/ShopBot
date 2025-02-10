@@ -10,10 +10,16 @@ export const data = new SlashCommandBuilder()
         .setName('create')
         .setDescription('Create a new Shop')
         .addStringOption(option => option
-            .setName('shop-name')
+            .setName('name')
             .setDescription('The name of the shop')
             .setRequired(true)
             .setMaxLength(120)
+            .setMinLength(1)
+        )
+        .addStringOption(option => option
+            .setName('description')
+            .setDescription('The description of the shop')
+            .setMaxLength(512)
             .setMinLength(1)
         )
     )
@@ -42,7 +48,7 @@ export async function execute(_client: Client, interaction: ChatInputCommandInte
         case 'reorder':
             break
         default:
-            return await replyErrorMessage(interaction)
+            return await replyErrorMessage(interaction, 'Invalid subcommand')
     }
 
 }

@@ -1,8 +1,10 @@
 import { ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, InteractionCallbackResponse, MessageFlags, StringSelectMenuInteraction } from "discord.js";
-import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent, UserFlow, UserFlowInteraction } from "./user-flow";
-import { DatabaseError, Product, Shop } from "../database/database-types";
 import { addProduct, getShops, removeProduct, updateProduct } from "../database/database-handler";
+import { DatabaseError, Product, Shop } from "../database/database-types";
+import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent } from "../user-interfaces/extended-components";
+import { UserInterfaceInteraction } from "../user-interfaces/user-interfaces";
 import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils";
+import { UserFlow } from "./user-flow";
 
 export class AddProductFlow extends UserFlow {
     public id = "add-product"
@@ -18,17 +20,16 @@ export class AddProductFlow extends UserFlow {
         const shops = getShops()
         if (!shops.size) return replyErrorMessage(interaction, 'There isn\'t any shop./n-# Use `/shops-manage create` to create a new one')
 
-        const productName = interaction.options.getString('product-name')?.replaceNonBreakableSpace()
-        const productDescription = interaction.options.getString('product-description')?.replaceNonBreakableSpace()
-        const productPrice = interaction.options.getInteger('product-price')
+        const productName = interaction.options.getString('name')?.replaceNonBreakableSpace()
+        const productDescription = interaction.options.getString('description')?.replaceNonBreakableSpace() || ''
+        const productPrice = interaction.options.getNumber('price')
 
-        if (!productName || !productPrice || !productDescription) return replyErrorMessage(interaction)
+        if (!productName || !productPrice) return replyErrorMessage(interaction, 'Insufficient parameters')
     
         if (productName.removeCustomEmojis().length == 0) return replyErrorMessage(interaction, 'The product name can\'t contain only custom emojis')
-        if (productDescription.removeCustomEmojis().length == 0) return replyErrorMessage(interaction, 'The product description can\'t contain only custom emojis')
         
         this.productName = productName
-        this.productPrice = productPrice
+        this.productPrice = +productPrice.toFixed(2)
         this.productDescription = productDescription
 
         this.initComponents()
@@ -76,7 +77,7 @@ export class AddProductFlow extends UserFlow {
         submitButton.toggle(this.selectedShop != null)
     }
 
-    protected async success(interaction: UserFlowInteraction) {
+    protected async success(interaction: UserInterfaceInteraction) {
         try {
             if (!this.selectedShop) return updateAsErrorMessage(interaction, 'No selected shop')
             if (!this.productName) return updateAsErrorMessage(interaction, 'No product name')
@@ -238,7 +239,7 @@ export class RemoveProductFlow extends UserFlow {
         this.createComponentsCollectors(this.response)
     }
 
-    protected async success(interaction: UserFlowInteraction) {
+    protected async success(interaction: UserInterfaceInteraction) {
         this.disableComponents()
 
         try {
@@ -417,7 +418,7 @@ export class UpdateProductFlow extends UserFlow {
         this.createComponentsCollectors(this.response)
     }
 
-    protected async success(interaction: UserFlowInteraction) {
+    protected async success(interaction: UserInterfaceInteraction) {
         this.disableComponents()
 
         try {
@@ -445,7 +446,7 @@ export class UpdateProductFlow extends UserFlow {
             case UpdateOption.DESCRIPTION:
                 return interaction.options.getString('new-description')?.replaceNonBreakableSpace() || ''
             case UpdateOption.PRICE:
-                return`${interaction.options.getInteger('new-price') || ''}`
+                return`${interaction.options.getNumber('new-price')?.toFixed(2) || ''}`
             default:
                 return ''
         }

@@ -13,10 +13,10 @@ export const data = new SlashCommandBuilder()
             .setName('name')
             .setDescription('The name of the product')
             .setRequired(true)
-            .setMaxLength(200)
+            .setMaxLength(160)
             .setMinLength(1)
         )
-        .addIntegerOption(option => option
+        .addNumberOption(option => option
             .setName('price')
             .setDescription('The price of the product')
             .setRequired(true)
@@ -26,7 +26,7 @@ export const data = new SlashCommandBuilder()
         .addStringOption(option => option
             .setName('description')
             .setDescription('The description of the product')
-            .setMaxLength(160)
+            .setMaxLength(450)
             .setMinLength(1)
         )
     )
@@ -44,7 +44,7 @@ export const data = new SlashCommandBuilder()
                 .setName('new-name')
                 .setDescription('The new name of the product')
                 .setRequired(true)
-                .setMaxLength(200)
+                .setMaxLength(160)
                 .setMinLength(1)
             )
         )
@@ -55,14 +55,14 @@ export const data = new SlashCommandBuilder()
                 .setName('new-description')
                 .setRequired(true)
                 .setDescription('The new description of the product')
-                .setMaxLength(160)
+                .setMaxLength(450)
                 .setMinLength(1)
             )
         )
         .addSubcommand(subcommand => subcommand
             .setName(UpdateOption.PRICE)
             .setDescription('Change Price. You will select the product later')
-            .addIntegerOption(option => option
+            .addNumberOption(option => option
                 .setName('new-price')
                 .setDescription('The new price of the product')
                 .setRequired(true)
@@ -95,6 +95,6 @@ export async function execute(_client: Client, interaction: ChatInputCommandInte
                 break
             }
             
-            return await replyErrorMessage(interaction)
+            return await replyErrorMessage(interaction, 'Invalid subcommand')
     }
 }

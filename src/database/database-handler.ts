@@ -60,11 +60,11 @@ export async function setAccountCurrencyAmount(id: Snowflake, currencyId: string
                     id: currencyId, 
                     name: getCurrencyName(currencyId)! 
                 }, 
-                amount 
+                amount: +amount.toFixed(2)
             }
         )
     } else {
-        currencyBalance.amount = amount
+        currencyBalance.amount = +amount.toFixed(2)
     }
 
     await save(accountsDatabase)

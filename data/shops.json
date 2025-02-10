@@ -13,7 +13,95 @@
                 "shopId": "22b6f8dd-3ab7-41eb-9e99-6ba6370e8441",
                 "name": "1984",
                 "description": "A splendid novel by George Orwell",
-                "price": 6
+                "price": 5.99
+            },
+            "54940be1-3d10-4ea5-91b6-2e12cc02603a": {
+                "id": "54940be1-3d10-4ea5-91b6-2e12cc02603a",
+                "shopId": "22b6f8dd-3ab7-41eb-9e99-6ba6370e8441",
+                "name": "Between Past and Future",
+                "description": "Hannah Arendt",
+                "price": 5
+            },
+            "b6329e22-a10c-4466-879a-90d732440f0e": {
+                "id": "b6329e22-a10c-4466-879a-90d732440f0e",
+                "shopId": "22b6f8dd-3ab7-41eb-9e99-6ba6370e8441",
+                "name": "Super Expensive Quantum Physics book",
+                "description": "",
+                "price": 770
+            }
+        }
+    },
+    "4783f4bf-da40-468d-94fd-3e80f659a76e": {
+        "id": "4783f4bf-da40-468d-94fd-3e80f659a76e",
+        "name": "Bakery",
+        "description": "The town's best bakery",
+        "currency": {
+            "id": "d9997bc7-ce3b-491b-92de-cfa5afd7e955",
+            "name": "Dollar"
+        },
+        "products": {
+            "869a3fce-4d4a-4bf5-9a98-f704f73c2af8": {
+                "id": "869a3fce-4d4a-4bf5-9a98-f704f73c2af8",
+                "shopId": "4783f4bf-da40-468d-94fd-3e80f659a76e",
+                "name": "Baguette",
+                "description": "A real authentic French Baguette",
+                "price": 0.9
+            },
+            "6749e140-3482-4dd2-95b2-528e8ae3165f": {
+                "id": "6749e140-3482-4dd2-95b2-528e8ae3165f",
+                "shopId": "4783f4bf-da40-468d-94fd-3e80f659a76e",
+                "name": "Basic Bread",
+                "description": "A quite basic piece of bread",
+                "price": 2
+            },
+            "1602844c-c798-495c-aa5c-e11e28f19a35": {
+                "id": "1602844c-c798-495c-aa5c-e11e28f19a35",
+                "shopId": "4783f4bf-da40-468d-94fd-3e80f659a76e",
+                "name": "CROISSANT",
+                "description": "A delicious tasting Croissant",
+                "price": 1.1
+            },
+            "d26c10f6-2214-40a4-934a-50724c016b0f": {
+                "id": "d26c10f6-2214-40a4-934a-50724c016b0f",
+                "shopId": "4783f4bf-da40-468d-94fd-3e80f659a76e",
+                "name": "Pain au chocolat",
+                "description": "(it's the only correct name)",
+                "price": 1.2
+            },
+            "b34faea0-cb8c-4fd1-b123-8c37fec471bb": {
+                "id": "b34faea0-cb8c-4fd1-b123-8c37fec471bb",
+                "shopId": "4783f4bf-da40-468d-94fd-3e80f659a76e",
+                "name": "Apple Pie",
+                "description": "",
+                "price": 4
+            },
+            "0ab67041-f719-484b-b8c0-c065c837afbe": {
+                "id": "0ab67041-f719-484b-b8c0-c065c837afbe",
+                "shopId": "4783f4bf-da40-468d-94fd-3e80f659a76e",
+                "name": "Strawberry Pie",
+                "description": "",
+                "price": 4
+            },
+            "2568e2db-be11-4f09-bdee-1186afebfbed": {
+                "id": "2568e2db-be11-4f09-bdee-1186afebfbed",
+                "shopId": "4783f4bf-da40-468d-94fd-3e80f659a76e",
+                "name": "Corn Bread",
+                "description": "This thing is delicious",
+                "price": 4
+            },
+            "5e24656f-d4c0-4134-b9e8-a39cbd5ae621": {
+                "id": "5e24656f-d4c0-4134-b9e8-a39cbd5ae621",
+                "shopId": "4783f4bf-da40-468d-94fd-3e80f659a76e",
+                "name": "Foccacia",
+                "description": "",
+                "price": 3
+            },
+            "39b7ad2e-5228-43fe-ad87-edcc3bd6ed76": {
+                "id": "39b7ad2e-5228-43fe-ad87-edcc3bd6ed76",
+                "shopId": "4783f4bf-da40-468d-94fd-3e80f659a76e",
+                "name": "Chouquettes (x12)",
+                "description": "",
+                "price": 2
             }
         }
     }

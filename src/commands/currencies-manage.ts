@@ -11,7 +11,7 @@ export const data = new SlashCommandBuilder()
         .setName('create')
         .setDescription('Creates a new Currency')
         .addStringOption(option => option
-            .setName('currency-name')
+            .setName('name')
             .setDescription('The name of the currency')
             .setRequired(true)
             .setMaxLength(40)
@@ -38,13 +38,13 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
 
             break 
         default:
-            return await replyErrorMessage(interaction)
+            return await replyErrorMessage(interaction, 'Invalid subcommand')
     }
 }
 
 export async function createCurrencyCommand(_client: Client, interaction: ChatInputCommandInteraction) {
-    const currencyName = interaction.options.getString('currency-name')?.replaceNonBreakableSpace()
-    if (currencyName == null) return replyErrorMessage(interaction)
+    const currencyName = interaction.options.getString('name')?.replaceNonBreakableSpace()
+    if (!currencyName) return replyErrorMessage(interaction, 'Insufficient parameters')
     
     try {
         if (currencyName.removeCustomEmojis().length == 0) return replyErrorMessage(interaction, 'The currency name can\'t contain only custom emojis')

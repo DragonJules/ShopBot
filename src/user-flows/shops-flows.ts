@@ -1,8 +1,9 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, MessageFlags, ModalBuilder, ModalSubmitInteraction, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from "discord.js";
-import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent, UserFlow, UserFlowInteraction } from "./user-flow";
 import { createShop, getCurrencies, getShops, removeShop } from "../database/database-handler";
-import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils";
 import { Currency, DatabaseError, Shop } from "../database/database-types";
+import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent } from "../user-interfaces/extended-components";
+import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils";
+import { UserFlow } from "./user-flow";
 
 export class ShopCreateFlow extends UserFlow {
     public id = 'shop-create'
@@ -15,8 +16,8 @@ export class ShopCreateFlow extends UserFlow {
         const currencies = getCurrencies()
         if (!currencies.size) return await replyErrorMessage(interaction, 'There isn\'t any currency, so you can\'t create a new shop.\n-# Use `/currencies-manage create` to create a new currency')
 
-        const shopName = interaction.options.getString('shop-name')?.replaceNonBreakableSpace()
-        if (shopName == null) return replyErrorMessage(interaction)
+        const shopName = interaction.options.getString('name')?.replaceNonBreakableSpace()
+        if (!shopName) return replyErrorMessage(interaction, 'Insufficient parameters')
 
         if (shopName.removeCustomEmojis().length == 0) return replyErrorMessage(interaction, 'The shop name can\'t contain only custom emojis')
 

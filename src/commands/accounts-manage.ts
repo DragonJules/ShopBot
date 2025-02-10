@@ -1,7 +1,8 @@
-import { SlashCommandBuilder, PermissionFlagsBits, Client, ChatInputCommandInteraction, EmbedBuilder, StringSelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from "discord.js"
+import { SlashCommandBuilder, PermissionFlagsBits, Client, ChatInputCommandInteraction, EmbedBuilder, StringSelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, Colors } from "discord.js"
 import { getCurrencies, getOrCreateAccount } from "../database/database-handler"
 import { replyErrorMessage } from "../utils/utils"
 import { AccountGiveFlow, AccountTakeFlow } from "../user-flows/accounts-flows"
+import { AccountUserInterface } from "../user-interfaces/account-ui"
 
 export const data = new SlashCommandBuilder()
     .setName('accounts-manage') 
@@ -13,15 +14,6 @@ export const data = new SlashCommandBuilder()
         .addUserOption(option => option
             .setName('target')
             .setDescription('The user you want to see the account of')
-            .setRequired(true)
-        )
-    )
-    .addSubcommand(subcommand => subcommand
-        .setName('view-inventory')
-        .setDescription('View user\'s inventory')
-        .addUserOption(option => option
-            .setName('target')
-            .setDescription('The user you want to see the inventory of')
             .setRequired(true)
         )
     )
@@ -62,10 +54,12 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
 
     switch (subCommand) {
         case 'view-account':
-            await viewAccount(client, interaction)
-            break
-        case 'view-inventory':
-            await viewInventory(client, interaction)
+            const user = interaction.options.getUser('target')
+            if (!user) return replyErrorMessage(interaction, 'Invalid user')
+    
+            const accountUI = new AccountUserInterface(user)
+            accountUI.display(interaction)
+            
             break
         case 'give':
             const accountGiveFlow = new AccountGiveFlow()
@@ -78,33 +72,6 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
             
             break
         default:
-            return await replyErrorMessage(interaction)
+            return await replyErrorMessage(interaction, 'Invalid subcommand')
     }
-}
-
-async function viewAccount(_client: Client, interaction: ChatInputCommandInteraction) {
-    const user = interaction.options.getUser('target')
-    if (!user) return replyErrorMessage(interaction)
-    
-    let userAccount = await getOrCreateAccount(user.id)
-    const accountEmbed = new EmbedBuilder()
-        .setTitle(`💰 _${user.tag}_'s Account`)
-        .setDescription(`${user}'s balance:`)
-        .setColor('Gold')
-        .setFooter({ text: 'ShopBot', iconURL: interaction.client.user.displayAvatarURL()})
-
-    if (userAccount.currencies.size) {       
-        userAccount.currencies.forEach(currency => {
-            accountEmbed.addFields({name: currency.amount.toString(), value: currency.item.name, inline: true})
-        })
-    }
-    else {
-        accountEmbed.addFields({name: '\u200b', value: `**  ** ***❌${user} doesn\'t have any money***\n** **`})
-    }
-
-    await interaction.reply({ content: `Here is ${user} account:`, embeds: [accountEmbed], flags: MessageFlags.Ephemeral })
-}
-
-async function viewInventory(_client: Client, interaction: ChatInputCommandInteraction) {
-
 }

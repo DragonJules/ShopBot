@@ -1,8 +1,9 @@
 import { ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, MessageFlags, StringSelectMenuInteraction, User } from "discord.js";
-import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent, showConfirmationModal, UserFlow } from "./user-flow";
 import { emptyAccount, getCurrencies, getOrCreateAccount, setAccountCurrencyAmount } from "../database/database-handler";
-import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils";
 import { Currency, DatabaseError } from "../database/database-types";
+import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent, showConfirmationModal } from "../user-interfaces/extended-components";
+import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils";
+import { UserFlow } from "./user-flow";
 
 export class AccountGiveFlow extends UserFlow {
     public id = 'account-give'
@@ -20,7 +21,7 @@ export class AccountGiveFlow extends UserFlow {
         const target = interaction.options.getUser('target')
         const amount = interaction.options.getInteger('amount')
     
-        if (!target || !amount) return replyErrorMessage(interaction)
+        if (!target || !amount) return replyErrorMessage(interaction, 'Insufficient parameters')
 
         this.target = target
         this.amount = amount
@@ -102,7 +103,7 @@ export class AccountTakeFlow extends UserFlow {
         const target = interaction.options.getUser('target')
         const amount = interaction.options.getInteger('amount')
     
-        if (!target || !amount) return replyErrorMessage(interaction)
+        if (!target || !amount) return replyErrorMessage(interaction, 'Insufficient parameters')
 
         this.target = target
         this.amount = amount
