@@ -134,8 +134,8 @@ If you have any problem with it, feel free to message me on Discord, or open an 
   /shops-manage
     | create <name>
     | remove
-    | edit (not implemented yet)
-    | reorder
+    | edit <name/description> <new-value>
+    | reorder *not implemented yet*
 ```
 
 *• Manage products*
@@ -143,14 +143,13 @@ If you have any problem with it, feel free to message me on Discord, or open an 
   /products-manage
     | add <name> <price> <description>
     | remove
-    | update <name/price/description> <new-value>
+    | edit <name/price/description> <new-value>
 ```
 
 *• Manage users*
 ```
   /accounts-manage
     | view-account <target>
-    | view-inventory <target>
     | give <target> <amount>
     | take <target> <amount>
 ```
