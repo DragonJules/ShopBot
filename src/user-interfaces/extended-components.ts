@@ -108,10 +108,13 @@ export class ExtendedStringSelectMenuComponent<T extends Currency | Shop | Produ
         map.forEach((value, key) => {
             const label = (typeof value === 'string') ? value : value.name.removeCustomEmojis().ellipsis(100)
 
-            options.push(new StringSelectMenuOptionBuilder()
+            const option = new StringSelectMenuOptionBuilder()
                 .setLabel(label)
                 .setValue(key)
-            )
+
+            if (typeof value !== 'string' && value.emoji != '') option.setEmoji(value.emoji)
+
+            options.push(option)
         })
         
         return options
@@ -141,11 +144,41 @@ export async function showConfirmationModal(interaction: MessageComponentInterac
 
     await interaction.showModal(modal)
 
-    const filter = (interaction: ModalSubmitInteraction) => interaction.customId === modalId;
+    const filter = (interaction: ModalSubmitInteraction) => interaction.customId === modalId
     const modalSubmit = await interaction.awaitModalSubmit({ filter, time: 120_000 })
     
     if (!modalSubmit.isFromMessage()) return [modalSubmit, false]
     await modalSubmit.deferUpdate()
 
     return [modalSubmit, modalSubmit.fields.getTextInputValue('confirm-empty-input').toLowerCase().substring(0, 3) == 'yes']
+}
+
+export async function showEditModal(interaction: MessageComponentInteraction | ChatInputCommandInteraction, edit: string, previousValue?: string): Promise<[ModalSubmitInteraction, string]> {
+    const editNormalized = `${edit.toLocaleLowerCase().replaceSpaces('-')}`
+    const modalId = `edit-${editNormalized}-modal`
+
+    const modal = new ModalBuilder()
+        .setCustomId(modalId)
+        .setTitle('Change Shop Name')
+    
+    const input = new TextInputBuilder()
+        .setCustomId(`${editNormalized}-input`)
+        .setLabel(`New ${edit}`)
+        .setPlaceholder(previousValue || edit)
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true)
+        .setMaxLength(120)
+        .setMinLength(1)
+
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(input))
+
+    await interaction.showModal(modal)
+
+    const filter = (interaction: ModalSubmitInteraction) => interaction.customId === modalId
+    const modalSubmit = await interaction.awaitModalSubmit({ filter, time: 120_000 })
+    
+    if (!modalSubmit.isFromMessage()) return [modalSubmit, '']
+    await modalSubmit.deferUpdate()
+
+    return [modalSubmit, modalSubmit.fields.getTextInputValue(`${editNormalized}-input`)]
 }

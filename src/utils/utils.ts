@@ -30,7 +30,8 @@ export async function updateAsSuccessMessage(interaction: UserInterfaceInteracti
 
 
 
-function getErrorMessage(errorMessage?: string) {return `❌ ${errorMessage ? errorMessage : 'An error occured while executing this command, please try again later'}`
+function getErrorMessage(errorMessage?: string) {
+    return `❌ ${errorMessage ? errorMessage : 'An error occured while executing this command, please try again later'}`
 }
 
 function getSuccessMessage(succesMessage: string) {

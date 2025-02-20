@@ -13,7 +13,7 @@ export const data = new SlashCommandBuilder()
             .setName('name')
             .setDescription('The name of the product')
             .setRequired(true)
-            .setMaxLength(160)
+            .setMaxLength(70)
             .setMinLength(1)
         )
         .addNumberOption(option => option
@@ -26,8 +26,13 @@ export const data = new SlashCommandBuilder()
         .addStringOption(option => option
             .setName('description')
             .setDescription('The description of the product')
-            .setMaxLength(450)
+            .setMaxLength(300)
             .setMinLength(1)
+        )
+        .addStringOption(option => option
+            .setName('emoji')
+            .setDescription('The emoji of the currency')
+            .setRequired(false)
         )
     )
     .addSubcommand(subcommand => subcommand
@@ -44,7 +49,7 @@ export const data = new SlashCommandBuilder()
                 .setName('new-name')
                 .setDescription('The new name of the product')
                 .setRequired(true)
-                .setMaxLength(160)
+                .setMaxLength(70)
                 .setMinLength(1)
             )
         )
@@ -55,7 +60,7 @@ export const data = new SlashCommandBuilder()
                 .setName('new-description')
                 .setRequired(true)
                 .setDescription('The new description of the product')
-                .setMaxLength(450)
+                .setMaxLength(300)
                 .setMinLength(1)
             )
         )
@@ -68,6 +73,15 @@ export const data = new SlashCommandBuilder()
                 .setRequired(true)
                 .setMaxValue(99999999)
                 .setMinValue(0)
+            )
+        )
+        .addSubcommand(subcommand => subcommand
+            .setName(ProductUpdateOption.EMOJI)
+            .setDescription('Change Emoji. You will select the product later')
+            .addStringOption(option => option
+                .setName('new-emoji')
+                .setDescription('The new emoji of the product (if you just want to remove it write anything)')
+                .setRequired(true)
             )
         )
     )
@@ -88,7 +102,7 @@ export async function execute(_client: Client, interaction: ChatInputCommandInte
 
             break
         default:
-            if (subCommandGroup == 'update') {
+            if (subCommandGroup == 'edit') {
                 const updateProductFlow = new UpdateProductFlow()
                 updateProductFlow.start(interaction)
                 

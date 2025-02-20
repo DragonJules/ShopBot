@@ -1,9 +1,9 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, InteractionCallbackResponse, MessageFlags, ModalBuilder, ModalSubmitInteraction, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from "discord.js";
-import { createDiscountCode, createShop, getCurrencies, getShops, removeDiscountCode, removeShop, updateShopDescription, updateShopName } from "../database/database-handler";
-import { Currency, DatabaseError, Shop } from "../database/database-types";
-import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent } from "../user-interfaces/extended-components";
-import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils";
-import { UserFlow } from "./user-flow";
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, InteractionCallbackResponse, MessageFlags, ModalBuilder, ModalSubmitInteraction, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from "discord.js"
+import { createDiscountCode, createShop, getCurrencies, getShops, removeDiscountCode, removeShop, updateShopDescription, updateShopEmoji, updateShopName } from "../database/database-handler"
+import { Currency, DatabaseError, Shop } from "../database/database-types"
+import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent, showEditModal } from "../user-interfaces/extended-components"
+import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
+import { UserFlow } from "./user-flow"
 
 export class ShopCreateFlow extends UserFlow {
     public id = 'shop-create'
@@ -11,17 +11,25 @@ export class ShopCreateFlow extends UserFlow {
 
     private selectedCurrency: Currency | null = null
     private shopName: string | null = null
+    private shopEmoji: string | null = null
+    private shopDescription: string | null = null
 
     public override async start(interaction: ChatInputCommandInteraction) {
         const currencies = getCurrencies()
         if (!currencies.size) return await replyErrorMessage(interaction, 'There isn\'t any currency, so you can\'t create a new shop.\n-# Use `/currencies-manage create` to create a new currency')
 
-        const shopName = interaction.options.getString('name')?.replaceNonBreakableSpace()
+        const shopName = interaction.options.getString('name')?.replaceSpaces()
+        const shopDescription = interaction.options.getString('description')?.replaceSpaces()  || ''
+        const emojiOption = interaction.options.getString('emoji')
+        const shopEmoji = emojiOption?.match(/<a?:.+?:\d{18,}>|\p{Extended_Pictographic}/gu)?.[0] || ''
+
         if (!shopName) return replyErrorMessage(interaction, 'Insufficient parameters')
 
         if (shopName.removeCustomEmojis().length == 0) return replyErrorMessage(interaction, 'The shop name can\'t contain only custom emojis')
 
         this.shopName = shopName
+        this.shopEmoji = shopEmoji
+        this.shopDescription = shopDescription
 
         this.initComponents()
         this.updateComponents()
@@ -60,40 +68,32 @@ export class ShopCreateFlow extends UserFlow {
                 .setLabel('Change Shop Name')
                 .setEmoji('📝')
                 .setStyle(ButtonStyle.Secondary),
-            (interaction: ButtonInteraction) => this.handleChangeShopNameInteraction(interaction),
+            async (interaction: ButtonInteraction) => {
+                const [modalSubmit, newShopName] = await showEditModal(interaction, 'Shop Name', this.shopName || undefined)
+                
+                this.shopName = newShopName
+                this.updateInteraction(modalSubmit)
+            },
+            120_000
+        )
+
+        const changeShopEmojiButton = new ExtendedButtonComponent(`${this.id}+change-shop-emoji`, 
+            new ButtonBuilder()
+                .setLabel('Change Shop Emoji')
+                .setEmoji('✏️')
+                .setStyle(ButtonStyle.Secondary),
+            async (interaction: ButtonInteraction) => {
+                const [modalSubmit, newShopEmoji] = await showEditModal(interaction, 'Shop Emoji', this.shopEmoji || undefined)
+                
+                this.shopEmoji = newShopEmoji?.match(/<a?:.+?:\d{18,}>|\p{Extended_Pictographic}/gu)?.[0] || ''
+                this.updateInteraction(modalSubmit)
+            },
             120_000
         )
 
         this.components.set(selectCurrencyMenu.customId, selectCurrencyMenu)
         this.components.set(submitButton.customId, submitButton)
         this.components.set(changeShopNameButton.customId, changeShopNameButton)
-    }
-
-    private async handleChangeShopNameInteraction(interaction: ButtonInteraction) {
-        const modalId = `${this.id}+change-shop-name-modal`
-
-        const modal = new ModalBuilder()
-            .setCustomId(modalId)
-            .setTitle('Change Shop Name')
-        
-        const shopNameInput = new TextInputBuilder()
-            .setCustomId('shop-name-input')
-            .setLabel('New Shop Name')
-            .setPlaceholder(this.shopName || 'Name')
-            .setStyle(TextInputStyle.Short)
-            .setRequired(true)
-            .setMaxLength(120)
-            .setMinLength(1)
-
-        modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(shopNameInput))
-
-        await interaction.showModal(modal)
-
-        const filter = (interaction: ModalSubmitInteraction) => interaction.customId === modalId;
-        const modalSubmit = await interaction.awaitModalSubmit({ filter, time: 120_000 })
-        
-        this.shopName = modalSubmit.fields.getTextInputValue('shop-name-input').replaceNonBreakableSpace()
-        this.updateInteraction(modalSubmit)
     }
 
     protected override updateComponents(): void {
@@ -110,7 +110,7 @@ export class ShopCreateFlow extends UserFlow {
             if (!this.shopName) return updateAsErrorMessage(interaction, 'No shop name')
             if (!this.selectedCurrency) return updateAsErrorMessage(interaction, 'No selected currency')
             
-            await createShop(this.shopName, '', this.selectedCurrency.id)
+            await createShop(this.shopName, this.shopDescription || '', this.selectedCurrency.id, this.shopEmoji || '')
 
             await updateAsSuccessMessage(interaction, `You succesfully created the shop **${this.shopName}** with the currency **${this.selectedCurrency.name}**. \n-# Use \`/shops-manage remove\` to remove it`)
 
@@ -197,7 +197,8 @@ export class ShopRemoveFlow extends UserFlow {
 
 export enum ShopUpdateOption {
     NAME = 'name',
-    DESCRIPTION = 'description'
+    DESCRIPTION = 'description',
+    EMOJI = 'emoji'
 }
 
 export class ShopUpdateFlow extends UserFlow {
@@ -279,6 +280,9 @@ export class ShopUpdateFlow extends UserFlow {
                 case ShopUpdateOption.DESCRIPTION:
                     await updateShopDescription(this.selectedShop.id, this.updateOptionValue)
                     break
+                case ShopUpdateOption.EMOJI:
+                    await updateShopEmoji(this.selectedShop.id, this.updateOptionValue)
+                    break
                 default:
                     await updateAsErrorMessage(interaction, 'Unknown update option')
                     return
@@ -296,9 +300,12 @@ export class ShopUpdateFlow extends UserFlow {
     private getUpdateValue(interaction: ChatInputCommandInteraction, subcommand: string): string {
         switch (subcommand) {
             case ShopUpdateOption.NAME:
-                return interaction.options.getString('new-name')?.replaceNonBreakableSpace() || ''
+                return interaction.options.getString('new-name')?.replaceSpaces() || ''
             case ShopUpdateOption.DESCRIPTION:
-                return interaction.options.getString('new-description')?.replaceNonBreakableSpace() || ''
+                return interaction.options.getString('new-description')?.replaceSpaces() || ''
+            case ShopUpdateOption.EMOJI:
+                const emojiOption = interaction.options.getString('new-emoji')
+                return emojiOption?.match(/<a?:.+?:\d{18,}>|\p{Extended_Pictographic}/gu)?.[0] || ''
             default:
                 return ''
         }
@@ -317,7 +324,7 @@ export class DiscountCodeCreateFlow extends UserFlow {
         const shops = getShops()
         if (!shops.size) return replyErrorMessage(interaction, 'There isn\'t any shop./n-# Use `/shops-manage create` to create a new one')
 
-        const discountCode = interaction.options.getString('code')?.replaceNonBreakableSpace().replace(/ /g, '').toUpperCase()
+        const discountCode = interaction.options.getString('code')?.replaceSpaces().replace(/ /g, '').toUpperCase()
         const discountAmount = interaction.options.getInteger('amount')
 
         if (!discountCode || !discountAmount) return replyErrorMessage(interaction, 'Missing arguments')

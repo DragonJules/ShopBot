@@ -25,21 +25,19 @@ export abstract class Database {
 export interface Currency {
     id: string
     name: string
+    emoji: string
 }
 
 export interface Product {
     id: string
     shopId: string
     name: string
+    emoji: string
     description: string
     price: number
 }
 
-export interface ProductOptions {
-    name: string
-    description: string
-    price: number
-}
+export type ProductOptions = Omit<Product, 'id' | 'shopId'>
 
 export type ProductOptionsOptional = Partial<ProductOptions>
 
@@ -119,6 +117,7 @@ export class CurrenciesDatabase extends Database {
 export interface Shop {
     id: string
     name: string
+    emoji: string
     description: string
     currency: Currency
     discountCodes: {[code: string]: number}

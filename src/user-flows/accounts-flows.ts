@@ -1,9 +1,9 @@
-import { ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, MessageFlags, StringSelectMenuInteraction, User } from "discord.js";
-import { emptyAccount, getCurrencies, getOrCreateAccount, setAccountCurrencyAmount } from "../database/database-handler";
-import { Currency, DatabaseError } from "../database/database-types";
-import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent, showConfirmationModal } from "../user-interfaces/extended-components";
-import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils";
-import { UserFlow } from "./user-flow";
+import { ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, MessageFlags, StringSelectMenuInteraction, User } from "discord.js"
+import { emptyAccount, getCurrencies, getOrCreateAccount, setAccountCurrencyAmount } from "../database/database-handler"
+import { Currency, DatabaseError } from "../database/database-types"
+import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent, showConfirmationModal } from "../user-interfaces/extended-components"
+import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
+import { UserFlow } from "./user-flow"
 
 export class AccountGiveFlow extends UserFlow {
     public id = 'account-give'

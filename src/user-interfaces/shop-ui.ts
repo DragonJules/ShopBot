@@ -1,12 +1,12 @@
-import { ActionRowBuilder, APIEmbed, APIEmbedField, ButtonBuilder, ButtonInteraction, ButtonStyle, Colors, EmbedBuilder, InteractionCallbackResponse, MessageFlags, ModalBuilder, ModalSubmitInteraction, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from "discord.js";
-import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent } from "./extended-components";
-import { EmbedUserInterface, MessageUserInterface, UserInterfaceInteraction } from "./user-interfaces";
-import { getOrCreateAccount, getShops, setAccountCurrencyAmount, setAccountItemAmount } from "../database/database-handler";
-import { logToDiscord, replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils";
-import { DatabaseError, Product, Shop } from "../database/database-types";
-import { AccountUserInterface } from "./account-ui";
+import { ActionRowBuilder, APIEmbed, APIEmbedField, ButtonBuilder, ButtonInteraction, ButtonStyle, Colors, EmbedBuilder, InteractionCallbackResponse, MessageFlags, ModalBuilder, ModalSubmitInteraction, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from "discord.js"
+import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent } from "./extended-components"
+import { EmbedUserInterface, MessageUserInterface, UserInterfaceInteraction } from "./user-interfaces"
+import { getOrCreateAccount, getShops, setAccountCurrencyAmount, setAccountItemAmount } from "../database/database-handler"
+import { logToDiscord, replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
+import { DatabaseError, Product, Shop } from "../database/database-types"
+import { AccountUserInterface } from "./account-ui"
 
-const PRODUCTS_PER_PAGE = 8
+const PRODUCTS_PER_PAGE = 9
 
 export class ShopUserInterface extends EmbedUserInterface {
     public override id = 'shop-ui'
@@ -166,8 +166,9 @@ export class ShopUserInterface extends EmbedUserInterface {
         const shopEmbed = this.embeds.get('shop-embed')
         if (shopEmbed instanceof EmbedBuilder && this.selectedShop != null) {
             const shopPages = Math.ceil(this.selectedShop.products.size / PRODUCTS_PER_PAGE)
+            const emojiString = this.selectedShop.emoji != null ? `${this.selectedShop.emoji} ` : ''
 
-            shopEmbed.setTitle(this.selectedShop.name)
+            shopEmbed.setTitle(`${emojiString}${this.selectedShop.name}`)
             shopEmbed.setDescription(`${this.selectedShop.description}\n\nProducts: `)
             shopEmbed.setFooter({ text: `Page ${this.shopPage + 1}/${shopPages}`})
 
@@ -183,10 +184,14 @@ export class ShopUserInterface extends EmbedUserInterface {
         const fields: APIEmbedField[] = []
 
         this.selectedShop.products.forEach(product => {
-            let descString = product.description ? product.description : '\u200b'
+            const descString = product.description ? product.description : '\u200b'
+            
+            const productEmojiString = product.emoji ? `${product.emoji} ` : ''
+            const currencyEmojiString = this.selectedShop!.currency.emoji ? `${this.selectedShop!.currency.emoji} ` : ''
+
             fields.push({ 
-                name: `${product.name}`, 
-                value: `Price: **${product.price} ${this.selectedShop!.currency.name}**\n${descString}`, 
+                name: `${productEmojiString}${product.name}`, 
+                value: `Price: **${product.price} ${currencyEmojiString}${this.selectedShop!.currency.name}**\n${descString}`, 
                 inline: true 
             })
         })
@@ -306,7 +311,7 @@ export class BuyProductUserInterface extends MessageUserInterface {
 
         await interaction.showModal(modal)
 
-        const filter = (interaction: ModalSubmitInteraction) => interaction.customId === modalId;
+        const filter = (interaction: ModalSubmitInteraction) => interaction.customId === modalId
         const modalSubmit = await interaction.awaitModalSubmit({ filter, time: 120_000 })
         
         const input = modalSubmit.fields.getTextInputValue('discount-code-input')

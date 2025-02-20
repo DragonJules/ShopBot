@@ -1,8 +1,8 @@
-import { APIEmbedField, ButtonBuilder, ButtonInteraction, ButtonStyle, Colors, EmbedBuilder, MessageFlags, User, userMention } from "discord.js";
-import { EmbedUserInterface, UserInterfaceInteraction } from "./user-interfaces";
-import { ExtendedButtonComponent, ExtendedComponent } from "./extended-components";
-import { Account } from "../database/database-types";
-import { getOrCreateAccount } from "../database/database-handler";
+import { APIEmbedField, ButtonBuilder, ButtonInteraction, ButtonStyle, Colors, EmbedBuilder, MessageFlags, User, userMention } from "discord.js"
+import { EmbedUserInterface, UserInterfaceInteraction } from "./user-interfaces"
+import { ExtendedButtonComponent, ExtendedComponent } from "./extended-components"
+import { Account } from "../database/database-types"
+import { getOrCreateAccount } from "../database/database-handler"
 
 enum AccountDisplayMode {
     CURRENCIES,
@@ -69,7 +69,7 @@ export class AccountUserInterface extends EmbedUserInterface {
 
                 this.embeds = new Map()
                 this.embeds.set('currencies-embed', this.embedsByDisplayMode.get(AccountDisplayMode.CURRENCIES)!.get('currencies-embed')!)
-                break;
+                break
             case AccountDisplayMode.INVENTORY:
                 const inventoryEmbed = this.embedsByDisplayMode.get(AccountDisplayMode.INVENTORY)?.get('inventory-embed') 
                 if (!inventoryEmbed) return
@@ -78,7 +78,7 @@ export class AccountUserInterface extends EmbedUserInterface {
 
                 this.embeds = new Map()
                 this.embeds.set('inventory-embed', this.embedsByDisplayMode.get(AccountDisplayMode.INVENTORY)!.get('inventory-embed')!)
-                break;
+                break
         }
     }
 
@@ -136,7 +136,9 @@ export class AccountUserInterface extends EmbedUserInterface {
         const fields: APIEmbedField[] = []
 
         this.account.currencies.forEach(currencyBalance => {
-            fields.push({ name: `${currencyBalance.item.name}`, value: `${currencyBalance.amount}`, inline: true })
+            const emojiString = currencyBalance.item.emoji != null ? `${currencyBalance.item.emoji} ` : ''
+
+            fields.push({ name: `${emojiString}${currencyBalance.item.name}`, value: `${currencyBalance.amount}`, inline: true })
         })
 
         return fields
@@ -147,7 +149,9 @@ export class AccountUserInterface extends EmbedUserInterface {
         const fields: APIEmbedField[] = []
 
         this.account.inventory.forEach(productBalance => {
-            fields.push({ name: `${productBalance.item.name}`, value: `${productBalance.amount}`, inline: true })
+            const emojiString = productBalance.item.emoji != null ? `${productBalance.item.emoji} ` : ''
+
+            fields.push({ name: `${emojiString}${productBalance.item.name}`, value: `${productBalance.amount}`, inline: true })
         })
 
         return fields

@@ -17,6 +17,11 @@ export const data = new SlashCommandBuilder()
             .setMaxLength(40)
             .setMinLength(1)
         )
+        .addStringOption(option => option
+            .setName('emoji')
+            .setDescription('The emoji of the currency')
+            .setRequired(false)
+        )
     )
     .addSubcommand(subcommand => subcommand
         .setName('remove')
@@ -43,13 +48,16 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
 }
 
 export async function createCurrencyCommand(_client: Client, interaction: ChatInputCommandInteraction) {
-    const currencyName = interaction.options.getString('name')?.replaceNonBreakableSpace()
+    const currencyName = interaction.options.getString('name')?.replaceSpaces()
     if (!currencyName) return replyErrorMessage(interaction, 'Insufficient parameters')
-    
+
+    const emojiOption = interaction.options.getString('emoji')
+    const emojiString = emojiOption?.match(/<a?:.+?:\d{18,}>|\p{Extended_Pictographic}/gu)?.[0] || ''
+
     try {
         if (currencyName.removeCustomEmojis().length == 0) return replyErrorMessage(interaction, 'The currency name can\'t contain only custom emojis')
         
-        await createCurrency(currencyName)
+        await createCurrency(currencyName, emojiString)
 
         await replySuccessMessage(interaction, `You succesfully created the currency **${currencyName}**. \n-# Use \`/currencies-manage remove\` to remove it`)        
     } catch (error) {

@@ -1,9 +1,9 @@
-import { ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, MessageFlags, ModalSubmitInteraction, StringSelectMenuInteraction } from "discord.js";
-import { getCurrencies, removeCurrency } from "../database/database-handler";
-import { Currency, DatabaseError } from "../database/database-types";
-import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent, showConfirmationModal } from "../user-interfaces/extended-components";
-import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils";
-import { UserFlow } from "./user-flow";
+import { ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, MessageFlags, ModalSubmitInteraction, StringSelectMenuInteraction } from "discord.js"
+import { getCurrencies, removeCurrency } from "../database/database-handler"
+import { Currency, DatabaseError } from "../database/database-types"
+import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent, showConfirmationModal } from "../user-interfaces/extended-components"
+import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
+import { UserFlow } from "./user-flow"
 
 
 export class CurrencyRemoveFlow extends UserFlow {

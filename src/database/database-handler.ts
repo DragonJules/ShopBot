@@ -1,7 +1,7 @@
 import { Snowflake } from 'discord.js'
 import { Account, AccountsDatabase, CurrenciesDatabase, Currency, Database, DatabaseError, Product, ProductOptions, ProductOptionsOptional, Shop, ShopsDatabase } from "./database-types"
 import fs from 'node:fs/promises'
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid'
 
 import accounts from '../../data/accounts.json'
 import currencies from '../../data/currencies.json'
@@ -39,14 +39,16 @@ export async function setAccountCurrencyAmount(id: Snowflake, currencyId: string
     
     if (!currenciesDatabase.currencies.has(currencyId)) throw new DatabaseError('Currency does not exist')
 
-    let currencyBalance = account.currencies.get(currencyId)
+    const currencyBalance = account.currencies.get(currencyId)
 
     if (!currencyBalance) {
+        const currency = getCurrencies().get(currencyId)!
         account.currencies.set(currencyId, 
             { 
                 item: { 
                     id: currencyId, 
-                    name: getCurrencyName(currencyId)! 
+                    name: currency.name,
+                    emoji: currency.emoji
                 }, 
                 amount: +amount.toFixed(2)
             }
@@ -103,12 +105,12 @@ export function getCurrencyName(currencyId: string): string | undefined {
     return currenciesDatabase.currencies.get(currencyId)?.name
 }
 
-export async function createCurrency(currencyName: string) {
+export async function createCurrency(currencyName: string, emoji: string) {
     if (currenciesDatabase.currencies.has(getCurrencyId(currencyName) || '')) throw new DatabaseError('Currency already exists')
     
     const newCurrencyId = uuidv4()
 
-    currenciesDatabase.currencies.set(newCurrencyId, { id: newCurrencyId, name: currencyName })
+    currenciesDatabase.currencies.set(newCurrencyId, { id: newCurrencyId, name: currencyName, emoji })
     save(currenciesDatabase)
 }
 
@@ -134,7 +136,7 @@ export function getShopName(shopId: string): string | undefined {
     return shopsDatabase.shops.get(shopId)?.name
 }
 
-export async function createShop(shopName: string, description: string, currencyId: string) {
+export async function createShop(shopName: string, description: string, currencyId: string, emoji: string) {
     if (shopsDatabase.shops.has(getShopId(shopName) || '')) throw new DatabaseError('Shop already exists')
     if (!currenciesDatabase.currencies.has(currencyId)) throw new DatabaseError('Currency does not exist')
 
@@ -143,6 +145,7 @@ export async function createShop(shopName: string, description: string, currency
     shopsDatabase.shops.set(newShopId, { 
         id: newShopId, 
         name: shopName, 
+        emoji,
         description,
         currency: currenciesDatabase.currencies.get(currencyId)!,
         discountCodes: {},
@@ -173,6 +176,13 @@ export async function updateShopDescription(shopId: string, description: string)
     await save(shopsDatabase)
 }
 
+export async function updateShopEmoji(shopId: string, emoji: string) {
+    if (!shopsDatabase.shops.has(shopId)) throw new DatabaseError('Shop does not exist')
+
+    shopsDatabase.shops.get(shopId)!.emoji = emoji
+    await save(shopsDatabase)
+}
+
 export async function createDiscountCode(shopId: string, discountCode: string, discountAmount: number) {
     if (!shopsDatabase.shops.has(shopId)) throw new DatabaseError('Shop does not exist')
 
@@ -191,10 +201,10 @@ export async function removeDiscountCode(shopId: string, discountCode: string) {
 export async function addProduct(shopId: string, options: ProductOptions) {
     if (!shopsDatabase.shops.has(shopId)) throw new DatabaseError('Shop does not exist')
 
-    const { name, description, price } = options
+    const { name, description, price, emoji } = options
     const id = uuidv4()
 
-    shopsDatabase.shops.get(shopId)!.products.set(id, { id, shopId, name, description, price })
+    shopsDatabase.shops.get(shopId)!.products.set(id, { id, shopId, name, emoji, description, price })
     await save(shopsDatabase)
 }
 
@@ -207,7 +217,7 @@ export async function removeProduct(shopId: string, productId: string) {
 export async function updateProduct(shopId: string, productId: string, options: ProductOptionsOptional) {
     if (!shopsDatabase.shops.has(shopId)) throw new DatabaseError('Shop does not exist')
     
-    const { name, description, price } = options
+    const { name, description, price, emoji } = options
     const product = shopsDatabase.shops.get(shopId)!.products.get(productId)
 
     if (!product) throw new DatabaseError('Product does not exist')
@@ -215,6 +225,7 @@ export async function updateProduct(shopId: string, productId: string, options: 
     if (name) product.name = name
     if (description) product.description = description
     if (price) product.price = price
+    if (emoji) product.emoji = emoji
 
     await save(shopsDatabase)
 }

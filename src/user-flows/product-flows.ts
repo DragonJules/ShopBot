@@ -1,10 +1,10 @@
-import { ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, InteractionCallbackResponse, MessageFlags, StringSelectMenuInteraction } from "discord.js";
-import { addProduct, getShops, removeProduct, updateProduct } from "../database/database-handler";
-import { DatabaseError, Product, Shop } from "../database/database-types";
-import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent } from "../user-interfaces/extended-components";
-import { UserInterfaceInteraction } from "../user-interfaces/user-interfaces";
-import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils";
-import { UserFlow } from "./user-flow";
+import { ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, InteractionCallbackResponse, MessageFlags, StringSelectMenuInteraction } from "discord.js"
+import { addProduct, getShops, removeProduct, updateProduct } from "../database/database-handler"
+import { DatabaseError, Product, Shop } from "../database/database-types"
+import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent } from "../user-interfaces/extended-components"
+import { UserInterfaceInteraction } from "../user-interfaces/user-interfaces"
+import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
+import { UserFlow } from "./user-flow"
 
 export class AddProductFlow extends UserFlow {
     public id = "add-product"
@@ -12,6 +12,7 @@ export class AddProductFlow extends UserFlow {
 
     private productName: string | null = null
     private productPrice: number | null = null
+    private productEmoji: string | null = null
     private productDescription: string | null = null
 
     private selectedShop: Shop | null = null
@@ -20,9 +21,12 @@ export class AddProductFlow extends UserFlow {
         const shops = getShops()
         if (!shops.size) return replyErrorMessage(interaction, 'There isn\'t any shop./n-# Use `/shops-manage create` to create a new one')
 
-        const productName = interaction.options.getString('name')?.replaceNonBreakableSpace()
-        const productDescription = interaction.options.getString('description')?.replaceNonBreakableSpace() || ''
+        const productName = interaction.options.getString('name')?.replaceSpaces()
+        const productDescription = interaction.options.getString('description')?.replaceSpaces() || ''
         const productPrice = interaction.options.getNumber('price')
+
+        const productEmojiOption = interaction.options.getString('emoji')
+        const productEmoji = productEmojiOption?.match(/<a?:.+?:\d{18,}>|\p{Extended_Pictographic}/gu)?.[0] || ''
 
         if (!productName || !productPrice) return replyErrorMessage(interaction, 'Insufficient parameters')
     
@@ -30,6 +34,7 @@ export class AddProductFlow extends UserFlow {
         
         this.productName = productName
         this.productPrice = +productPrice.toFixed(2)
+        this.productEmoji = productEmoji
         this.productDescription = productDescription
 
         this.initComponents()
@@ -40,7 +45,7 @@ export class AddProductFlow extends UserFlow {
     }
     
     protected getMessage(): string {
-        const descString = (this.productDescription) ? `. Description: **${this.productDescription.replaceNonBreakableSpace()}**` : ''
+        const descString = (this.productDescription) ? `. Description: **${this.productDescription.replaceSpaces()}**` : ''
         return `Add Product: **${this.productName}** for **${this.productPrice} ${this.selectedShop?.currency.name || '[]'}** in **[${this.selectedShop?.name || 'Select Shop'}]**${descString}`
     }
 
@@ -83,7 +88,7 @@ export class AddProductFlow extends UserFlow {
             if (!this.productName) return updateAsErrorMessage(interaction, 'No product name')
             if (!this.productPrice) return updateAsErrorMessage(interaction, 'No product price')
 
-            await addProduct(this.selectedShop.id, { name: this.productName, description: this.productDescription || '', price: this.productPrice })
+            await addProduct(this.selectedShop.id, { name: this.productName, description: this.productDescription || '', emoji: this.productEmoji || '', price: this.productPrice })
 
             await updateAsSuccessMessage(interaction, `You succesfully added the product **${this.productName}** to the shop **${this.selectedShop.name}**`)
 
@@ -265,7 +270,8 @@ enum UpdateProductFlowStage {
 export enum ProductUpdateOption {
     NAME = 'name',
     DESCRIPTION = 'description',
-    PRICE = 'price'
+    PRICE = 'price',
+    EMOJI = 'emoji'
 }
 
 export class UpdateProductFlow extends UserFlow {
@@ -423,10 +429,12 @@ export class UpdateProductFlow extends UserFlow {
         try {
             if (!this.selectedShop) return updateAsErrorMessage(interaction, 'No selected shop')
             if (!this.selectedProduct) return updateAsErrorMessage(interaction, 'No selected product')
-            if (!this.updateOption || !this.updateOptionValue) return updateAsErrorMessage(interaction, 'No selected update option')
+            if (!this.updateOption || this.updateOptionValue == undefined) return updateAsErrorMessage(interaction, 'No selected update option')
             
             const updateOption: Record<string, string | number> = {}
             updateOption[this.updateOption.toString()] = (this.updateOption == ProductUpdateOption.PRICE) ? Number(this.updateOptionValue) : this.updateOptionValue
+
+            console.log(updateOption)
 
             const oldName = this.selectedProduct.name
 
@@ -443,11 +451,14 @@ export class UpdateProductFlow extends UserFlow {
     private getUpdateValue(interaction: ChatInputCommandInteraction, subcommand: string): string {
         switch (subcommand) {
             case ProductUpdateOption.NAME:
-                return interaction.options.getString('new-name')?.replaceNonBreakableSpace() || ''
+                return interaction.options.getString(`new-${subcommand}`)?.replaceSpaces() || ''
             case ProductUpdateOption.DESCRIPTION:
-                return interaction.options.getString('new-description')?.replaceNonBreakableSpace() || ''
+                return interaction.options.getString(`new-${subcommand}`)?.replaceSpaces() || ''
             case ProductUpdateOption.PRICE:
-                return`${interaction.options.getNumber('new-price')?.toFixed(2) || ''}`
+                return`${interaction.options.getNumber(`new-${subcommand}`)?.toFixed(2) || ''}`
+            case ProductUpdateOption.EMOJI:
+                const emojiOption = interaction.options.getString(`new-${subcommand}`)
+                return emojiOption?.match(/<a?:.+?:\d{18,}>|\p{Extended_Pictographic}/gu)?.[0] || ''
             default:
                 return ''
         }
