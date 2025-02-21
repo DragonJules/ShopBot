@@ -17,11 +17,11 @@ const save = (database: Database) => new Promise<boolean>(async (resolve, reject
     }
 })
 
-const accountsDatabase = new AccountsDatabase(accounts, 'data/accounts.json')
 const currenciesDatabase = new CurrenciesDatabase(currencies, 'data/currencies.json')
 const shopsDatabase = new ShopsDatabase(shops, 'data/shops.json')
+const accountsDatabase = new AccountsDatabase(accounts, 'data/accounts.json')
 
-
+// #region ACCOUNTS
 export async function getOrCreateAccount(id: Snowflake): Promise<Account> {
     let account = accountsDatabase.accounts.get(id)
 
@@ -121,6 +121,9 @@ export async function removeCurrency(currencyId: string) {
     save(currenciesDatabase)
 }
 
+// #endregion
+
+// #region SHOPS
 export function getShops(): Map<string, Shop> {
     return shopsDatabase.shops
 }
@@ -183,6 +186,22 @@ export async function updateShopEmoji(shopId: string, emoji: string) {
     await save(shopsDatabase)
 }
 
+
+export function updateShopPosition(shopId: string, index: number) {
+    if (!shopsDatabase.shops.has(shopId)) throw new DatabaseError('Shop does not exist')
+    if (index < 0 || index > shopsDatabase.shops.size - 1) throw new DatabaseError('Invalid position')
+
+    const shopsArray = Array.from(shopsDatabase.shops.entries())
+    const shopIndex = shopsArray.findIndex(([id, _shop]) => id === shopId)
+
+    if (shopIndex === -1) throw new DatabaseError('Shop does not exist')
+
+    shopsArray.splice(index, 0, shopsArray.splice(shopIndex, 1)[0]);
+    
+    shopsDatabase.shops = new Map(shopsArray)
+    save(shopsDatabase)
+}
+
 export async function createDiscountCode(shopId: string, discountCode: string, discountAmount: number) {
     if (!shopsDatabase.shops.has(shopId)) throw new DatabaseError('Shop does not exist')
 
@@ -196,7 +215,14 @@ export async function removeDiscountCode(shopId: string, discountCode: string) {
     delete shopsDatabase.shops.get(shopId)!.discountCodes[discountCode]
     await save(shopsDatabase)
 }
+// #endregion
 
+// #region PRODUCTS
+export function getProducts(shopId: string): Map<string, Product> {
+    if (!shopsDatabase.shops.has(shopId)) throw new DatabaseError('Shop does not exist')
+
+    return shopsDatabase.shops.get(shopId)!.products
+}
 
 export async function addProduct(shopId: string, options: ProductOptions) {
     if (!shopsDatabase.shops.has(shopId)) throw new DatabaseError('Shop does not exist')
@@ -229,4 +255,4 @@ export async function updateProduct(shopId: string, productId: string, options: 
 
     await save(shopsDatabase)
 }
-
+// #endregion

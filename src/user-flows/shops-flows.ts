@@ -1,5 +1,5 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, InteractionCallbackResponse, MessageFlags, ModalBuilder, ModalSubmitInteraction, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from "discord.js"
-import { createDiscountCode, createShop, getCurrencies, getShops, removeDiscountCode, removeShop, updateShopDescription, updateShopEmoji, updateShopName } from "../database/database-handler"
+import { createDiscountCode, createShop, getCurrencies, getShops, removeDiscountCode, removeShop, updateShopDescription, updateShopEmoji, updateShopName, updateShopPosition } from "../database/database-handler"
 import { Currency, DatabaseError, Shop } from "../database/database-types"
 import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent, showEditModal } from "../user-interfaces/extended-components"
 import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
@@ -193,7 +193,121 @@ export class ShopRemoveFlow extends UserFlow {
     }
 }
 
-// TODO export class ShopReorderFlow extends UserFlow {}
+export class ShopReorderFlow extends UserFlow {
+    public id = 'shop-reorder'
+    protected components: Map<string, ExtendedComponent> = new Map()
+
+    private selectedShop: Shop | null = null
+    private selectedPosition: number | null = null
+
+
+    public override async start(interaction: ChatInputCommandInteraction) {
+        const shops = getShops()
+        if (!shops.size) return replyErrorMessage(interaction, 'There isn\'t any shop./n-# Use `/shops-manage create` to create a new one')
+
+        this.initComponents()
+
+        this.selectedShop = shops.values().next().value!
+        this.selectedPosition = 0 + 1
+
+        this.updateComponents()
+
+        const response = await interaction.reply({ content: this.getMessage(), components: this.getComponentRows(), flags: MessageFlags.Ephemeral, withResponse: true })
+        this.createComponentsCollectors(response)
+    }
+
+    protected override getMessage(): string {
+        return `Change position of **[${this.selectedShop?.name || 'Select Shop'}]** to __**${this.selectedPosition || 'Select Position'}**__`
+    }
+
+    protected override initComponents(): void {
+        const shopSelectMenu = new ExtendedStringSelectMenuComponent<Shop>(
+            `${this.id}+select-shop`,
+            'Select a shop',
+            getShops(),
+            (interaction: StringSelectMenuInteraction, selected: Shop): void => {
+                this.selectedShop = selected
+                const shopsArray = Array.from(getShops().keys())
+                const shopIndex = shopsArray.findIndex(id => id === selected.id)
+
+                this.selectedPosition = shopIndex + 1
+                this.updateInteraction(interaction)
+            },
+            120_000
+        )
+
+        const upButton = new ExtendedButtonComponent(`${this.id}+up`,
+            new ButtonBuilder()
+                .setEmoji({name: '⬆️'})
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(this.selectedPosition != null && this.selectedPosition < getShops().size),
+            (interaction: ButtonInteraction) => {
+                if (!this.selectedPosition) return updateAsErrorMessage(interaction, 'No selected position')
+                this.selectedPosition = Math.max(this.selectedPosition - 1, 1)
+                this.updateInteraction(interaction)
+            },
+            120_000
+        )
+
+        const downButton = new ExtendedButtonComponent(`${this.id}+down`,
+            new ButtonBuilder()
+                .setEmoji({name: '⬇️'})
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(this.selectedPosition != null && this.selectedPosition > 1),
+            (interaction: ButtonInteraction) => {
+                if (!this.selectedPosition) return updateAsErrorMessage(interaction, 'No selected position')
+                this.selectedPosition = Math.min(this.selectedPosition + 1, getShops().size)
+                this.updateInteraction(interaction)
+            },
+            120_000
+        )
+
+        const submitNewPositionButton = new ExtendedButtonComponent(`${this.id}+submit-new-position`,
+            new ButtonBuilder()
+                .setLabel('Submit position')
+                .setStyle(ButtonStyle.Success)
+                .setDisabled(true),
+            (interaction: ButtonInteraction) => this.success(interaction),
+            120_000
+        )
+
+        this.components.set(shopSelectMenu.customId, shopSelectMenu)
+        this.components.set(upButton.customId, upButton)
+        this.components.set(downButton.customId, downButton)
+        this.components.set(submitNewPositionButton.customId, submitNewPositionButton)
+    }
+
+    protected override updateComponents(): void {
+        const submitNewPositionButton = this.components.get(`${this.id}+submit-new-position`)
+        if (submitNewPositionButton instanceof ExtendedButtonComponent) {
+            submitNewPositionButton.toggle(this.selectedShop != null && this.selectedPosition != null)
+        }
+
+        const upButton = this.components.get(`${this.id}+up`)
+        if (upButton instanceof ExtendedButtonComponent) {
+            upButton.toggle(this.selectedPosition != null && this.selectedPosition > 1)
+        }
+
+        const downButton = this.components.get(`${this.id}+down`)
+        if (downButton instanceof ExtendedButtonComponent) {
+            downButton.toggle(this.selectedPosition != null && this.selectedPosition < getShops().size)
+        }
+    }
+
+    protected override async success(interaction: ButtonInteraction) {
+        try {
+            if (!this.selectedShop || !this.selectedPosition) return updateAsErrorMessage(interaction, 'No selected shop or position')
+
+            updateShopPosition(this.selectedShop.id, this.selectedPosition - 1)
+            await updateAsSuccessMessage(interaction, `You succesfully changed the position of **${this.selectedShop.name}** to **${this.selectedPosition}**`)
+            return
+        }
+        catch (error) {
+            await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
+            return 
+        }
+    }
+}
 
 export enum ShopUpdateOption {
     NAME = 'name',

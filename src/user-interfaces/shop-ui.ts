@@ -111,7 +111,7 @@ export class ShopUserInterface extends EmbedUserInterface {
     protected override initEmbeds(interaction: UserInterfaceInteraction): void {
         if (!this.selectedShop) return
 
-        const shopPages = Math.ceil(this.selectedShop.products.size / PRODUCTS_PER_PAGE)
+        const shopPages = this.getNumberOfPages()
 
         const shopEmbed = new EmbedBuilder()
             .setFooter({ text: `Page ${this.shopPage + 1}/${shopPages}`, iconURL: interaction.client.user.displayAvatarURL()})
@@ -131,7 +131,7 @@ export class ShopUserInterface extends EmbedUserInterface {
             buyButton.toggle(this.selectedShop.products.size > 0)
         }
 
-        const shopPages = Math.ceil(this.selectedShop!.products.size / PRODUCTS_PER_PAGE)
+        const shopPages = this.getNumberOfPages()
 
         if (shopPages > 1) {
             if (this.response) {
@@ -165,7 +165,7 @@ export class ShopUserInterface extends EmbedUserInterface {
     protected override updateEmbeds() {
         const shopEmbed = this.embeds.get('shop-embed')
         if (shopEmbed instanceof EmbedBuilder && this.selectedShop != null) {
-            const shopPages = Math.ceil(this.selectedShop.products.size / PRODUCTS_PER_PAGE)
+            const shopPages = this.getNumberOfPages()
             const emojiString = this.selectedShop.emoji != null ? `${this.selectedShop.emoji} ` : ''
 
             shopEmbed.setTitle(`${emojiString}${this.selectedShop.name}`)
@@ -207,12 +207,16 @@ export class ShopUserInterface extends EmbedUserInterface {
     }
 
     private nextPage(interaction: ButtonInteraction) {
-        const shopPages = Math.ceil(this.selectedShop!.products.size / PRODUCTS_PER_PAGE)
+        const shopPages = this.getNumberOfPages()
 
         if (this.shopPage == shopPages - 1) return this.updateInteraction(interaction)
 
         this.shopPage += 1
         this.updateInteraction(interaction)
+    }
+
+    getNumberOfPages(): number {
+        return Math.max(Math.ceil(this.selectedShop!.products.size / PRODUCTS_PER_PAGE), 1)
     }
 }
 

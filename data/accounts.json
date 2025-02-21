@@ -2,11 +2,7 @@
     "628298729405022216": {
         "currencies": {
             "d9997bc7-ce3b-491b-92de-cfa5afd7e955": {
-                "item": {
-                    "id": "d9997bc7-ce3b-491b-92de-cfa5afd7e955",
-                    "name": "Dollar",
-                    "emoji": "💵"
-                },
+                "item": "d9997bc7-ce3b-491b-92de-cfa5afd7e955",
                 "amount": 97.5
             }
         },
@@ -14,77 +10,49 @@
             "20d038ab-7dab-4ced-85f2-c38a9076687a": {
                 "item": {
                     "id": "20d038ab-7dab-4ced-85f2-c38a9076687a",
-                    "shopId": "22b6f8dd-3ab7-41eb-9e99-6ba6370e8441",
-                    "name": "1984",
-                    "emoji": "",
-                    "description": "A splendid novel by George Orwell",
-                    "price": 5.99
+                    "shopId": "22b6f8dd-3ab7-41eb-9e99-6ba6370e8441"
                 },
                 "amount": 2
             },
             "b34faea0-cb8c-4fd1-b123-8c37fec471bb": {
                 "item": {
                     "id": "b34faea0-cb8c-4fd1-b123-8c37fec471bb",
-                    "shopId": "4783f4bf-da40-468d-94fd-3e80f659a76e",
-                    "name": "Apple Pie",
-                    "emoji": "",
-                    "description": "",
-                    "price": 4
+                    "shopId": "4783f4bf-da40-468d-94fd-3e80f659a76e"
                 },
                 "amount": 3
             },
             "d26c10f6-2214-40a4-934a-50724c016b0f": {
                 "item": {
                     "id": "d26c10f6-2214-40a4-934a-50724c016b0f",
-                    "shopId": "4783f4bf-da40-468d-94fd-3e80f659a76e",
-                    "name": "Pain au chocolat",
-                    "emoji": "",
-                    "description": "(it's the only correct name)",
-                    "price": 1.2
+                    "shopId": "4783f4bf-da40-468d-94fd-3e80f659a76e"
                 },
                 "amount": 1
             },
             "6749e140-3482-4dd2-95b2-528e8ae3165f": {
                 "item": {
                     "id": "6749e140-3482-4dd2-95b2-528e8ae3165f",
-                    "shopId": "4783f4bf-da40-468d-94fd-3e80f659a76e",
-                    "name": "Basic Bread",
-                    "emoji": "",
-                    "description": "A quite basic piece of bread",
-                    "price": 2
+                    "shopId": "4783f4bf-da40-468d-94fd-3e80f659a76e"
                 },
                 "amount": 1
             },
             "869a3fce-4d4a-4bf5-9a98-f704f73c2af8": {
                 "item": {
                     "id": "869a3fce-4d4a-4bf5-9a98-f704f73c2af8",
-                    "shopId": "4783f4bf-da40-468d-94fd-3e80f659a76e",
-                    "name": "Baguette",
-                    "emoji": "",
-                    "description": "A real authentic French Baguette",
-                    "price": 0.9
+                    "shopId": "4783f4bf-da40-468d-94fd-3e80f659a76e"
                 },
                 "amount": 1
             },
             "b6329e22-a10c-4466-879a-90d732440f0e": {
                 "item": {
                     "id": "b6329e22-a10c-4466-879a-90d732440f0e",
-                    "shopId": "22b6f8dd-3ab7-41eb-9e99-6ba6370e8441",
-                    "name": "Super Expensive Quantum Physics book",
-                    "emoji": "",
-                    "description": "",
-                    "price": 770
+                    "shopId": "22b6f8dd-3ab7-41eb-9e99-6ba6370e8441"
                 },
                 "amount": 1
             },
             "54940be1-3d10-4ea5-91b6-2e12cc02603a": {
                 "item": {
                     "id": "54940be1-3d10-4ea5-91b6-2e12cc02603a",
-                    "shopId": "22b6f8dd-3ab7-41eb-9e99-6ba6370e8441",
-                    "name": "Between Past and Future",
-                    "emoji": "",
-                    "description": "Hannah Arendt",
-                    "price": 5
+                    "shopId": "22b6f8dd-3ab7-41eb-9e99-6ba6370e8441"
                 },
                 "amount": 1
             }

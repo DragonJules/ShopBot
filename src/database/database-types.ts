@@ -1,4 +1,7 @@
 import { Snowflake } from "discord.js"
+import { getCurrencies, getProducts } from "./database-handler";
+
+export type UUID = string
 
 export class DatabaseError extends Error {
     constructor(message: string) {
@@ -23,14 +26,14 @@ export abstract class Database {
 }
 
 export interface Currency {
-    id: string
+    id: UUID
     name: string
     emoji: string
 }
 
 export interface Product {
-    id: string
-    shopId: string
+    id: UUID
+    shopId: UUID
     name: string
     emoji: string
     description: string
@@ -47,14 +50,19 @@ export interface Balance<Item> {
 }
 
 export interface Account {
-    currencies: Map<string, Balance<Currency>>
-    inventory: Map<string, Balance<Product>>
+    currencies: Map<UUID, Balance<Currency>>
+    inventory: Map<UUID, Balance<Product>>
+}
+
+export interface ProductId {
+    id: UUID
+    shopId: UUID
 }
 
 export interface AccountsDatabaseJSONBody extends DatabaseJSONBody {
     [userId: Snowflake]: {
-        currencies: {[currencyId: string]: Balance<Currency>},
-        inventory: {[productId: string]: Balance<Product>}
+        currencies: {[currencyId: UUID]: Balance<UUID>},
+        inventory: {[productId: UUID]: Balance<ProductId>}
     }
 }
 
@@ -72,7 +80,10 @@ export class AccountsDatabase extends Database {
         const accountsJSON: AccountsDatabaseJSONBody = {}
 
         this.accounts.forEach((account, userId) => {
-            accountsJSON[userId] = { currencies: Object.fromEntries(account.currencies), inventory: Object.fromEntries(account.inventory) }
+            const currencies = Object.fromEntries(Array.from(account.currencies.entries()).map(([id, balance]) => [id, { item: balance.item.id, amount: balance.amount } as Balance<UUID>]))
+            const inventory = Object.fromEntries(Array.from(account.inventory.entries()).map(([id, balance]) => [id, { item: { id: balance.item.id, shopId: balance.item.shopId }, amount: balance.amount } as Balance<ProductId>]))
+
+            accountsJSON[userId] = { currencies, inventory }
         })
 
         return accountsJSON
@@ -81,8 +92,11 @@ export class AccountsDatabase extends Database {
     protected parseRaw(databaseRaw: AccountsDatabaseJSONBody): Map<Snowflake, Account> {
         const accounts: Map<Snowflake, Account> = new Map()
 
-        for (const [userId, { currencies, inventory }] of Object.entries(databaseRaw)) {
-            accounts.set(userId, { currencies: new Map(Object.entries(currencies)), inventory: new Map(Object.entries(inventory)) })
+        for (const [userId, { currencies: currenciesJSON, inventory: inventoryJSON }] of Object.entries(databaseRaw)) {
+            const currenciesArray = Array.from(Object.entries(currenciesJSON)).map(([id, balance]) => [id, { item: getCurrencies().get(id)!, amount: balance.amount }] as [UUID, Balance<Currency>])
+            const inventoryArray = Array.from(Object.entries(inventoryJSON)).map(([id, balance]) => [id, { item: getProducts(balance.item.shopId)!.get(id)!, amount: balance.amount }] as [UUID, Balance<Product>])
+
+            accounts.set(userId, { currencies: new Map(currenciesArray), inventory: new Map(inventoryArray) })
         }
 
         return accounts
@@ -91,12 +105,12 @@ export class AccountsDatabase extends Database {
 }
 
 export interface CurrenciesDatabaseJSONBody extends DatabaseJSONBody {
-    [currencyId: Snowflake]: Currency
+    [currencyId: UUID]: Currency
 }
 
 
 export class CurrenciesDatabase extends Database {
-    public currencies: Map<string, Currency>
+    public currencies: Map<UUID, Currency>
 
     public constructor (databaseRaw: CurrenciesDatabaseJSONBody, path: string) {
         super(databaseRaw, path)
@@ -109,27 +123,27 @@ export class CurrenciesDatabase extends Database {
         return currencies
     }
 
-    protected parseRaw(databaseRaw: CurrenciesDatabaseJSONBody): Map<string, Currency> {
+    protected parseRaw(databaseRaw: CurrenciesDatabaseJSONBody): Map<UUID, Currency> {
         return new Map(Object.entries(databaseRaw))
     }
 }
 
 export interface Shop {
-    id: string
+    id: UUID
     name: string
     emoji: string
     description: string
     currency: Currency
     discountCodes: {[code: string]: number}
-    products: Map<string, Product>
+    products: Map<UUID, Product>
 }
 
 export interface ShopsDatabaseJSONBody extends DatabaseJSONBody {
-    [shopId: Snowflake]: Omit<Shop, 'products'> & { products: {[productId: string]: Product} }
+    [shopId: UUID]: Omit<Shop, 'products' | 'currency'> & { products: {[productId: UUID]: Product} } & {currencyId: UUID}
 }
 
 export class ShopsDatabase extends Database {
-    public shops: Map<string, Shop>
+    public shops: Map<UUID, Shop>
 
     public constructor (databaseRaw: ShopsDatabaseJSONBody, path: string) {
         super(databaseRaw, path)
@@ -141,17 +155,17 @@ export class ShopsDatabase extends Database {
         const shopsJSON: ShopsDatabaseJSONBody = {}
 
         this.shops.forEach((shop, shopId) => {
-            shopsJSON[shopId] = { ...shop, products: Object.fromEntries(shop.products) }
+            shopsJSON[shopId] = { ...shop, products: Object.fromEntries(shop.products), currencyId: shop.currency.id }
         })
 
         return shopsJSON
     }
 
-    protected parseRaw(databaseRaw: ShopsDatabaseJSONBody): Map<string, Shop> {
-        const shops: Map<string, Shop> = new Map()
+    protected parseRaw(databaseRaw: ShopsDatabaseJSONBody): Map<UUID, Shop> {
+        const shops: Map<UUID, Shop> = new Map()
 
         for (const [shopId, shop] of Object.entries(databaseRaw)) {
-            shops.set(shopId, { ...shop, products: new Map(Object.entries(shop.products)) })
+            shops.set(shopId, { ...shop, products: new Map(Object.entries(shop.products)), currency: getCurrencies().get(shop.currencyId)! })
         }
 
         return shops

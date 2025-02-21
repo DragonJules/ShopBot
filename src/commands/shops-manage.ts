@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, PermissionFlagsBits, Client, ChatInputCommandInteraction, StringSelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from "discord.js"
 import { getCurrencies, getShops } from "../database/database-handler"
 import { replyErrorMessage } from "../utils/utils"
-import { DiscountCodeCreateFlow, DiscountCodeRemoveFlow, ShopCreateFlow, ShopRemoveFlow, ShopUpdateFlow, ShopUpdateOption } from "../user-flows/shops-flows"
+import { DiscountCodeCreateFlow, DiscountCodeRemoveFlow, ShopCreateFlow, ShopRemoveFlow, ShopReorderFlow, ShopUpdateFlow, ShopUpdateOption } from "../user-flows/shops-flows"
 
 export const data = new SlashCommandBuilder()
     .setName('shops-manage') 
@@ -109,6 +109,8 @@ export async function execute(_client: Client, interaction: ChatInputCommandInte
             removeShopFlow.start(interaction)
             break
         case 'reorder':
+            const reorderShopsFlow = new ShopReorderFlow()
+            reorderShopsFlow.start(interaction)
             break
         case 'create-discount-code':
             const createDiscountCodeFlow = new DiscountCodeCreateFlow()
@@ -129,47 +131,5 @@ export async function execute(_client: Client, interaction: ChatInputCommandInte
 
             return await replyErrorMessage(interaction, 'Invalid subcommand')
     }
-
-}
-
-async function reorderShops(_client: Client, interaction: ChatInputCommandInteraction) {
-    const shops = getShops()
-    if (!shops.size) return await interaction.reply({ content: `❌ There isn't any shop./n-# Use \`/create-shop\` to create a new one`, flags: MessageFlags.Ephemeral })
-
-    let newPos = 0 + 1
-    const selectedShop = shops.entries().next().value?.[1]!
-    const shopName = selectedShop.name
-
-
-    const selectShopMenu = new StringSelectMenuBuilder()
-        .setCustomId('select-shop-reorder')
-        .setPlaceholder('Select Shop')
-    
-    shops.forEach(shop => {
-        selectShopMenu.addOptions({
-            label: shop.name.removeCustomEmojis().ellipsis(100),
-            value: shop.id
-        })
-    })
-
-    const buttons = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-            .setCustomId('up-shop-position')
-            .setEmoji({name: '⬆️'})
-            .setStyle(ButtonStyle.Primary)
-            .setDisabled(newPos == 1),
-        new ButtonBuilder()
-            .setCustomId('down-shop-position')
-            .setEmoji({name: '⬇️'})
-            .setStyle(ButtonStyle.Primary)
-            .setDisabled(newPos == shops.size),
-        new ButtonBuilder()
-            .setCustomId('submit-shop-new-pos')
-            .setEmoji({name: '✅'})
-            .setLabel(`Set position to ${newPos}`)
-            .setStyle(ButtonStyle.Success)
-    )
-
-    await interaction.reply({ content: `Change position of **[${shopName}]** to __**${newPos}**__`, components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectShopMenu), buttons], flags: MessageFlags.Ephemeral })
 
 }
