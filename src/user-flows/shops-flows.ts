@@ -309,19 +309,19 @@ export class ShopReorderFlow extends UserFlow {
     }
 }
 
-export enum ShopUpdateOption {
+export enum EditShopOption {
     NAME = 'name',
     DESCRIPTION = 'description',
     EMOJI = 'emoji'
 }
 
-export class ShopUpdateFlow extends UserFlow {
-    public override id: string = 'shop-update'
+export class EditShopFlow extends UserFlow {
+    public override id: string = 'edit-shop'
     protected override components: Map<string, ExtendedComponent> = new Map()
 
     private selectedShop: Shop | null = null
 
-    private updateOption: ShopUpdateOption | null = null
+    private updateOption: EditShopOption | null = null
     private updateOptionValue: string | null = null
 
     public override async start(interaction: ChatInputCommandInteraction) {
@@ -329,8 +329,8 @@ export class ShopUpdateFlow extends UserFlow {
         if (!shops.size) return replyErrorMessage(interaction, 'There isn\'t any shop./n-# Use `/shops-manage create` to create a new one')
 
         const subcommand = interaction.options.getSubcommand()
-        if (!subcommand || Object.values(ShopUpdateOption).indexOf(subcommand as ShopUpdateOption) == -1) return replyErrorMessage(interaction, 'Unknown subcommand')
-        this.updateOption = subcommand as ShopUpdateOption
+        if (!subcommand || Object.values(EditShopOption).indexOf(subcommand as EditShopOption) == -1) return replyErrorMessage(interaction, 'Unknown subcommand')
+        this.updateOption = subcommand as EditShopOption
 
         this.updateOptionValue = this.getUpdateValue(interaction, subcommand)
 
@@ -388,13 +388,13 @@ export class ShopUpdateFlow extends UserFlow {
             const oldName = this.selectedShop.name
 
             switch (this.updateOption) {
-                case ShopUpdateOption.NAME:
+                case EditShopOption.NAME:
                     await updateShopName(this.selectedShop.id, this.updateOptionValue)
                     break
-                case ShopUpdateOption.DESCRIPTION:
+                case EditShopOption.DESCRIPTION:
                     await updateShopDescription(this.selectedShop.id, this.updateOptionValue)
                     break
-                case ShopUpdateOption.EMOJI:
+                case EditShopOption.EMOJI:
                     await updateShopEmoji(this.selectedShop.id, this.updateOptionValue)
                     break
                 default:
@@ -413,11 +413,11 @@ export class ShopUpdateFlow extends UserFlow {
 
     private getUpdateValue(interaction: ChatInputCommandInteraction, subcommand: string): string {
         switch (subcommand) {
-            case ShopUpdateOption.NAME:
+            case EditShopOption.NAME:
                 return interaction.options.getString('new-name')?.replaceSpaces() || ''
-            case ShopUpdateOption.DESCRIPTION:
+            case EditShopOption.DESCRIPTION:
                 return interaction.options.getString('new-description')?.replaceSpaces() || ''
-            case ShopUpdateOption.EMOJI:
+            case EditShopOption.EMOJI:
                 const emojiOption = interaction.options.getString('new-emoji')
                 return emojiOption?.match(/<a?:.+?:\d{18,}>|\p{Extended_Pictographic}/gu)?.[0] || ''
             default:

@@ -88,7 +88,10 @@ export async function emptyAccount(id: Snowflake, empty: 'currencies' | 'invento
 
     await save(accountsDatabase)
 }
+// #endregion
 
+
+// #region CURRENCIES
 export function getCurrencies(): Map<string, Currency> {
     return currenciesDatabase.currencies
 }
@@ -120,6 +123,8 @@ export async function removeCurrency(currencyId: string) {
     currenciesDatabase.currencies.delete(currencyId)
     save(currenciesDatabase)
 }
+
+// TODO update currencies functions
 
 // #endregion
 

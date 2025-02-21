@@ -1,7 +1,7 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, Client, MessageFlags, PermissionFlagsBits, SlashCommandBuilder, StringSelectMenuBuilder } from "discord.js"
 import { getShops } from "../database/database-handler"
 import { replyErrorMessage } from "../utils/utils"
-import { AddProductFlow, RemoveProductFlow, ProductUpdateOption, UpdateProductFlow } from "../user-flows/product-flows"
+import { AddProductFlow, RemoveProductFlow, EditProductOption, UpdateProductFlow } from "../user-flows/product-flows"
 
 export const data = new SlashCommandBuilder()
     .setName('products-manage') 
@@ -43,7 +43,7 @@ export const data = new SlashCommandBuilder()
         .setName('edit')
         .setDescription('Edit a product')
         .addSubcommand(subcommand => subcommand
-            .setName(ProductUpdateOption.NAME)
+            .setName(EditProductOption.NAME)
             .setDescription('Change Name. You will select the product later')
             .addStringOption(option => option
                 .setName('new-name')
@@ -54,7 +54,7 @@ export const data = new SlashCommandBuilder()
             )
         )
         .addSubcommand(subcommand => subcommand
-            .setName(ProductUpdateOption.DESCRIPTION)
+            .setName(EditProductOption.DESCRIPTION)
             .setDescription('Change Description. You will select the product later')
             .addStringOption(option => option
                 .setName('new-description')
@@ -65,7 +65,7 @@ export const data = new SlashCommandBuilder()
             )
         )
         .addSubcommand(subcommand => subcommand
-            .setName(ProductUpdateOption.PRICE)
+            .setName(EditProductOption.PRICE)
             .setDescription('Change Price. You will select the product later')
             .addNumberOption(option => option
                 .setName('new-price')
@@ -76,7 +76,7 @@ export const data = new SlashCommandBuilder()
             )
         )
         .addSubcommand(subcommand => subcommand
-            .setName(ProductUpdateOption.EMOJI)
+            .setName(EditProductOption.EMOJI)
             .setDescription('Change Emoji. You will select the product later')
             .addStringOption(option => option
                 .setName('new-emoji')

@@ -101,7 +101,6 @@ export class AccountsDatabase extends Database {
 
         return accounts
     }
-
 }
 
 export interface CurrenciesDatabaseJSONBody extends DatabaseJSONBody {
@@ -170,5 +169,4 @@ export class ShopsDatabase extends Database {
 
         return shops
     }
-
 }

@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, PermissionFlagsBits, Client, ChatInputCommandInteraction, StringSelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from "discord.js"
 import { getCurrencies, getShops } from "../database/database-handler"
 import { replyErrorMessage } from "../utils/utils"
-import { DiscountCodeCreateFlow, DiscountCodeRemoveFlow, ShopCreateFlow, ShopRemoveFlow, ShopReorderFlow, ShopUpdateFlow, ShopUpdateOption } from "../user-flows/shops-flows"
+import { DiscountCodeCreateFlow, DiscountCodeRemoveFlow, ShopCreateFlow, ShopRemoveFlow, ShopReorderFlow, EditShopFlow, EditShopOption } from "../user-flows/shops-flows"
 
 export const data = new SlashCommandBuilder()
     .setName('shops-manage') 
@@ -40,7 +40,7 @@ export const data = new SlashCommandBuilder()
         .setName('edit')
         .setDescription('Edit a shop')
         .addSubcommand(subcommand => subcommand
-            .setName(ShopUpdateOption.NAME)
+            .setName(EditShopOption.NAME)
             .setDescription('Change Name. You will select the shop later')
             .addStringOption(option => option
                 .setName('new-name')
@@ -51,7 +51,7 @@ export const data = new SlashCommandBuilder()
             )
         )
         .addSubcommand(subcommand => subcommand
-            .setName(ShopUpdateOption.DESCRIPTION)
+            .setName(EditShopOption.DESCRIPTION)
             .setDescription('Change Description. You will select the shop later')
             .addStringOption(option => option
                 .setName('new-description')
@@ -62,7 +62,7 @@ export const data = new SlashCommandBuilder()
             )
         )
         .addSubcommand(subcommand => subcommand
-            .setName(ShopUpdateOption.EMOJI)
+            .setName(EditShopOption.EMOJI)
             .setDescription('Change Emoji. You will select the shop later')
             .addStringOption(option => option
                 .setName('new-emoji')
@@ -124,7 +124,7 @@ export async function execute(_client: Client, interaction: ChatInputCommandInte
             break
         default:
             if (subCommandGroup == 'edit') {
-                const editShopFlow = new ShopUpdateFlow()
+                const editShopFlow = new EditShopFlow()
                 editShopFlow.start(interaction)
                 break
             }
