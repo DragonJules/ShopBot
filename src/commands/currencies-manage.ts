@@ -2,7 +2,7 @@ import { SlashCommandBuilder, PermissionFlagsBits, Client, ChatInputCommandInter
 import { replyErrorMessage, replySuccessMessage } from "../utils/utils"
 import { DatabaseError } from "../database/database-types"
 import { createCurrency, getCurrencies } from "../database/database-handler"
-import { CurrencyRemoveFlow } from "../user-flows/currencies-flows"
+import { CurrencyRemoveFlow, EditCurrencyFlow, EditCurrencyOption } from "../user-flows/currencies-flows"
 
 export const data = new SlashCommandBuilder()
     .setName('currencies-manage') 
@@ -27,11 +27,36 @@ export const data = new SlashCommandBuilder()
         .setName('remove')
         .setDescription('Remove the selected currency')
     )
+    .addSubcommandGroup(group => group
+        .setName('edit')
+        .setDescription('Edit a currency')
+        .addSubcommand(subcommand => subcommand
+            .setName(EditCurrencyOption.NAME)
+            .setDescription('Change Name. You will select the currency later')        
+            .addStringOption(option => option
+                .setName('new-name')
+                .setDescription('The new name of the currency')
+                .setRequired(true)
+                .setMaxLength(40)
+                .setMinLength(1)
+            )
+        )
+        .addSubcommand(subcommand => subcommand
+            .setName(EditCurrencyOption.EMOJI)
+            .setDescription('Change Emoji. You will select the currency later')
+            .addStringOption(option => option
+                .setName('new-emoji')
+                .setDescription('The new emoji of the currency (if you just want to remove it write anything)')
+                .setRequired(true)
+            )
+        )
+    )
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     
 
 export async function execute(client: Client, interaction: ChatInputCommandInteraction) {
     const subCommand = interaction.options.getSubcommand()
+    const subCommandGroup = interaction.options.getSubcommandGroup()
 
     switch (subCommand) {
         case 'create':
@@ -43,6 +68,12 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
 
             break 
         default:
+            if (subCommandGroup == 'edit') {
+                const editCurrencyFlow = new EditCurrencyFlow()
+                editCurrencyFlow.start(interaction)
+                break
+            }
+
             return await replyErrorMessage(interaction, 'Invalid subcommand')
     }
 }

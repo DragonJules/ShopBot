@@ -5,6 +5,7 @@ import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuCom
 import { UserInterfaceInteraction } from "../user-interfaces/user-interfaces"
 import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
 import { UserFlow } from "./user-flow"
+import { EMOJI_REGEX } from "../utils/constants"
 
 export class AddProductFlow extends UserFlow {
     public id = "add-product"
@@ -456,7 +457,7 @@ export class UpdateProductFlow extends UserFlow {
                 return`${interaction.options.getNumber(`new-${subcommand}`)?.toFixed(2) || ''}`
             case EditProductOption.EMOJI:
                 const emojiOption = interaction.options.getString(`new-${subcommand}`)
-                return emojiOption?.match(/<a?:.+?:\d{18,}>|\p{Extended_Pictographic}/gu)?.[0] || ''
+                return emojiOption?.match(EMOJI_REGEX)?.[0] || ''
             default:
                 return ''
         }

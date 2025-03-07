@@ -1,5 +1,5 @@
 import { Snowflake } from 'discord.js'
-import { Account, AccountsDatabase, CurrenciesDatabase, Currency, Database, DatabaseError, Product, ProductOptions, ProductOptionsOptional, Shop, ShopsDatabase } from "./database-types"
+import { Account, AccountsDatabase, CurrenciesDatabase, Currency, CurrencyOptionsOptional, Database, DatabaseError, Product, ProductOptions, ProductOptionsOptional, Shop, ShopsDatabase } from "./database-types"
 import fs from 'node:fs/promises'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -124,7 +124,18 @@ export async function removeCurrency(currencyId: string) {
     save(currenciesDatabase)
 }
 
-// TODO update currencies functions
+export async function updateCurrency(currencyId: string, options: CurrencyOptionsOptional) {
+    if (!currenciesDatabase.currencies.has(currencyId)) throw new DatabaseError('Currency does not exist')
+    
+    const { name, emoji } = options
+
+    const currency = currenciesDatabase.currencies.get(currencyId)!
+
+    if (name) currency.name = name
+    if (emoji) currency.emoji = emoji
+
+    await save(currenciesDatabase)
+}
 
 // #endregion
 

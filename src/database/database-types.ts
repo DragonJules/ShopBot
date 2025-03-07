@@ -31,6 +31,9 @@ export interface Currency {
     emoji: string
 }
 
+export type CurrencyOptions = Omit<Currency, 'id'>
+export type CurrencyOptionsOptional = Partial<CurrencyOptions>
+
 export interface Product {
     id: UUID
     shopId: UUID
@@ -41,7 +44,6 @@ export interface Product {
 }
 
 export type ProductOptions = Omit<Product, 'id' | 'shopId'>
-
 export type ProductOptionsOptional = Partial<ProductOptions>
 
 export interface Balance<Item> {
