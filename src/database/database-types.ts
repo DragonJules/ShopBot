@@ -1,10 +1,23 @@
-import { Snowflake } from "discord.js"
+import { Snowflake } from "discord.js";
 import { getCurrencies, getProducts } from "./database-handler";
 
 export type UUID = string
 
+export enum DatabaseErrors {
+    ShopDoesNotExist = 'Shop does not exist',
+    ShopAlreadyExists = 'Shop already exists',
+    InvalidPosition = 'Invalid position',
+
+    CurrencyDoesNotExist = 'Currency does not exist',
+    CurrencyAlreadyExists = 'Currency already exists',
+
+    ProductDoesNotExist = 'Product does not exist',
+
+    AccountDoesNotExist = 'Account does not exist',
+}
+
 export class DatabaseError extends Error {
-    constructor(message: string) {
+    constructor(message: DatabaseErrors) {
         super(message)
         this.name = "DatabaseError"
         Object.setPrototypeOf(this, DatabaseError.prototype);

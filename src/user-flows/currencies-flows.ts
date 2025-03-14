@@ -1,11 +1,11 @@
-import { ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, MessageFlags, ModalSubmitInteraction, StringSelectMenuInteraction } from "discord.js"
+import { bold, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, MessageFlags, ModalSubmitInteraction, StringSelectMenuInteraction } from "discord.js"
 import { getCurrencies, removeCurrency, updateCurrency } from "../database/database-handler"
 import { Currency, DatabaseError } from "../database/database-types"
 import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent, showConfirmationModal } from "../user-interfaces/extended-components"
+import { UserInterfaceInteraction } from "../user-interfaces/user-interfaces"
+import { EMOJI_REGEX, ErrorMessages } from "../utils/constants"
 import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
 import { UserFlow } from "./user-flow"
-import { UserInterfaceInteraction } from "../user-interfaces/user-interfaces"
-import { EMOJI_REGEX } from "../utils/constants"
 
 
 export class CurrencyRemoveFlow extends UserFlow {
@@ -15,7 +15,7 @@ export class CurrencyRemoveFlow extends UserFlow {
 
     async start(interaction: ChatInputCommandInteraction) {
         const currencies = getCurrencies()
-        if (currencies.size == 0) return replyErrorMessage(interaction, 'There isn\'t any currency, so you can\'t remove one. \n-# Use `/currencies-manage create` to create a new currency')    
+        if (currencies.size == 0) return replyErrorMessage(interaction, ErrorMessages.NoCurrencies)    
 
         this.selectedCurrency = null
 
@@ -77,7 +77,7 @@ export class CurrencyRemoveFlow extends UserFlow {
         try {
             if (!this.selectedCurrency) return
             await removeCurrency(this.selectedCurrency.id)
-            await updateAsSuccessMessage(interaction, `You succesfully removed the currency **${this.selectedCurrency.name}**`)
+            await updateAsSuccessMessage(interaction, `You succesfully removed the currency ${bold(this.selectedCurrency.name)}`)
         } catch (error) {
             await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
             return 
@@ -102,10 +102,10 @@ export class EditCurrencyFlow extends UserFlow {
 
     async start(interaction: ChatInputCommandInteraction) {
         const currencies = getCurrencies()
-        if (currencies.size == 0) return replyErrorMessage(interaction, `There isn't any currency, so you can't edit one. \n-# Use \`/currencies-manage create\` to create a new currency`)    
+        if (currencies.size == 0) return replyErrorMessage(interaction, ErrorMessages.NoCurrencies)    
 
         const subcommand = interaction.options.getSubcommand()
-        if (!subcommand || Object.values(EditCurrencyOption).indexOf(subcommand as EditCurrencyOption) == -1) return replyErrorMessage(interaction, 'Unknown subcommand')
+        if (!subcommand || Object.values(EditCurrencyOption).indexOf(subcommand as EditCurrencyOption) == -1) return replyErrorMessage(interaction, ErrorMessages.InvalidSubcommand)
         this.updateOption = subcommand as EditCurrencyOption
 
         this.updateOptionValue = this.getUpdateValue(interaction, subcommand)
@@ -118,7 +118,7 @@ export class EditCurrencyFlow extends UserFlow {
     }
 
     protected override getMessage(): string {
-        return `Update **[${this.selectedCurrency?.name || 'Select Currency'}]**.\n**New ${this.updateOption}**: **${this.updateOptionValue}**`
+        return `Update **[${this.selectedCurrency?.name || 'Select Currency'}]**.\n**New ${this.updateOption}**: ${bold(`${this.updateOptionValue}`)}`
     }
 
     protected override initComponents(): void {
@@ -157,8 +157,8 @@ export class EditCurrencyFlow extends UserFlow {
 
     protected override async success(interaction: UserInterfaceInteraction): Promise<unknown> {
         try {
-            if (!this.selectedCurrency) return updateAsErrorMessage(interaction, 'No selected currency')
-            if (!this.updateOption || this.updateOptionValue == undefined) return updateAsErrorMessage(interaction, 'No selected update option')
+            if (!this.selectedCurrency) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
+            if (!this.updateOption || this.updateOptionValue == undefined) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
             
             const updateOption: Record<string, string | number> = {}
             updateOption[this.updateOption.toString()] = this.updateOptionValue
@@ -167,7 +167,7 @@ export class EditCurrencyFlow extends UserFlow {
 
             await updateCurrency(this.selectedCurrency.id, updateOption)
 
-            await updateAsSuccessMessage(interaction, `You succesfully updated the currency **${oldName}**. \nNew **${this.updateOption}**: **${this.updateOptionValue}**`)
+            await updateAsSuccessMessage(interaction, `You succesfully updated the currency ${bold(oldName)}. \nNew ${bold(this.updateOption)}: ${bold(this.updateOptionValue)}`)
         } catch (error) {
             await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
             return

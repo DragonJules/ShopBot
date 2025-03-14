@@ -1,7 +1,7 @@
 import fs from 'fs/promises'
 import path from 'node:path'
 
-import { Client, GatewayIntentBits, Collection, Interaction, SlashCommandBuilder } from 'discord.js'
+import { Client, Collection, GatewayIntentBits, Interaction, SlashCommandBuilder } from 'discord.js'
 import config from '../config/config.json'
 import { PrettyLog } from './utils/pretty-log'
 import './utils/strings'

@@ -1,11 +1,11 @@
-import { ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, InteractionCallbackResponse, MessageFlags, StringSelectMenuInteraction } from "discord.js"
+import { bold, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, InteractionCallbackResponse, MessageFlags, StringSelectMenuInteraction } from "discord.js"
 import { addProduct, getShops, removeProduct, updateProduct } from "../database/database-handler"
 import { DatabaseError, Product, Shop } from "../database/database-types"
 import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent } from "../user-interfaces/extended-components"
 import { UserInterfaceInteraction } from "../user-interfaces/user-interfaces"
 import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
 import { UserFlow } from "./user-flow"
-import { EMOJI_REGEX } from "../utils/constants"
+import { EMOJI_REGEX, ErrorMessages } from "../utils/constants"
 
 export class AddProductFlow extends UserFlow {
     public id = "add-product"
@@ -20,18 +20,18 @@ export class AddProductFlow extends UserFlow {
 
     public async start(interaction: ChatInputCommandInteraction) {
         const shops = getShops()
-        if (!shops.size) return replyErrorMessage(interaction, 'There isn\'t any shop./n-# Use `/shops-manage create` to create a new one')
+        if (!shops.size) return replyErrorMessage(interaction, ErrorMessages.NoShops)
 
         const productName = interaction.options.getString('name')?.replaceSpaces()
         const productDescription = interaction.options.getString('description')?.replaceSpaces() || ''
         const productPrice = interaction.options.getNumber('price')
 
         const productEmojiOption = interaction.options.getString('emoji')
-        const productEmoji = productEmojiOption?.match(/<a?:.+?:\d{18,}>|\p{Extended_Pictographic}/gu)?.[0] || ''
+        const productEmoji = productEmojiOption?.match(EMOJI_REGEX)?.[0] || ''
 
-        if (!productName || !productPrice) return replyErrorMessage(interaction, 'Insufficient parameters')
+        if (!productName || !productPrice) return replyErrorMessage(interaction, ErrorMessages.InsufficientParameters)
     
-        if (productName.removeCustomEmojis().length == 0) return replyErrorMessage(interaction, 'The product name can\'t contain only custom emojis')
+        if (productName.removeCustomEmojis().length == 0) return replyErrorMessage(interaction, ErrorMessages.NotOnlyEmojisInName)
         
         this.productName = productName
         this.productPrice = +productPrice.toFixed(2)
@@ -46,8 +46,8 @@ export class AddProductFlow extends UserFlow {
     }
     
     protected getMessage(): string {
-        const descString = (this.productDescription) ? `. Description: **${this.productDescription.replaceSpaces()}**` : ''
-        return `Add Product: **${this.productName}** for **${this.productPrice} ${this.selectedShop?.currency.name || '[]'}** in **[${this.selectedShop?.name || 'Select Shop'}]**${descString}`
+        const descString = (this.productDescription) ? `. Description: ${bold(this.productDescription.replaceSpaces())}` : ''
+        return `Add Product: ${bold(`${this.productName}`)} for **${this.productPrice} ${this.selectedShop?.currency.name || '[]'}** in **[${this.selectedShop?.name || 'Select Shop'}]**${descString}`
     }
 
     protected initComponents(): void {
@@ -85,13 +85,13 @@ export class AddProductFlow extends UserFlow {
 
     protected async success(interaction: UserInterfaceInteraction) {
         try {
-            if (!this.selectedShop) return updateAsErrorMessage(interaction, 'No selected shop')
-            if (!this.productName) return updateAsErrorMessage(interaction, 'No product name')
-            if (!this.productPrice) return updateAsErrorMessage(interaction, 'No product price')
+            if (!this.selectedShop) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
+            if (!this.productName) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
+            if (!this.productPrice) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
 
             await addProduct(this.selectedShop.id, { name: this.productName, description: this.productDescription || '', emoji: this.productEmoji || '', price: this.productPrice })
 
-            await updateAsSuccessMessage(interaction, `You succesfully added the product **${this.productName}** to the shop **${this.selectedShop.name}**`)
+            await updateAsSuccessMessage(interaction, `You succesfully added the product ${bold(this.productName)} to the shop ${bold(this.selectedShop.name)}`)
 
         } catch (error) {
             await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
@@ -119,7 +119,7 @@ export class RemoveProductFlow extends UserFlow {
 
     public async start(interaction: ChatInputCommandInteraction) {
         const shops = getShops()
-        if (!shops.size) return replyErrorMessage(interaction, 'There isn\'t any shop./n-# Use `/shops-manage create` to create a new one')
+        if (!shops.size) return replyErrorMessage(interaction, ErrorMessages.NoShops)
 
         this.initComponents()
         this.updateComponents()
@@ -155,7 +155,7 @@ export class RemoveProductFlow extends UserFlow {
                 .setStyle(ButtonStyle.Success)
                 .setDisabled(true),
             (interaction: ButtonInteraction) => {
-                if (this.selectedShop!.products.size == 0) return updateAsErrorMessage(interaction, 'The selected shop has no products')
+                if (this.selectedShop!.products.size == 0) return updateAsErrorMessage(interaction, ErrorMessages.NoProducts)
 
                 this.changeStage(RemoveProductFlowStage.SELECT_PRODUCT)
                 this.updateInteraction(interaction)
@@ -249,12 +249,12 @@ export class RemoveProductFlow extends UserFlow {
         this.disableComponents()
 
         try {
-            if (!this.selectedShop) return updateAsErrorMessage(interaction, 'No selected shop')
-            if (!this.selectedProduct) return updateAsErrorMessage(interaction, 'No selected product')
+            if (!this.selectedShop) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
+            if (!this.selectedProduct) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
 
             await removeProduct(this.selectedShop.id, this.selectedProduct.id)
 
-            await updateAsSuccessMessage(interaction, `You succesfully removed the product **${this.selectedProduct.name}** from the shop **${this.selectedShop.name}**`)
+            await updateAsSuccessMessage(interaction, `You succesfully removed the product ${bold(this.selectedProduct.name)} from the shop ${bold(this.selectedShop.name)}`)
 
         } catch (error) {
             await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
@@ -295,7 +295,7 @@ export class UpdateProductFlow extends UserFlow {
         if (!shops.size) return replyErrorMessage(interaction, `There isn't any shop with products./n-# Use \`/shops-manage create\` to create a new shop, and \`/products-manage add\` to add products`)
 
         const subcommand = interaction.options.getSubcommand()
-        if (!subcommand || Object.values(EditProductOption).indexOf(subcommand as EditProductOption) == -1) return replyErrorMessage(interaction, 'Unknown subcommand')
+        if (!subcommand || Object.values(EditProductOption).indexOf(subcommand as EditProductOption) == -1) return replyErrorMessage(interaction, ErrorMessages.InvalidSubcommand)
         this.updateOption = subcommand as EditProductOption
 
         this.updateOptionValue = this.getUpdateValue(interaction, subcommand)
@@ -309,8 +309,9 @@ export class UpdateProductFlow extends UserFlow {
     }
 
     protected getMessage(): string {
-        if (this.stage == EditProductFlowStage.SELECT_SHOP) return `Update product from **[${this.selectedShop?.name || 'Select Shop'}]**.\nNew **${this.updateOption}**: **${this.updateOptionValue}**`
-        if (this.stage == EditProductFlowStage.SELECT_PRODUCT) return `Update Product: **[${this.selectedProduct?.name || 'Select Product'}]** from **[${this.selectedShop?.name}]**. \nNew **${this.updateOption}**: **${this.updateOptionValue}**`
+        if (this.stage == EditProductFlowStage.SELECT_SHOP) return `Update product from ${bold(`[${this.selectedShop?.name || 'Select Shop'}]`)}.\nNew ${bold(`${this.updateOption}`)}: ${bold(`${this.updateOptionValue}`)}`
+
+        if (this.stage == EditProductFlowStage.SELECT_PRODUCT) return `Update Product: ${bold(`[${this.selectedProduct?.name || 'Select Product'}]`)} from ${bold(this.selectedShop!.name)}. \nNew ${bold(`${this.updateOption}`)}: ${bold(`${this.updateOptionValue}`)}`
 
         return ''
     }
@@ -334,7 +335,7 @@ export class UpdateProductFlow extends UserFlow {
                 .setStyle(ButtonStyle.Success)
                 .setDisabled(true),
             (interaction: ButtonInteraction) => {
-                if (this.selectedShop!.products.size == 0) return updateAsErrorMessage(interaction, 'The selected shop has no products')
+                if (this.selectedShop!.products.size == 0) return updateAsErrorMessage(interaction, ErrorMessages.NoProducts)
 
                 this.changeStage(EditProductFlowStage.SELECT_PRODUCT)
                 this.updateInteraction(interaction)
@@ -428,9 +429,9 @@ export class UpdateProductFlow extends UserFlow {
         this.disableComponents()
 
         try {
-            if (!this.selectedShop) return updateAsErrorMessage(interaction, 'No selected shop')
-            if (!this.selectedProduct) return updateAsErrorMessage(interaction, 'No selected product')
-            if (!this.updateOption || this.updateOptionValue == undefined) return updateAsErrorMessage(interaction, 'No selected update option')
+            if (!this.selectedShop) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
+            if (!this.selectedProduct) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
+            if (!this.updateOption || this.updateOptionValue == undefined) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
             
             const updateOption: Record<string, string | number> = {}
             updateOption[this.updateOption.toString()] = (this.updateOption == EditProductOption.PRICE) ? Number(this.updateOptionValue) : this.updateOptionValue
@@ -439,7 +440,7 @@ export class UpdateProductFlow extends UserFlow {
 
             await updateProduct(this.selectedShop.id, this.selectedProduct.id, updateOption)
 
-            await updateAsSuccessMessage(interaction, `You succesfully updated the product **${oldName}** from the shop **${this.selectedShop.name}**. \nNew **${this.updateOption}**: **${this.updateOptionValue}**`)
+            await updateAsSuccessMessage(interaction, `You succesfully updated the product ${bold(oldName)} from the shop ${bold(this.selectedShop.name)}. \nNew ${bold(this.updateOption)}: ${bold(this.updateOptionValue)}`)
 
         } catch (error) {
             await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)

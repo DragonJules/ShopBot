@@ -1,7 +1,7 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, Client, MessageFlags, PermissionFlagsBits, SlashCommandBuilder, StringSelectMenuBuilder } from "discord.js"
-import { getShops } from "../database/database-handler"
+import { ChatInputCommandInteraction, Client, PermissionFlagsBits, SlashCommandBuilder } from "discord.js"
+import { AddProductFlow, EditProductOption, RemoveProductFlow, UpdateProductFlow } from "../user-flows/product-flows"
 import { replyErrorMessage } from "../utils/utils"
-import { AddProductFlow, RemoveProductFlow, EditProductOption, UpdateProductFlow } from "../user-flows/product-flows"
+import { ErrorMessages } from "../utils/constants"
 
 export const data = new SlashCommandBuilder()
     .setName('products-manage') 
@@ -109,6 +109,6 @@ export async function execute(_client: Client, interaction: ChatInputCommandInte
                 break
             }
             
-            return await replyErrorMessage(interaction, 'Invalid subcommand')
+            return await replyErrorMessage(interaction, ErrorMessages.InvalidSubcommand)
     }
 }

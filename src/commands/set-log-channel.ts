@@ -1,7 +1,9 @@
 import fs from 'node:fs/promises'
 
-import { ChannelType, ChatInputCommandInteraction, Client, MessageFlags, PermissionFlagsBits, SlashCommandBuilder } from 'discord.js'
-import config from '../../config/config.json'
+import { channelMention, ChannelType, ChatInputCommandInteraction, Client, MessageFlags, PermissionFlagsBits, SlashCommandBuilder } from 'discord.js'
+import settings from '../../data/settings.json'
+import { replyErrorMessage, updateAsErrorMessage } from '../utils/utils'
+import { ErrorMessages } from '../utils/constants'
 
 const data = new SlashCommandBuilder()
     .setName('set-log-channel')
@@ -18,15 +20,15 @@ const data = new SlashCommandBuilder()
 async function execute(_client: Client, interaction: ChatInputCommandInteraction) {
     const chosenChannel = interaction.options.getChannel('channel')
 
-    if (chosenChannel ==  null) return await interaction.reply({ content: '❌ An error has occured while executing this command, try again later', components: [] })
+    if (chosenChannel ==  null) return await replyErrorMessage(interaction, ErrorMessages.InsufficientParameters)
 
-    config.logChannelId = chosenChannel.id
+    settings.logChannelId = chosenChannel.id
     try {
-        await fs.writeFile('./config/config.json', JSON.stringify(config, null, 4))
-        await interaction.reply({ content: `You succesfully set the log channel to <#${chosenChannel.id}>, re-use this command to change it`, flags: MessageFlags.Ephemeral })
+        await fs.writeFile('./data/settings.json', JSON.stringify(settings, null, 4))
+        await interaction.reply({ content: `You succesfully set the log channel to ${channelMention(chosenChannel.id)}, re-use this command to change it`, flags: MessageFlags.Ephemeral })
     } catch (error) {
         console.log(error)
-        await interaction.editReply({ content: '❌ An error has occured while executing this command, try again later', components: [] })
+        await updateAsErrorMessage(interaction)
     }
 
 }

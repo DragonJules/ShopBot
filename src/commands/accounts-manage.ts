@@ -1,8 +1,8 @@
-import { SlashCommandBuilder, PermissionFlagsBits, Client, ChatInputCommandInteraction, EmbedBuilder, StringSelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, Colors } from "discord.js"
-import { getCurrencies, getOrCreateAccount } from "../database/database-handler"
-import { replyErrorMessage } from "../utils/utils"
+import { ChatInputCommandInteraction, Client, PermissionFlagsBits, SlashCommandBuilder } from "discord.js"
 import { AccountGiveFlow, AccountTakeFlow } from "../user-flows/accounts-flows"
 import { AccountUserInterface } from "../user-interfaces/account-ui"
+import { replyErrorMessage } from "../utils/utils"
+import { ErrorMessages } from "../utils/constants"
 
 export const data = new SlashCommandBuilder()
     .setName('accounts-manage') 
@@ -55,7 +55,7 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
     switch (subCommand) {
         case 'view-account':
             const user = interaction.options.getUser('target')
-            if (!user) return replyErrorMessage(interaction, 'Invalid user')
+            if (!user) return replyErrorMessage(interaction, ErrorMessages.InsufficientParameters)
     
             const accountUI = new AccountUserInterface(user)
             accountUI.display(interaction)
@@ -72,6 +72,6 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
             
             break
         default:
-            return await replyErrorMessage(interaction, 'Invalid subcommand')
+            return await replyErrorMessage(interaction, ErrorMessages.InvalidSubcommand)
     }
 }

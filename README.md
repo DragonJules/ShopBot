@@ -79,8 +79,7 @@ npm install
 ```json
 {
   "clientId": "[The Application ID you have saved]",
-  "token": "[The Token you have saved]",
-  "logChannelId": "[The ID of the channel the log should be sent in]",
+  "token": "[The Token you have saved]"
 }
 ```
 

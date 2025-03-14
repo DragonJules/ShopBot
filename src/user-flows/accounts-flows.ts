@@ -1,9 +1,10 @@
-import { ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, MessageFlags, StringSelectMenuInteraction, User } from "discord.js"
+import { bold, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, inlineCode, MessageFlags, StringSelectMenuInteraction, User } from "discord.js"
 import { emptyAccount, getCurrencies, getOrCreateAccount, setAccountCurrencyAmount } from "../database/database-handler"
 import { Currency, DatabaseError } from "../database/database-types"
 import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent, showConfirmationModal } from "../user-interfaces/extended-components"
 import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
 import { UserFlow } from "./user-flow"
+import { ErrorMessages } from "../utils/constants"
 
 export class AccountGiveFlow extends UserFlow {
     public id = 'account-give'
@@ -16,12 +17,12 @@ export class AccountGiveFlow extends UserFlow {
 
     public async start(interaction: ChatInputCommandInteraction) {
         const currencies = getCurrencies()
-        if (!currencies.size) return replyErrorMessage(interaction, 'There isn\'t any currency, so you can\'t give money./n-# Use `/currencies-manage create` to create a new currency')
+        if (!currencies.size) return replyErrorMessage(interaction, `Can't give money. ${ErrorMessages.NoCurrencies}`)
     
         const target = interaction.options.getUser('target')
         const amount = interaction.options.getInteger('amount')
     
-        if (!target || !amount) return replyErrorMessage(interaction, 'Insufficient parameters')
+        if (!target || !amount) return replyErrorMessage(interaction, ErrorMessages.InsufficientParameters)
 
         this.target = target
         this.amount = amount
@@ -34,7 +35,7 @@ export class AccountGiveFlow extends UserFlow {
     }
 
     protected override getMessage(): string {
-        return `Give **${this.amount} [${this.selectedCurrency?.name || 'Select Currency'}]** to **${this.target}**`
+        return `Give ${bold(`${this.amount} [${this.selectedCurrency?.name || 'Select Currency'}]`)} to ${bold(`${this.target}`)}`
     }
 
     protected override initComponents(): void {
@@ -74,11 +75,11 @@ export class AccountGiveFlow extends UserFlow {
         this.disableComponents()
         
         try {
-            if (!this.selectedCurrency) return replyErrorMessage(interaction, 'No selected currency')
+            if (!this.selectedCurrency) return replyErrorMessage(interaction, ErrorMessages.InsufficientParameters)
             
             await setAccountCurrencyAmount(this.target!.id, this.selectedCurrency.id, this.amount!)
 
-            await updateAsSuccessMessage(interaction, `You succesfully gave **${this.amount}** ${this.selectedCurrency.name} to **${this.target}**`)
+            await updateAsSuccessMessage(interaction, `You succesfully gave ${bold(`${this.amount}`)} ${this.selectedCurrency.name} to ${bold(`${this.target}`)}`)
             
         } catch (error) {
             await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
@@ -98,12 +99,12 @@ export class AccountTakeFlow extends UserFlow {
 
     public async start(interaction: ChatInputCommandInteraction) {
         const currencies = getCurrencies()
-        if (!currencies.size) return replyErrorMessage(interaction, 'There isn\'t any currency, so you can\'t take money./n-# Use `/currencies-manage create` to create a new currency')
+        if (!currencies.size) return replyErrorMessage(interaction, `Can't take money. ${ErrorMessages.NoCurrencies}`)
     
         const target = interaction.options.getUser('target')
         const amount = interaction.options.getInteger('amount')
     
-        if (!target || !amount) return replyErrorMessage(interaction, 'Insufficient parameters')
+        if (!target || !amount) return replyErrorMessage(interaction, ErrorMessages.InsufficientParameters)
 
         this.target = target
         this.amount = amount
@@ -116,7 +117,7 @@ export class AccountTakeFlow extends UserFlow {
     }
 
     protected override getMessage(): string {
-        return `Take **${this.amount} [${this.selectedCurrency?.name || 'Select Currency'}]** from **${this.target}**`
+        return `Take ${bold(`${this.amount} [${this.selectedCurrency?.name || 'Select Currency'}]`)} from ${bold(`${this.target}`)}`
     }
 
     protected override initComponents(): void {
@@ -167,7 +168,7 @@ export class AccountTakeFlow extends UserFlow {
                 if (!confirmed) return this.updateInteraction(modalSubmitInteraction)
 
                 await emptyAccount(this.target!.id, 'currencies')
-                await updateAsSuccessMessage(modalSubmitInteraction, `You successfully emptied **${this.target}** account`)
+                await updateAsSuccessMessage(modalSubmitInteraction, `You successfully emptied ${bold(`${this.target}`)} account`)
             },
             120_000
         )
@@ -193,14 +194,14 @@ export class AccountTakeFlow extends UserFlow {
     protected async success(interaction: ButtonInteraction) {
         this.disableComponents()
         try {
-            if (!this.selectedCurrency) return replyErrorMessage(interaction, 'No selected currency')
+            if (!this.selectedCurrency) return replyErrorMessage(interaction, ErrorMessages.InsufficientParameters)
             
             const currentBalance = (await getOrCreateAccount(this.target!.id)).currencies.get(this.selectedCurrency.id)?.amount || 0
             const newBalance = Math.max(currentBalance - this.amount!, 0)
             
             await setAccountCurrencyAmount(this.target!.id, this.selectedCurrency.id, newBalance)
 
-            await updateAsSuccessMessage(interaction, `You succesfully took **${this.amount}** ${this.selectedCurrency.name} from **${this.target}**`)
+            await updateAsSuccessMessage(interaction, `You succesfully took ${bold(`${this.amount}`)} ${this.selectedCurrency.name} from ${bold(`${this.target}`)}`)
         } catch (error) {
             await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
         }

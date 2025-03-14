@@ -1,5 +1,5 @@
-import { ComponentType, InteractionCollector, ButtonInteraction, StringSelectMenuInteraction, MessageComponentInteraction, ReadonlyCollection, InteractionCallbackResponse, MessageComponentType, ButtonBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ChatInputCommandInteraction, ModalSubmitInteraction, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } from "discord.js"
-import { Currency, Shop, Product } from "../database/database-types"
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ChatInputCommandInteraction, ComponentType, InteractionCallbackResponse, InteractionCollector, MessageComponentInteraction, MessageComponentType, ModalBuilder, ModalSubmitInteraction, ReadonlyCollection, StringSelectMenuBuilder, StringSelectMenuInteraction, StringSelectMenuOptionBuilder, TextInputBuilder, TextInputStyle } from "discord.js"
+import { Currency, Product, Shop } from "../database/database-types"
 import { UserInterfaceComponentBuilder } from "./user-interfaces"
 
 export abstract class ExtendedComponent {

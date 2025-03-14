@@ -1,6 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction, MessageFlags, Client, Colors } from "discord.js"
-import { getOrCreateAccount } from "../database/database-handler"
-import { replyErrorMessage } from "../utils/utils"
+import { ChatInputCommandInteraction, Client, SlashCommandBuilder } from "discord.js"
 import { AccountUserInterface } from "../user-interfaces/account-ui"
 
 export const data = new SlashCommandBuilder()

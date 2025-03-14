@@ -1,5 +1,5 @@
-import { ActionRowBuilder, ButtonBuilder, ChatInputCommandInteraction, ComponentType, EmbedBuilder, InteractionCallbackResponse, InteractionEditReplyOptions, Message, MessageComponentInteraction, ModalSubmitInteraction, StringSelectMenuBuilder } from "discord.js"
-import { updateAsErrorMessage, replyErrorMessage } from "../utils/utils"
+import { ActionRowBuilder, ButtonBuilder, ChatInputCommandInteraction, ComponentType, EmbedBuilder, InteractionCallbackResponse, InteractionEditReplyOptions, MessageComponentInteraction, ModalSubmitInteraction, StringSelectMenuBuilder } from "discord.js"
+import { replyErrorMessage, updateAsErrorMessage } from "../utils/utils"
 import { ExtendedComponent } from "./extended-components"
 
 export type UserInterfaceInteraction = ChatInputCommandInteraction | MessageComponentInteraction | ModalSubmitInteraction

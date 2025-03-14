@@ -1,10 +1,11 @@
-import { ActionRowBuilder, APIEmbed, APIEmbedField, ButtonBuilder, ButtonInteraction, ButtonStyle, Colors, EmbedBuilder, InteractionCallbackResponse, MessageFlags, ModalBuilder, ModalSubmitInteraction, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from "discord.js"
+import { ActionRowBuilder, APIEmbedField, bold, ButtonBuilder, ButtonInteraction, ButtonStyle, Colors, EmbedBuilder, InteractionCallbackResponse, MessageFlags, ModalBuilder, ModalSubmitInteraction, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from "discord.js"
+import { getOrCreateAccount, getShops, setAccountCurrencyAmount, setAccountItemAmount } from "../database/database-handler"
+import { DatabaseError, Product, Shop } from "../database/database-types"
+import { logToDiscord, replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
+import { AccountUserInterface } from "./account-ui"
 import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent } from "./extended-components"
 import { EmbedUserInterface, MessageUserInterface, UserInterfaceInteraction } from "./user-interfaces"
-import { getOrCreateAccount, getShops, setAccountCurrencyAmount, setAccountItemAmount } from "../database/database-handler"
-import { logToDiscord, replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
-import { DatabaseError, Product, Shop } from "../database/database-types"
-import { AccountUserInterface } from "./account-ui"
+import { ErrorMessages } from "../utils/constants"
 
 const PRODUCTS_PER_PAGE = 9
 
@@ -39,7 +40,7 @@ export class ShopUserInterface extends EmbedUserInterface {
 
     public override async display(interaction: UserInterfaceInteraction) {
         const shops = getShops()
-        if (!shops.size) return replyErrorMessage(interaction, 'There isn\'t any shop.\n-# Use `/shops-manage create` to create a new one')
+        if (!shops.size) return replyErrorMessage(interaction, ErrorMessages.NoShops)
 
         this.selectedShop = shops.entries().next().value?.[1]!
 
@@ -78,7 +79,7 @@ export class ShopUserInterface extends EmbedUserInterface {
                 .setEmoji({name: '🪙'})
                 .setStyle(ButtonStyle.Primary),
             (interaction: ButtonInteraction) => {
-                if (!this.selectedShop) return updateAsErrorMessage(interaction, 'No selected shop')
+                if (!this.selectedShop) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
 
                 const buyProductUI = new BuyProductUserInterface(this.selectedShop)
                 buyProductUI.display(interaction)
@@ -237,7 +238,7 @@ export class BuyProductUserInterface extends MessageUserInterface {
     }
 
     public override async display(interaction: UserInterfaceInteraction) {
-        if (!this.selectedShop.products.size) return await replyErrorMessage(interaction, 'There is no product available here')
+        if (!this.selectedShop.products.size) return await replyErrorMessage(interaction, ErrorMessages.NoProducts)
 
         this.initComponents()
         this.updateComponents()
@@ -247,8 +248,8 @@ export class BuyProductUserInterface extends MessageUserInterface {
     }
 
     protected override getMessage(): string {
-        const discountCodeString = this.discountCode ? `\nDiscount code: **${this.discountCode}**` : ''
-        return `Buy **[${this.selectedProduct?.name || 'Select Product'}]** from **${this.selectedShop.name}**.${discountCodeString}`
+        const discountCodeString = this.discountCode ? `\nDiscount code: ${bold(this.discountCode)}` : ''
+        return `Buy **[${this.selectedProduct?.name || 'Select Product'}]** from ${bold(this.selectedShop.name)}.${discountCodeString}`
     }
 
     protected override initComponents(): void {
@@ -330,14 +331,15 @@ export class BuyProductUserInterface extends MessageUserInterface {
     }
 
     private async buyProduct(interaction: UserInterfaceInteraction) {
-        if (!this.selectedProduct) return
+        if (!this.selectedProduct) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
         try {
             const user = await getOrCreateAccount(interaction.user.id)
             
             const userCurrencyAmount = user.currencies.get(this.selectedShop.currency.id)?.amount || 0
             const price = this.selectedProduct.price * (1 - this.discount / 100)
 
-            if (userCurrencyAmount < price) return replyErrorMessage(interaction, `You don\'t have enough ${this.selectedShop.currency.name} to buy this product`)
+            if (userCurrencyAmount < price) return replyErrorMessage(interaction, `You don't have enough ${this.selectedShop.currency.name} to buy this product`)
+            
             
             setAccountCurrencyAmount(interaction.user.id, this.selectedShop.currency.id, userCurrencyAmount - price)
 
@@ -345,10 +347,9 @@ export class BuyProductUserInterface extends MessageUserInterface {
             setAccountItemAmount(interaction.user.id, this.selectedProduct, productCurrencyAmount + 1)
 
             const priceString = (this.discount == 0) ? `**${price} ${this.selectedShop.currency.name}**` : `~~${this.selectedProduct.price}~~ **${price} ${this.selectedShop.currency.name}**`
+            await updateAsSuccessMessage(interaction, `You succesfully bought ${bold(this.selectedProduct.name)} in ${bold(this.selectedShop.name)} for ${priceString}`)
 
-            await updateAsSuccessMessage(interaction, `You succesfully bought **${this.selectedProduct.name}** in **${this.selectedShop.name}** for ${priceString}`)
-
-            logToDiscord(interaction, `${interaction.member} purchased **${this.selectedProduct.name}** from **${this.selectedShop.name}** for ${priceString}** with discount code ${this.discountCode ? this.discountCode : 'none'}`)
+            logToDiscord(interaction, `${interaction.member} purchased ${bold(this.selectedProduct.name)} from ${bold(this.selectedShop.name)} for ${priceString}** with discount code ${this.discountCode ? this.discountCode : 'none'}`)
         } catch (error) {
             await replyErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
         }

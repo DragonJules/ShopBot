@@ -2,14 +2,15 @@ import { MessageFlags, TextChannel } from "discord.js"
 import { UserInterfaceInteraction } from "../user-interfaces/user-interfaces"
 import { PrettyLog } from "./pretty-log"
 
-import { logChannelId } from "../../config/config.json"
+import { logChannelId } from "../../data/settings.json"
+import { ErrorMessages } from "./constants"
 
-export async function replyErrorMessage(interaction: UserInterfaceInteraction, errorMessage?: string) {
-    return await interaction.reply({ content: getErrorMessage(errorMessage), flags: MessageFlags.Ephemeral })
+export async function replyErrorMessage(interaction: UserInterfaceInteraction, errorMessage?: string | ErrorMessages) {
+    return await interaction.reply({ content: getErrorMessage(errorMessage as string), flags: MessageFlags.Ephemeral })
 }
 
-export async function updateAsErrorMessage(interaction: UserInterfaceInteraction, errorMessage?: string) {
-    const message = getErrorMessage(errorMessage)
+export async function updateAsErrorMessage(interaction: UserInterfaceInteraction, errorMessage?: string | ErrorMessages) {
+    const message = getErrorMessage(errorMessage as string)
 
     if (interaction.deferred) return await interaction.editReply({ content: message, components: [] })
     if (interaction.isMessageComponent() || (interaction.isModalSubmit() && interaction.isFromMessage())) return await interaction.update({ content: message, components: [] })
@@ -38,7 +39,7 @@ function getSuccessMessage(succesMessage: string) {
     return `✅ ${succesMessage}`
 }
 
-export async function logToDiscord(interaction: UserInterfaceInteraction,message: string) {
+export async function logToDiscord(interaction: UserInterfaceInteraction, message: string) {
     PrettyLog.info(`Logged to Discord: ${message}`)
     
     try {

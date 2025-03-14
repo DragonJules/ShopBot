@@ -1,8 +1,9 @@
-import { SlashCommandBuilder, PermissionFlagsBits, Client, ChatInputCommandInteraction, StringSelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from "discord.js"
-import { replyErrorMessage, replySuccessMessage } from "../utils/utils"
+import { bold, ChatInputCommandInteraction, Client, PermissionFlagsBits, SlashCommandBuilder } from "discord.js"
+import { createCurrency } from "../database/database-handler"
 import { DatabaseError } from "../database/database-types"
-import { createCurrency, getCurrencies } from "../database/database-handler"
 import { CurrencyRemoveFlow, EditCurrencyFlow, EditCurrencyOption } from "../user-flows/currencies-flows"
+import { EMOJI_REGEX, ErrorMessages } from "../utils/constants"
+import { replyErrorMessage, replySuccessMessage } from "../utils/utils"
 
 export const data = new SlashCommandBuilder()
     .setName('currencies-manage') 
@@ -74,23 +75,23 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
                 break
             }
 
-            return await replyErrorMessage(interaction, 'Invalid subcommand')
+            return await replyErrorMessage(interaction, ErrorMessages.InvalidSubcommand)
     }
 }
 
 export async function createCurrencyCommand(_client: Client, interaction: ChatInputCommandInteraction) {
     const currencyName = interaction.options.getString('name')?.replaceSpaces()
-    if (!currencyName) return replyErrorMessage(interaction, 'Insufficient parameters')
+    if (!currencyName) return replyErrorMessage(interaction, ErrorMessages.InsufficientParameters)
 
     const emojiOption = interaction.options.getString('emoji')
-    const emojiString = emojiOption?.match(/<a?:.+?:\d{18,}>|\p{Extended_Pictographic}/gu)?.[0] || ''
+    const emojiString = emojiOption?.match(EMOJI_REGEX)?.[0] || ''
 
     try {
-        if (currencyName.removeCustomEmojis().length == 0) return replyErrorMessage(interaction, 'The currency name can\'t contain only custom emojis')
+        if (currencyName.removeCustomEmojis().length == 0) return replyErrorMessage(interaction, ErrorMessages.NotOnlyEmojisInName)
         
         await createCurrency(currencyName, emojiString)
 
-        await replySuccessMessage(interaction, `You succesfully created the currency **${currencyName}**. \n-# Use \`/currencies-manage remove\` to remove it`)        
+        await replySuccessMessage(interaction, `You succesfully created the currency ${bold(currencyName)}. \n-# Use \`/currencies-manage remove\` to remove it`)        
     } catch (error) {
         return await replyErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
     }
