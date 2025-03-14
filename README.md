@@ -198,7 +198,7 @@ I will after that add the following features, some of which have been suggested 
 - ✅ Pagination system in shops
 - ✅ emojis for products, currencies and products
 - ✅ New commands system, for easier use
-- Editable ✅ shops, ✅ products and 🔄️ currencies
+- ✅ Editable shops, products and currencies
 - ❓ API to automate actions like: filling accounts; managing currencies, shops and products 
 
 All those changes will be made on this branch.
