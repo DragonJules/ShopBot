@@ -53,7 +53,8 @@ Now, let's configure your bot, caution, you need to do it carefully
 This repo is the bot's source code, not a bot itself. <br>
 To use it, you must host it yourself. There are several methods to do this, some are free, some are paid (Be careful that your hosting solution allows file editing, sometimes called local database, otherwise all the bot's data will be lost if the server restarts). <br>
 Once you found the hoster for your bot, here are the steps to follow: <br>
-We will first create the bot :
+### Installing the bot
+#### Creating the bot
 1. Go on [Discord Developer Portal](https://discord.com/developers/applications) and login
 2. Click **New Application**, give your bot a name, accept the ToS and developer policy
 3. In the **Installation** tab, untick **User Install**, and in **Install Link** select **None**
@@ -68,7 +69,8 @@ We will first create the bot :
 9. Select **Guild Install** and copy the generated URL
 10. Follow this URL and add the bot to the server you want, accept everything, the bot should be added to your server !
 
-Now, we can link the bot to the code, so you can start using it : 
+#### Configuring the bot
+Now, we'll link the code to the bot.
 1. You need to have [Node.js](https://nodejs.org/en) installed on your machine.
 2. [Download my code](https://github.com/DragonJules/ShopBot/archive/refs/heads/main.zip) and extract it from the ZIP file (or clone the repo), open the folder where it's located, and open a terminal from here.
 3. Install the required packages and compile the code by executing the following command:
@@ -83,7 +85,7 @@ npm install
 }
 ```
 
-
+#### Uploading the bot
 Your Bot is ready to be uploaded on the server ! The following steps may vary depending on your hosting solution.
 1. Upload the whole **ShopBot-main** folder on the server.
 2. Create a routine for restarting the server. Such that the following command is executed from the bot's folder each time the server is restarted.
@@ -110,42 +112,43 @@ If you have any problem with it, feel free to message me on Discord, or open an 
 
 #### Commands for everyone:
 
-*• Show user's account*
-  `/account` <br>
+- Show user's account: `/account` 
  
-*• Display the shops*
-  `/shop` 
+- Display the shops: `/shop` 
 
-<br>
 
 #### Admin commands:
-`/set-log-channel`
+- Settings
+```
+  /set-log-channel
+```
 
-*• Manage Currencies*
+- Manage Currencies
 ```
   /currencies-manage
-    | create <name>
+    | create <name> <emoji>
+    | edit <name/emoji> <new-value>
     | remove
 ```
 
-*• Manage Shops*
+- Manage Shops
 ```
   /shops-manage
-    | create <name>
+    | create <name> <emoji>
+    | edit <name/description/emoji> <new-value>
+    | reorder
     | remove
-    | edit <name/description> <new-value>
-    | reorder *not implemented yet*
 ```
 
-*• Manage products*
+- Manage products
 ```
   /products-manage
-    | add <name> <price> <description>
+    | add <name> <price> <description> <emoji>
+    | edit <name/price/description/emoji> <new-value>
     | remove
-    | edit <name/price/description> <new-value>
 ```
 
-*• Manage users*
+- Manage users
 ```
   /accounts-manage
     | view-account <target>
@@ -164,26 +167,25 @@ This for you not to have to remember the name of each currency and shop to manag
 The use of those command is made as intuitive as possible using Discord's slash-commands and message components.
 If you encounter any issue with a command, you can open an [issue](https://github.com/DragonJules/ShopBot/issues).
 
-
+<!-- TODO Update Screenshots -->
 ## Screenshots 
+### What members of the discord can see
+#### Shop 
+<img src="./readme/assets/shop.png" height="320px"/> 
 
-### What members of the discord can see:
-Shop <br>
-<img src="./readme/assets/shop.png" height="320px"/>   <br>
-Buy | Account <br>
+#### Buy | Account
 <img src="./readme/assets/buy.png" height="200px"/>   <img src="./readme/assets/account.png" height="200px"/>
 
-<br>
 
-### Examples of what you as an administrator can see:
-Create | Delete a currency: <br>
+### Examples of what you, as an administrator, can see
+#### Create | Delete a currency
 <img src="./readme/assets/create-currency.png" height="120px"/> <img src="./readme/assets/remove-currency.png" height="120px"/> 
 
-Create | Delete a shop: <br>
+#### Create | Delete a shop
 <img src="./readme/assets/create-shop.png" height="166px"/> <img src="./readme/assets/remove-shop.png" height="166px"/> 
 
 
-Configuring bot's commands permissions: <br>
+#### Configuring bot's commands permissions
 <img src="./readme/assets/bot-perms1.png" height="290px"/> <img src="./readme/assets/bot-perms2.png" height="290px"/>
 
 
