@@ -25,7 +25,7 @@ async function execute(_client: Client, interaction: ChatInputCommandInteraction
     settings.logChannelId = chosenChannel.id
     try {
         await fs.writeFile('./data/settings.json', JSON.stringify(settings, null, 4))
-        await interaction.reply({ content: `You succesfully set the log channel to ${channelMention(chosenChannel.id)}, re-use this command to change it`, flags: MessageFlags.Ephemeral })
+        await interaction.reply({ content: `You successfully set the log channel to ${channelMention(chosenChannel.id)}, re-use this command to change it`, flags: MessageFlags.Ephemeral })
     } catch (error) {
         console.log(error)
         await updateAsErrorMessage(interaction)

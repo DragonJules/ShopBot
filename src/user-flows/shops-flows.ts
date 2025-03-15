@@ -113,7 +113,7 @@ export class ShopCreateFlow extends UserFlow {
             
             await createShop(this.shopName, this.shopDescription || '', this.selectedCurrency.id, this.shopEmoji || '')
 
-            await updateAsSuccessMessage(interaction, `You succesfully created the shop ${bold(this.shopName)} with the currency ${bold(this.selectedCurrency.name)}. \n-# Use \`/shops-manage remove\` to remove it`)
+            await updateAsSuccessMessage(interaction, `You successfully created the shop ${bold(this.shopName)} with the currency ${bold(this.selectedCurrency.name)}. \n-# Use \`/shops-manage remove\` to remove it`)
 
         } catch (error) {
             await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
@@ -185,7 +185,7 @@ export class ShopRemoveFlow extends UserFlow {
             
             await removeShop(this.selectedShop.id)
 
-            await updateAsSuccessMessage(interaction, `You succesfully removed the shop ${bold(this.selectedShop.name)}`)
+            await updateAsSuccessMessage(interaction, `You successfully removed the shop ${bold(this.selectedShop.name)}`)
         }
         catch (error) {
             await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
@@ -300,7 +300,7 @@ export class ShopReorderFlow extends UserFlow {
             if (!this.selectedShop || !this.selectedPosition) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
 
             updateShopPosition(this.selectedShop.id, this.selectedPosition - 1)
-            await updateAsSuccessMessage(interaction, `You succesfully changed the position of ${bold(this.selectedShop.name)} to ${bold(`${this.selectedPosition}`)}`)
+            await updateAsSuccessMessage(interaction, `You successfully changed the position of ${bold(this.selectedShop.name)} to ${bold(`${this.selectedPosition}`)}`)
             return
         }
         catch (error) {
@@ -403,7 +403,7 @@ export class EditShopFlow extends UserFlow {
                     return
             }
 
-            await updateAsSuccessMessage(interaction, `You succesfully updated the shop ${bold(oldName)}.\n New ${bold(this.updateOption)}: ${bold(this.updateOptionValue)}`)
+            await updateAsSuccessMessage(interaction, `You successfully updated the shop ${bold(oldName)}.\n New ${bold(this.updateOption)}: ${bold(this.updateOptionValue)}`)
         }
         catch (error) {
             await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
@@ -501,7 +501,7 @@ export class DiscountCodeCreateFlow extends UserFlow {
 
             await createDiscountCode(this.selectedShop.id, this.discountCode, this.discountAmount)
 
-            await updateAsSuccessMessage(interaction, `You succesfully created the discount code ${bold(this.discountCode)} for ${bold(this.selectedShop.name)}.\n${bold(`Amount: ${this.discountAmount}`)}%`)
+            await updateAsSuccessMessage(interaction, `You successfully created the discount code ${bold(this.discountCode)} for ${bold(this.selectedShop.name)}.\n${bold(`Amount: ${this.discountAmount}`)}%`)
         } catch (error) {
             await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
             return
@@ -665,7 +665,7 @@ export class DiscountCodeRemoveFlow extends UserFlow {
 
             await removeDiscountCode(this.selectedShop.id, this.selectedDiscountCode)
 
-            await updateAsSuccessMessage(interaction, `You succesfully removed the discount code ${bold(this.selectedDiscountCode)} from ${bold(this.selectedShop.name)}`)
+            await updateAsSuccessMessage(interaction, `You successfully removed the discount code ${bold(this.selectedDiscountCode)} from ${bold(this.selectedShop.name)}`)
         } catch (error) {
             await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
             return

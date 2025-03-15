@@ -91,7 +91,7 @@ export async function createCurrencyCommand(_client: Client, interaction: ChatIn
         
         await createCurrency(currencyName, emojiString)
 
-        await replySuccessMessage(interaction, `You succesfully created the currency ${bold(currencyName)}. \n-# Use \`/currencies-manage remove\` to remove it`)        
+        await replySuccessMessage(interaction, `You successfully created the currency ${bold(currencyName)}. \n-# Use \`/currencies-manage remove\` to remove it`)        
     } catch (error) {
         return await replyErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
     }

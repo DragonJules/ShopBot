@@ -91,7 +91,7 @@ export class AddProductFlow extends UserFlow {
 
             await addProduct(this.selectedShop.id, { name: this.productName, description: this.productDescription || '', emoji: this.productEmoji || '', price: this.productPrice })
 
-            await updateAsSuccessMessage(interaction, `You succesfully added the product ${bold(this.productName)} to the shop ${bold(this.selectedShop.name)}`)
+            await updateAsSuccessMessage(interaction, `You successfully added the product ${bold(this.productName)} to the shop ${bold(this.selectedShop.name)}`)
 
         } catch (error) {
             await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
@@ -254,7 +254,7 @@ export class RemoveProductFlow extends UserFlow {
 
             await removeProduct(this.selectedShop.id, this.selectedProduct.id)
 
-            await updateAsSuccessMessage(interaction, `You succesfully removed the product ${bold(this.selectedProduct.name)} from the shop ${bold(this.selectedShop.name)}`)
+            await updateAsSuccessMessage(interaction, `You successfully removed the product ${bold(this.selectedProduct.name)} from the shop ${bold(this.selectedShop.name)}`)
 
         } catch (error) {
             await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
@@ -440,7 +440,7 @@ export class UpdateProductFlow extends UserFlow {
 
             await updateProduct(this.selectedShop.id, this.selectedProduct.id, updateOption)
 
-            await updateAsSuccessMessage(interaction, `You succesfully updated the product ${bold(oldName)} from the shop ${bold(this.selectedShop.name)}. \nNew ${bold(this.updateOption)}: ${bold(this.updateOptionValue)}`)
+            await updateAsSuccessMessage(interaction, `You successfully updated the product ${bold(oldName)} from the shop ${bold(this.selectedShop.name)}. \nNew ${bold(this.updateOption)}: ${bold(this.updateOptionValue)}`)
 
         } catch (error) {
             await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)

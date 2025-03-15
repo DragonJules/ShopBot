@@ -79,7 +79,7 @@ export class AccountGiveFlow extends UserFlow {
             
             await setAccountCurrencyAmount(this.target!.id, this.selectedCurrency.id, this.amount!)
 
-            await updateAsSuccessMessage(interaction, `You succesfully gave ${bold(`${this.amount}`)} ${this.selectedCurrency.name} to ${bold(`${this.target}`)}`)
+            await updateAsSuccessMessage(interaction, `You successfully gave ${bold(`${this.amount}`)} ${this.selectedCurrency.name} to ${bold(`${this.target}`)}`)
             
         } catch (error) {
             await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
@@ -201,7 +201,7 @@ export class AccountTakeFlow extends UserFlow {
             
             await setAccountCurrencyAmount(this.target!.id, this.selectedCurrency.id, newBalance)
 
-            await updateAsSuccessMessage(interaction, `You succesfully took ${bold(`${this.amount}`)} ${this.selectedCurrency.name} from ${bold(`${this.target}`)}`)
+            await updateAsSuccessMessage(interaction, `You successfully took ${bold(`${this.amount}`)} ${this.selectedCurrency.name} from ${bold(`${this.target}`)}`)
         } catch (error) {
             await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
         }

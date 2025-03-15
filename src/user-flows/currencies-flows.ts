@@ -77,7 +77,7 @@ export class CurrencyRemoveFlow extends UserFlow {
         try {
             if (!this.selectedCurrency) return
             await removeCurrency(this.selectedCurrency.id)
-            await updateAsSuccessMessage(interaction, `You succesfully removed the currency ${bold(this.selectedCurrency.name)}`)
+            await updateAsSuccessMessage(interaction, `You successfully removed the currency ${bold(this.selectedCurrency.name)}`)
         } catch (error) {
             await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
             return 
@@ -167,7 +167,7 @@ export class EditCurrencyFlow extends UserFlow {
 
             await updateCurrency(this.selectedCurrency.id, updateOption)
 
-            await updateAsSuccessMessage(interaction, `You succesfully updated the currency ${bold(oldName)}. \nNew ${bold(this.updateOption)}: ${bold(this.updateOptionValue)}`)
+            await updateAsSuccessMessage(interaction, `You successfully updated the currency ${bold(oldName)}. \nNew ${bold(this.updateOption)}: ${bold(this.updateOptionValue)}`)
         } catch (error) {
             await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
             return

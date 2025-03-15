@@ -347,7 +347,7 @@ export class BuyProductUserInterface extends MessageUserInterface {
             setAccountItemAmount(interaction.user.id, this.selectedProduct, productCurrencyAmount + 1)
 
             const priceString = (this.discount == 0) ? `**${price} ${this.selectedShop.currency.name}**` : `~~${this.selectedProduct.price}~~ **${price} ${this.selectedShop.currency.name}**`
-            await updateAsSuccessMessage(interaction, `You succesfully bought ${bold(this.selectedProduct.name)} in ${bold(this.selectedShop.name)} for ${priceString}`)
+            await updateAsSuccessMessage(interaction, `You successfully bought ${bold(this.selectedProduct.name)} in ${bold(this.selectedShop.name)} for ${priceString}`)
 
             logToDiscord(interaction, `${interaction.member} purchased ${bold(this.selectedProduct.name)} from ${bold(this.selectedShop.name)} for ${priceString}** with discount code ${this.discountCode ? this.discountCode : 'none'}`)
         } catch (error) {
