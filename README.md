@@ -92,7 +92,7 @@ Your Bot is ready to be uploaded on the server ! The following steps may vary de
 ```bash
 npm run start
 ```
-3. Open a terminal from the bot' folder and execute the following command :
+3. Open a terminal from the bot's folder and execute the following command :
 ```bash
 npm run deploy /a
 ```

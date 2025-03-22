@@ -25,7 +25,7 @@ export const data = new SlashCommandBuilder()
             .setDescription('The user you want to give money')
             .setRequired(true)    
         )
-        .addIntegerOption(option => option
+        .addNumberOption(option => option
             .setName('amount')
             .setDescription('The amount of money to give')
             .setRequired(true)
@@ -41,7 +41,7 @@ export const data = new SlashCommandBuilder()
             .setDescription('The user you want to take money')
             .setRequired(true)    
         )
-        .addIntegerOption(option => option
+        .addNumberOption(option => option
             .setName('amount')
             .setDescription('The amount of money to take. If you want to take all target\'s money, you will be able to do it later')
             .setRequired(true)

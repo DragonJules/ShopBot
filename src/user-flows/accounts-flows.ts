@@ -20,7 +20,7 @@ export class AccountGiveFlow extends UserFlow {
         if (!currencies.size) return replyErrorMessage(interaction, `Can't give money. ${ErrorMessages.NoCurrencies}`)
     
         const target = interaction.options.getUser('target')
-        const amount = interaction.options.getInteger('amount')
+        const amount = interaction.options.getNumber('amount')
     
         if (!target || !amount) return replyErrorMessage(interaction, ErrorMessages.InsufficientParameters)
 
@@ -103,7 +103,7 @@ export class AccountTakeFlow extends UserFlow {
         if (!currencies.size) return replyErrorMessage(interaction, `Can't take money. ${ErrorMessages.NoCurrencies}`)
     
         const target = interaction.options.getUser('target')
-        const amount = interaction.options.getInteger('amount')
+        const amount = interaction.options.getNumber('amount')
     
         if (!target || !amount) return replyErrorMessage(interaction, ErrorMessages.InsufficientParameters)
 
