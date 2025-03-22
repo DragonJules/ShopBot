@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, Client, PermissionFlagsBits, SlashCommandBuilder } from "discord.js"
-import { DiscountCodeCreateFlow, DiscountCodeRemoveFlow, EditShopFlow, EditShopOption, ShopCreateFlow, ShopRemoveFlow, ShopReorderFlow } from "../user-flows/shops-flows"
-import { replyErrorMessage } from "../utils/utils"
+import { DiscountCodeCreateFlow, DiscountCodeRemoveFlow, EditShopCurrencyFlow, EditShopFlow, EditShopOption, ShopCreateFlow, ShopRemoveFlow, ShopReorderFlow } from "../user-flows/shops-flows"
 import { ErrorMessages } from "../utils/constants"
+import { replyErrorMessage } from "../utils/utils"
 
 export const data = new SlashCommandBuilder()
     .setName('shops-manage') 
@@ -70,6 +70,10 @@ export const data = new SlashCommandBuilder()
                 .setRequired(true)
             )
         )
+        .addSubcommand(subcommand => subcommand
+            .setName('currency')
+            .setDescription('Change Currency. You will select the shop later')
+        )
     )
     .addSubcommand(subcommand => subcommand
         .setName('create-discount-code')
@@ -124,12 +128,18 @@ export async function execute(_client: Client, interaction: ChatInputCommandInte
             break
         default:
             if (subCommandGroup == 'edit') {
+                if (subCommand == 'currency') {
+                    const editShopCurrencyFlow = new EditShopCurrencyFlow()
+                    editShopCurrencyFlow.start(interaction)
+                    break
+                }
+
                 const editShopFlow = new EditShopFlow()
                 editShopFlow.start(interaction)
                 break
             }
 
-            return await replyErrorMessage(interaction, ErrorMessages.InvalidSubcommand)
+            await replyErrorMessage(interaction, ErrorMessages.InvalidSubcommand)
     }
 
 }

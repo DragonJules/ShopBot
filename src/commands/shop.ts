@@ -6,7 +6,7 @@ export const data = new SlashCommandBuilder()
     .setDescription('Display shops and buy products')
 
 
-export async function execute(_client: Client, interaction: ChatInputCommandInteraction){
+export async function execute(_client: Client, interaction: ChatInputCommandInteraction) {
     const shopInterface = new ShopUserInterface()
     shopInterface.display(interaction)
 }

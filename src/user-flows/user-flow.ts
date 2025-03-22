@@ -3,7 +3,7 @@ import { UserInterface, UserInterfaceInteraction } from "../user-interfaces/user
 
 
 export abstract class UserFlow extends UserInterface {
-    public abstract start(interaction: ChatInputCommandInteraction): void 
-    protected abstract success(interaction: UserInterfaceInteraction): void
+    public abstract start(interaction: ChatInputCommandInteraction): Promise<unknown> 
+    protected abstract success(interaction: UserInterfaceInteraction): Promise<unknown>
 }
 

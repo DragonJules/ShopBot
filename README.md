@@ -202,6 +202,7 @@ I will after that add the following features, some of which have been suggested 
 - ✅ New commands system, for easier use
 - ✅ Editable shops, products and currencies
 - ❓ API to automate actions like: filling accounts; managing currencies, shops and products 
+- Automatic action products (e.g. give a certain amount of currency to a user, give a role to a user, etc.)
 
 All those changes will be made on this branch.
 

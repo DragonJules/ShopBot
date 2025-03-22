@@ -1,8 +1,8 @@
-import { APIEmbedField, ButtonBuilder, ButtonInteraction, ButtonStyle, Colors, EmbedBuilder, MessageFlags, User, userMention } from "discord.js"
-import { EmbedUserInterface, UserInterfaceInteraction } from "./user-interfaces"
-import { ExtendedButtonComponent, ExtendedComponent } from "./extended-components"
-import { Account } from "../database/database-types"
+import { APIEmbedField, ButtonBuilder, ButtonInteraction, ButtonStyle, Colors, EmbedBuilder, MessageFlags, User } from "discord.js"
 import { getOrCreateAccount } from "../database/database-handler"
+import { Account } from "../database/database-types"
+import { ExtendedButtonComponent, ExtendedComponent } from "./extended-components"
+import { EmbedUserInterface, UserInterfaceInteraction } from "./user-interfaces"
 
 enum AccountDisplayMode {
     CURRENCIES,

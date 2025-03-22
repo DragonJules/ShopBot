@@ -75,11 +75,11 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
                 break
             }
 
-            return await replyErrorMessage(interaction, ErrorMessages.InvalidSubcommand)
+            await replyErrorMessage(interaction, ErrorMessages.InvalidSubcommand)
     }
 }
 
-export async function createCurrencyCommand(_client: Client, interaction: ChatInputCommandInteraction) {
+export async function createCurrencyCommand(_client: Client, interaction: ChatInputCommandInteraction): Promise<unknown> {
     const currencyName = interaction.options.getString('name')?.replaceSpaces()
     if (!currencyName) return replyErrorMessage(interaction, ErrorMessages.InsufficientParameters)
 
@@ -91,9 +91,11 @@ export async function createCurrencyCommand(_client: Client, interaction: ChatIn
         
         await createCurrency(currencyName, emojiString)
 
-        await replySuccessMessage(interaction, `You successfully created the currency ${bold(currencyName)}. \n-# Use \`/currencies-manage remove\` to remove it`)        
+        await replySuccessMessage(interaction, `You successfully created the currency ${bold(currencyName)}. \n-# Use \`/currencies-manage remove\` to remove it`)    
+        return    
     } catch (error) {
-        return await replyErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
+        await replyErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
+        return
     }
 
 }

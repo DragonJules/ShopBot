@@ -1,10 +1,12 @@
-import { ActionRowBuilder, bold, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, InteractionCallbackResponse, MessageFlags, ModalBuilder, ModalSubmitInteraction, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from "discord.js"
-import { createDiscountCode, createShop, getCurrencies, getShops, removeDiscountCode, removeShop, updateShopDescription, updateShopEmoji, updateShopName, updateShopPosition } from "../database/database-handler"
+import { bold, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, InteractionCallbackResponse, MessageFlags, StringSelectMenuInteraction } from "discord.js"
+import { createDiscountCode, createShop, getCurrencies, getShops, removeDiscountCode, removeShop, updateShop, updateShopCurrency, updateShopPosition } from "../database/database-handler"
 import { Currency, DatabaseError, Shop } from "../database/database-types"
 import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent, showEditModal } from "../user-interfaces/extended-components"
+import { UserInterfaceInteraction } from "../user-interfaces/user-interfaces"
+import { EMOJI_REGEX, ErrorMessages } from "../utils/constants"
+import { PrettyLog } from "../utils/pretty-log"
 import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
 import { UserFlow } from "./user-flow"
-import { EMOJI_REGEX, ErrorMessages } from "../utils/constants"
 
 export class ShopCreateFlow extends UserFlow {
     public id = 'shop-create'
@@ -15,7 +17,7 @@ export class ShopCreateFlow extends UserFlow {
     private shopEmoji: string | null = null
     private shopDescription: string | null = null
 
-    public override async start(interaction: ChatInputCommandInteraction) {
+    public override async start(interaction: ChatInputCommandInteraction): Promise<unknown> {
         const currencies = getCurrencies()
         if (!currencies.size) return await replyErrorMessage(interaction, `Can't create a new shop. ${ErrorMessages.NoCurrencies}`)
 
@@ -37,6 +39,7 @@ export class ShopCreateFlow extends UserFlow {
 
         const response = await interaction.reply({ content: this.getMessage(), components: this.getComponentRows(), flags: MessageFlags.Ephemeral, withResponse: true })
         this.createComponentsCollectors(response)
+        return 
     }
 
     protected override getMessage(): string {
@@ -86,7 +89,7 @@ export class ShopCreateFlow extends UserFlow {
             async (interaction: ButtonInteraction) => {
                 const [modalSubmit, newShopEmoji] = await showEditModal(interaction, 'Shop Emoji', this.shopEmoji || undefined)
                 
-                this.shopEmoji = newShopEmoji?.match(EMOJI_REGEX)?.[0] || ''
+                this.shopEmoji = newShopEmoji?.match(EMOJI_REGEX)?.[0] || this.shopEmoji 
                 this.updateInteraction(modalSubmit)
             },
             120_000
@@ -95,6 +98,7 @@ export class ShopCreateFlow extends UserFlow {
         this.components.set(selectCurrencyMenu.customId, selectCurrencyMenu)
         this.components.set(submitButton.customId, submitButton)
         this.components.set(changeShopNameButton.customId, changeShopNameButton)
+        this.components.set(changeShopEmojiButton.customId, changeShopEmojiButton)
     }
 
     protected override updateComponents(): void {
@@ -104,7 +108,7 @@ export class ShopCreateFlow extends UserFlow {
         submitButton.toggle(this.selectedCurrency != null)
     }
 
-    protected override async success(interaction: ButtonInteraction) {
+    protected override async success(interaction: ButtonInteraction): Promise<unknown> {
         this.disableComponents()
 
         try {
@@ -113,11 +117,9 @@ export class ShopCreateFlow extends UserFlow {
             
             await createShop(this.shopName, this.shopDescription || '', this.selectedCurrency.id, this.shopEmoji || '')
 
-            await updateAsSuccessMessage(interaction, `You successfully created the shop ${bold(this.shopName)} with the currency ${bold(this.selectedCurrency.name)}. \n-# Use \`/shops-manage remove\` to remove it`)
-
+            return await updateAsSuccessMessage(interaction, `You successfully created the shop ${bold(this.shopName)} with the currency ${bold(this.selectedCurrency.name)}. \n-# Use \`/shops-manage remove\` to remove it`)
         } catch (error) {
-            await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
-            return 
+            return await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
         }
     }
 }
@@ -128,7 +130,7 @@ export class ShopRemoveFlow extends UserFlow {
 
     private selectedShop: Shop | null = null
 
-    public override async start(interaction: ChatInputCommandInteraction) {
+    public override async start(interaction: ChatInputCommandInteraction): Promise<unknown> {
         const shops = getShops()
         if (!shops.size) return replyErrorMessage(interaction, ErrorMessages.NoShops)
 
@@ -137,6 +139,7 @@ export class ShopRemoveFlow extends UserFlow {
 
         const response = await interaction.reply({ content: this.getMessage(), components: this.getComponentRows(), flags: MessageFlags.Ephemeral, withResponse: true })
         this.createComponentsCollectors(response)
+        return
     }
 
     protected override getMessage(): string {
@@ -177,7 +180,7 @@ export class ShopRemoveFlow extends UserFlow {
     }
 
 
-    protected override async success(interaction: ButtonInteraction) {
+    protected override async success(interaction: ButtonInteraction): Promise<unknown> {
         this.disableComponents()
 
         try {
@@ -185,11 +188,10 @@ export class ShopRemoveFlow extends UserFlow {
             
             await removeShop(this.selectedShop.id)
 
-            await updateAsSuccessMessage(interaction, `You successfully removed the shop ${bold(this.selectedShop.name)}`)
+            return await updateAsSuccessMessage(interaction, `You successfully removed the shop ${bold(this.selectedShop.name)}`)
         }
         catch (error) {
-            await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
-            return 
+            return await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
         }
     }
 }
@@ -202,7 +204,7 @@ export class ShopReorderFlow extends UserFlow {
     private selectedPosition: number | null = null
 
 
-    public override async start(interaction: ChatInputCommandInteraction) {
+    public override async start(interaction: ChatInputCommandInteraction): Promise<unknown> {
         const shops = getShops()
         if (!shops.size) return replyErrorMessage(interaction, ErrorMessages.NoShops)
 
@@ -215,6 +217,7 @@ export class ShopReorderFlow extends UserFlow {
 
         const response = await interaction.reply({ content: this.getMessage(), components: this.getComponentRows(), flags: MessageFlags.Ephemeral, withResponse: true })
         this.createComponentsCollectors(response)
+        return
     }
 
     protected override getMessage(): string {
@@ -245,7 +248,7 @@ export class ShopReorderFlow extends UserFlow {
             (interaction: ButtonInteraction) => {
                 if (!this.selectedPosition) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
                 this.selectedPosition = Math.max(this.selectedPosition - 1, 1)
-                this.updateInteraction(interaction)
+                return this.updateInteraction(interaction)
             },
             120_000
         )
@@ -258,7 +261,8 @@ export class ShopReorderFlow extends UserFlow {
             (interaction: ButtonInteraction) => {
                 if (!this.selectedPosition) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
                 this.selectedPosition = Math.min(this.selectedPosition + 1, getShops().size)
-                this.updateInteraction(interaction)
+            
+                return this.updateInteraction(interaction)
             },
             120_000
         )
@@ -325,7 +329,7 @@ export class EditShopFlow extends UserFlow {
     private updateOption: EditShopOption | null = null
     private updateOptionValue: string | null = null
 
-    public override async start(interaction: ChatInputCommandInteraction) {
+    public override async start(interaction: ChatInputCommandInteraction): Promise<unknown> {
         const shops = getShops()
         if (!shops.size) return replyErrorMessage(interaction, ErrorMessages.NoShops)
 
@@ -340,10 +344,11 @@ export class EditShopFlow extends UserFlow {
 
         const response = await interaction.reply({ content: this.getMessage(), components: this.getComponentRows(), flags: MessageFlags.Ephemeral, withResponse: true })
         this.createComponentsCollectors(response)
+        return
     }
 
     protected override getMessage(): string {
-        return `Update **[${this.selectedShop?.name || 'Select Shop'}]**.\n**New ${this.updateOption}**: ${bold(`${this.updateOptionValue}`)}`
+        return `Edit **[${this.selectedShop?.name || 'Select Shop'}]**.\n**New ${this.updateOption}**: ${bold(`${this.updateOptionValue}`)}`
     }
 
     protected override initComponents(): void {
@@ -360,7 +365,7 @@ export class EditShopFlow extends UserFlow {
 
         const submitButton = new ExtendedButtonComponent(`${this.id}+submit`,
             new ButtonBuilder()
-                .setLabel('Update Shop')
+                .setLabel('Edit Shop')
                 .setEmoji({name: '✅'})
                 .setStyle(ButtonStyle.Success)
                 .setDisabled(true),
@@ -379,7 +384,7 @@ export class EditShopFlow extends UserFlow {
         submitButton.toggle(this.selectedShop != null)
     }
 
-    protected override async success(interaction: ButtonInteraction) {
+    protected override async success(interaction: ButtonInteraction): Promise<unknown> {
         this.disableComponents()
 
         try {
@@ -388,26 +393,12 @@ export class EditShopFlow extends UserFlow {
             
             const oldName = this.selectedShop.name
 
-            switch (this.updateOption) { // TODO: Change this to match how it's done in the other flows
-                case EditShopOption.NAME:
-                    await updateShopName(this.selectedShop.id, this.updateOptionValue)
-                    break
-                case EditShopOption.DESCRIPTION:
-                    await updateShopDescription(this.selectedShop.id, this.updateOptionValue)
-                    break
-                case EditShopOption.EMOJI:
-                    await updateShopEmoji(this.selectedShop.id, this.updateOptionValue)
-                    break
-                default:
-                    await updateAsErrorMessage(interaction, 'Unknown update option')
-                    return
-            }
+            await updateShop(this.selectedShop.id, { [this.updateOption.toString()]: this.updateOptionValue })
 
-            await updateAsSuccessMessage(interaction, `You successfully updated the shop ${bold(oldName)}.\n New ${bold(this.updateOption)}: ${bold(this.updateOptionValue)}`)
+            return await updateAsSuccessMessage(interaction, `You successfully edited the shop ${bold(oldName)}.\n New ${bold(this.updateOption)}: ${bold(this.updateOptionValue)}`)
         }
         catch (error) {
-            await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
-            return 
+            return await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
         }
     }
 
@@ -422,7 +413,162 @@ export class EditShopFlow extends UserFlow {
                 const emojiOption = interaction.options.getString('new-emoji')
                 return emojiOption?.match(EMOJI_REGEX)?.[0] || ''
             default:
+                PrettyLog.warning(`Unknown edit shop option: ${subcommand}`)
                 return ''
+        }
+    }
+}
+
+
+enum EditShopCurrencyStage {
+    SELECT_SHOP, SELECT_CURRENCY
+}
+
+export class EditShopCurrencyFlow extends UserFlow {
+    public override id: string = 'edit-shop-currency'
+    protected override components: Map<string, ExtendedComponent> = new Map()
+
+    private stage: EditShopCurrencyStage = EditShopCurrencyStage.SELECT_SHOP
+    private componentsByStage: Map<EditShopCurrencyStage, Map<string, ExtendedComponent>> = new Map()
+
+    private selectedShop: Shop | null = null
+    private selectedCurrency: Currency | null = null
+
+    private response: InteractionCallbackResponse | null = null
+
+    public override async start(interaction: ChatInputCommandInteraction): Promise<unknown> {
+        const shops = getShops()
+        if (!shops.size) return replyErrorMessage(interaction, ErrorMessages.NoShops)
+
+        this.initComponents()
+        this.updateComponents()
+
+        const response = await interaction.reply({ content: this.getMessage(), components: this.getComponentRows(), flags: MessageFlags.Ephemeral, withResponse: true })
+        this.response = response
+        this.createComponentsCollectors(response)
+        return
+    }
+
+    protected override getMessage(): string {
+        if (this.stage === EditShopCurrencyStage.SELECT_SHOP) return `Change the currency of **[${this.selectedShop?.name || 'Select Shop'}]**.`
+        if (this.stage === EditShopCurrencyStage.SELECT_CURRENCY) return `Change the currency of **${this.selectedShop!.name}** to **[${this.selectedCurrency?.name || 'Select Currency'}]**.`
+
+        PrettyLog.warning(`Unknown stage: ${this.stage}`)
+        return ''
+    }
+
+    protected override initComponents(): void {
+        const shopSelectMenu = new ExtendedStringSelectMenuComponent<Shop>(
+            `${this.id}+select-shop`,
+            'Select a shop',
+            getShops(),
+            (interaction: StringSelectMenuInteraction, selected: Shop): void => {
+                this.selectedShop = selected
+                this.updateInteraction(interaction)
+            },
+            120_000
+        )
+
+        const submitShopButton = new ExtendedButtonComponent(`${this.id}+submit-shop`,
+            new ButtonBuilder()
+                .setLabel('Submit Shop')
+                .setEmoji({name: '✅'})
+                .setStyle(ButtonStyle.Success)
+                .setDisabled(true),
+            (interaction: ButtonInteraction) => {
+                this.changeStage(EditShopCurrencyStage.SELECT_CURRENCY)
+                this.updateInteraction(interaction)
+            },
+            120_000
+        )
+
+        this.componentsByStage.set(EditShopCurrencyStage.SELECT_SHOP, new Map())
+        this.componentsByStage.get(EditShopCurrencyStage.SELECT_SHOP)?.set(shopSelectMenu.customId, shopSelectMenu)
+        this.componentsByStage.get(EditShopCurrencyStage.SELECT_SHOP)?.set(submitShopButton.customId, submitShopButton)
+
+        this.components.set(shopSelectMenu.customId, shopSelectMenu)
+        this.components.set(submitShopButton.customId, submitShopButton)
+
+        const currencySelectMenu = new ExtendedStringSelectMenuComponent<Currency>(
+            `${this.id}+select-currency`,
+            'Select a currency',
+            getCurrencies(),
+            (interaction: StringSelectMenuInteraction, selectedCurrency: Currency): void => {
+                this.selectedCurrency = selectedCurrency
+                this.updateInteraction(interaction)
+            },
+            120_000
+        )
+
+        const submitCurrencyButton = new ExtendedButtonComponent(`${this.id}+submit-currency`,
+            new ButtonBuilder()
+                .setLabel('Submit Currency')
+                .setEmoji({name: '✅'})
+                .setStyle(ButtonStyle.Success)
+                .setDisabled(true),
+            (interaction: ButtonInteraction) => this.success(interaction),
+            120_000
+        )
+
+        const changeShopButton = new ExtendedButtonComponent(`${this.id}+change-shop`,
+            new ButtonBuilder()
+                .setLabel('Change Shop')
+                .setEmoji({name: '📝'})
+                .setStyle(ButtonStyle.Secondary),
+            (interaction: ButtonInteraction) => {
+                this.selectedShop = null
+                this.selectedCurrency = null
+
+                this.changeStage(EditShopCurrencyStage.SELECT_SHOP)
+                this.updateInteraction(interaction)
+            },
+            120_000
+        )
+
+        this.componentsByStage.set(EditShopCurrencyStage.SELECT_CURRENCY, new Map())
+        this.componentsByStage.get(EditShopCurrencyStage.SELECT_CURRENCY)?.set(currencySelectMenu.customId, currencySelectMenu)
+        this.componentsByStage.get(EditShopCurrencyStage.SELECT_CURRENCY)?.set(submitCurrencyButton.customId, submitCurrencyButton)
+        this.componentsByStage.get(EditShopCurrencyStage.SELECT_CURRENCY)?.set(changeShopButton.customId, changeShopButton)
+    }
+
+    protected override updateComponents(): void {
+        if (this.stage == EditShopCurrencyStage.SELECT_SHOP) {
+            const submitShopButton = this.components.get(`${this.id}+submit-shop`)
+            if (!(submitShopButton instanceof ExtendedButtonComponent)) return
+
+            submitShopButton.toggle(this.selectedShop != null)
+        }
+
+        if (this.stage == EditShopCurrencyStage.SELECT_CURRENCY) {
+            const submitUpdateButton = this.components.get(`${this.id}+submit-currency`)
+            if (submitUpdateButton instanceof ExtendedButtonComponent) {
+                submitUpdateButton.toggle(this.selectedCurrency != null)
+            }
+        }
+    }
+
+    private changeStage(newStage: EditShopCurrencyStage): void {
+        this.stage = newStage
+
+        this.destroyComponentsCollectors()
+
+        this.components = this.componentsByStage.get(newStage) || new Map()
+        this.updateComponents()
+
+        if (!this.response) return
+        this.createComponentsCollectors(this.response)
+    }
+
+    protected override async success(interaction: UserInterfaceInteraction): Promise<unknown> {
+        if (!this.selectedShop || !this.selectedCurrency) return await updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
+
+        try {
+            updateShopCurrency(this.selectedShop.id, this.selectedCurrency.id)
+            
+            return await updateAsSuccessMessage(interaction, `You successfully updated the currency for the shop ${bold(this.selectedShop.name)} to ${bold(this.selectedCurrency.name)}`)
+        }
+        catch (error) {
+            return await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
         }
     }
 }
@@ -435,7 +581,7 @@ export class DiscountCodeCreateFlow extends UserFlow {
     private discountCode: string | null = null
     private discountAmount: number | null = null
 
-    public override async start(interaction: ChatInputCommandInteraction) {
+    public override async start(interaction: ChatInputCommandInteraction): Promise<unknown> {
         const shops = getShops()
         if (!shops.size) return replyErrorMessage(interaction, ErrorMessages.NoShops)
 
@@ -452,6 +598,7 @@ export class DiscountCodeCreateFlow extends UserFlow {
 
         const response = await interaction.reply({ content: this.getMessage(), components: this.getComponentRows(), flags: MessageFlags.Ephemeral, withResponse: true })
         this.createComponentsCollectors(response)
+        return
     }
 
     protected override getMessage(): string {
@@ -492,7 +639,7 @@ export class DiscountCodeCreateFlow extends UserFlow {
 
     }
 
-    protected override async success(interaction: ButtonInteraction) {
+    protected override async success(interaction: ButtonInteraction): Promise<unknown> {
         this.disableComponents()
 
         try {
@@ -501,10 +648,9 @@ export class DiscountCodeCreateFlow extends UserFlow {
 
             await createDiscountCode(this.selectedShop.id, this.discountCode, this.discountAmount)
 
-            await updateAsSuccessMessage(interaction, `You successfully created the discount code ${bold(this.discountCode)} for ${bold(this.selectedShop.name)}.\n${bold(`Amount: ${this.discountAmount}`)}%`)
+            return await updateAsSuccessMessage(interaction, `You successfully created the discount code ${bold(this.discountCode)} for ${bold(this.selectedShop.name)}.\n${bold(`Amount: ${this.discountAmount}`)}%`)
         } catch (error) {
-            await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
-            return
+            return await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
         }
     }
 }
@@ -526,7 +672,7 @@ export class DiscountCodeRemoveFlow extends UserFlow {
 
     private response: InteractionCallbackResponse | null = null
 
-    public override async start(interaction: ChatInputCommandInteraction) {
+    public override async start(interaction: ChatInputCommandInteraction): Promise<unknown> {
         const shops = getShops()
         if (!shops.size) return replyErrorMessage(interaction, ErrorMessages.NoShops)
 
@@ -536,12 +682,14 @@ export class DiscountCodeRemoveFlow extends UserFlow {
         const response = await interaction.reply({ content: this.getMessage(), components: this.getComponentRows(), flags: MessageFlags.Ephemeral, withResponse: true })
         this.response = response
         this.createComponentsCollectors(response)
+        return
     }
 
     protected override getMessage(): string {
         if (this.stage == DiscountCodeRemoveStage.SELECT_SHOP) return `Remove a discount code from ${bold(`[${this.selectedShop?.name || 'Select Shop'}]`)}.`
         if (this.stage == DiscountCodeRemoveStage.SELECT_DISCOUNT_CODE) return `Remove discount code ${bold(`[${this.selectedDiscountCode || 'Select Discount Code'}]`)} from ${bold(`[${this.selectedShop!.name }]`)}.`
 
+        PrettyLog.warning(`Unknown stage: ${this.stage}`)
         return ''
     }
 
@@ -569,7 +717,7 @@ export class DiscountCodeRemoveFlow extends UserFlow {
                 if (!shopDiscountCodes || Object.keys(shopDiscountCodes).length == 0) return updateAsErrorMessage(interaction, 'The selected shop has no discount codes')
 
                 this.changeStage(DiscountCodeRemoveStage.SELECT_DISCOUNT_CODE)
-                this.updateInteraction(interaction)
+                return this.updateInteraction(interaction)
             },
             120_000
         )
@@ -665,10 +813,9 @@ export class DiscountCodeRemoveFlow extends UserFlow {
 
             await removeDiscountCode(this.selectedShop.id, this.selectedDiscountCode)
 
-            await updateAsSuccessMessage(interaction, `You successfully removed the discount code ${bold(this.selectedDiscountCode)} from ${bold(this.selectedShop.name)}`)
+            return await updateAsSuccessMessage(interaction, `You successfully removed the discount code ${bold(this.selectedDiscountCode)} from ${bold(this.selectedShop.name)}`)
         } catch (error) {
-            await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
-            return
+            return await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
         }
     }
 }

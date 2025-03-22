@@ -2,8 +2,8 @@ import fs from 'node:fs/promises'
 
 import { channelMention, ChannelType, ChatInputCommandInteraction, Client, MessageFlags, PermissionFlagsBits, SlashCommandBuilder } from 'discord.js'
 import settings from '../../data/settings.json'
-import { replyErrorMessage, updateAsErrorMessage } from '../utils/utils'
 import { ErrorMessages } from '../utils/constants'
+import { replyErrorMessage, updateAsErrorMessage } from '../utils/utils'
 
 const data = new SlashCommandBuilder()
     .setName('set-log-channel')
@@ -17,7 +17,7 @@ const data = new SlashCommandBuilder()
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
 
 
-async function execute(_client: Client, interaction: ChatInputCommandInteraction) {
+async function execute(_client: Client, interaction: ChatInputCommandInteraction): Promise<unknown> {
     const chosenChannel = interaction.options.getChannel('channel')
 
     if (chosenChannel ==  null) return await replyErrorMessage(interaction, ErrorMessages.InsufficientParameters)
@@ -25,12 +25,11 @@ async function execute(_client: Client, interaction: ChatInputCommandInteraction
     settings.logChannelId = chosenChannel.id
     try {
         await fs.writeFile('./data/settings.json', JSON.stringify(settings, null, 4))
-        await interaction.reply({ content: `You successfully set the log channel to ${channelMention(chosenChannel.id)}, re-use this command to change it`, flags: MessageFlags.Ephemeral })
+        return await interaction.reply({ content: `You successfully set the log channel to ${channelMention(chosenChannel.id)}, re-use this command to change it`, flags: MessageFlags.Ephemeral })
     } catch (error) {
         console.log(error)
-        await updateAsErrorMessage(interaction)
+        return await updateAsErrorMessage(interaction)
     }
-
 }
 
 module.exports = {

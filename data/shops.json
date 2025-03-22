@@ -140,5 +140,19 @@
             "name": "Dollar",
             "emoji": "💵"
         }
+    },
+    "a9d9627b-dc1f-48c0-8780-2f8aa9f21915": {
+        "id": "a9d9627b-dc1f-48c0-8780-2f8aa9f21915",
+        "name": "Hardware Shop",
+        "emoji": "🛠",
+        "description": "",
+        "currency": {
+            "id": "d9997bc7-ce3b-491b-92de-cfa5afd7e955",
+            "name": "Dollar",
+            "emoji": "💵"
+        },
+        "discountCodes": {},
+        "products": {},
+        "currencyId": "d9997bc7-ce3b-491b-92de-cfa5afd7e955"
     }
 }

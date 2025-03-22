@@ -1,5 +1,5 @@
 import { Snowflake } from "discord.js";
-import { getCurrencies, getProducts } from "./database-handler";
+import { getCurrencies, getProducts, getShops } from "./database-handler";
 
 export type UUID = string
 
@@ -108,8 +108,8 @@ export class AccountsDatabase extends Database {
         const accounts: Map<Snowflake, Account> = new Map()
 
         for (const [userId, { currencies: currenciesJSON, inventory: inventoryJSON }] of Object.entries(databaseRaw)) {
-            const currenciesArray = Array.from(Object.entries(currenciesJSON)).map(([id, balance]) => [id, { item: getCurrencies().get(id)!, amount: balance.amount }] as [UUID, Balance<Currency>])
-            const inventoryArray = Array.from(Object.entries(inventoryJSON)).map(([id, balance]) => [id, { item: getProducts(balance.item.shopId)!.get(id)!, amount: balance.amount }] as [UUID, Balance<Product>])
+            const currenciesArray = Array.from(Object.entries(currenciesJSON)).filter(([id, _]) => getCurrencies().has(id)).map(([id, balance]) => [id, { item: getCurrencies().get(id), amount: balance.amount }] as [UUID, Balance<Currency>])
+            const inventoryArray = Array.from(Object.entries(inventoryJSON)).filter(([id, balance]) => getShops().has(balance.item.shopId) && getProducts(balance.item.shopId).has(id)).map(([id, balance]) => [id, { item: getProducts(balance.item.shopId)!.get(id)!, amount: balance.amount }] as [UUID, Balance<Product>])
 
             accounts.set(userId, { currencies: new Map(currenciesArray), inventory: new Map(inventoryArray) })
         }
@@ -152,6 +152,9 @@ export interface Shop {
     products: Map<UUID, Product>
 }
 
+export type ShopOptions = Omit<Shop, 'id' | 'products' | 'currency' | 'discountCodes'>
+export type ShopOptionsOptional = Partial<ShopOptions>
+
 export interface ShopsDatabaseJSONBody extends DatabaseJSONBody {
     [shopId: UUID]: Omit<Shop, 'products' | 'currency'> & { products: {[productId: UUID]: Product} } & {currencyId: UUID}
 }
@@ -179,6 +182,7 @@ export class ShopsDatabase extends Database {
         const shops: Map<UUID, Shop> = new Map()
 
         for (const [shopId, shop] of Object.entries(databaseRaw)) {
+            if (!getCurrencies().has(shop.currencyId)) continue
             shops.set(shopId, { ...shop, products: new Map(Object.entries(shop.products)), currency: getCurrencies().get(shop.currencyId)! })
         }
 

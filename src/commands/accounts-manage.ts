@@ -49,13 +49,16 @@ export const data = new SlashCommandBuilder()
         )
     )
 
-export async function execute(client: Client, interaction: ChatInputCommandInteraction) {
+export async function execute(_: Client, interaction: ChatInputCommandInteraction): Promise<void> {
     const subCommand = interaction.options.getSubcommand()
 
     switch (subCommand) {
         case 'view-account':
             const user = interaction.options.getUser('target')
-            if (!user) return replyErrorMessage(interaction, ErrorMessages.InsufficientParameters)
+            if (!user) {
+                replyErrorMessage(interaction, ErrorMessages.InsufficientParameters)
+                break
+            }
     
             const accountUI = new AccountUserInterface(user)
             accountUI.display(interaction)
@@ -72,6 +75,7 @@ export async function execute(client: Client, interaction: ChatInputCommandInter
             
             break
         default:
-            return await replyErrorMessage(interaction, ErrorMessages.InvalidSubcommand)
+            await replyErrorMessage(interaction, ErrorMessages.InvalidSubcommand)
+            break
     }
 }

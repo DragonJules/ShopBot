@@ -1,12 +1,8 @@
-import fs from 'node:fs/promises'
 
-import wait from 'node:timers/promises'
-import config from '../../config/config.json'
 
-import { EmbedBuilder, StringSelectMenuBuilder, ActionRowBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle, ButtonBuilder, ButtonStyle, Interaction, Client, ChannelType, InteractionType, ModalSubmitInteraction, StringSelectMenuInteraction, ButtonInteraction, BaseInteraction } from 'discord.js'
+import { BaseInteraction, ChannelType, ChatInputCommandInteraction, InteractionType } from 'discord.js'
 import { PrettyLog } from '../utils/pretty-log'
 import { replyErrorMessage } from '../utils/utils'
-import { ChatInputCommandInteraction } from 'discord.js'
 
 export const name = 'interactionCreate'
 
@@ -14,8 +10,6 @@ export async function execute(interaction: BaseInteraction) {
     if (interaction.type != InteractionType.ApplicationCommand) return
     if (interaction.user.bot) return
     
-    const client = interaction.client
-
     if (interaction.isChatInputCommand()) {
         handleSlashCommand(interaction)
         return

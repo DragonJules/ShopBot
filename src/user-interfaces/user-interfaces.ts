@@ -10,9 +10,9 @@ export abstract class UserInterface {
     protected abstract components: Map<string, ExtendedComponent>
 
     protected abstract getMessage(): string 
-    protected abstract updateComponents(): void
+    protected abstract updateComponents(): unknown
 
-    protected abstract initComponents(): void
+    protected abstract initComponents(): unknown
 
     protected getComponentRows(): ActionRowBuilder<UserInterfaceComponentBuilder>[] {
         const rows: ActionRowBuilder<UserInterfaceComponentBuilder>[] = []

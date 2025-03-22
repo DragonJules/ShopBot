@@ -1,7 +1,7 @@
 import { Snowflake } from 'discord.js'
 import fs from 'node:fs/promises'
 import { v4 as uuidv4 } from 'uuid'
-import { Account, AccountsDatabase, CurrenciesDatabase, Currency, CurrencyOptionsOptional, Database, DatabaseError, DatabaseErrors, Product, ProductOptions, ProductOptionsOptional, Shop, ShopsDatabase } from "./database-types"
+import { Account, AccountsDatabase, CurrenciesDatabase, Currency, CurrencyOptionsOptional, Database, DatabaseError, DatabaseErrors, Product, ProductOptions, ProductOptionsOptional, Shop, ShopOptionsOptional, ShopsDatabase } from "./database-types"
 
 import accounts from '../../data/accounts.json'
 import currencies from '../../data/currencies.json'
@@ -88,8 +88,27 @@ export async function emptyAccount(id: Snowflake, empty: 'currencies' | 'invento
 
     await save(accountsDatabase)
 }
-// #endregion
 
+export async function getAccountsWithCurrency(currencyId: string) {
+    const accountsWithCurrency = new Map<Snowflake, Account>()
+    accountsDatabase.accounts.forEach((account: Account, id: Snowflake) => {
+        if (account.currencies.has(currencyId)) accountsWithCurrency.set(id, account)
+    })
+    return accountsWithCurrency
+    
+}
+
+export async function takeCurrencyFromAccounts(currencyId: string) {
+    const accountsWithCurrency = await getAccountsWithCurrency(currencyId)
+    accountsWithCurrency.forEach(async (account: Account, id: Snowflake) => {
+        account.currencies.delete(currencyId)
+    })
+
+    await save(accountsDatabase)
+    return accountsWithCurrency
+}
+
+// #endregion
 
 // #region CURRENCIES
 export function getCurrencies(): Map<string, Currency> {
@@ -99,7 +118,7 @@ export function getCurrencies(): Map<string, Currency> {
 export function getCurrencyId(currencyName: string): string | undefined {
     let currencyId: string | undefined = undefined
     currenciesDatabase.currencies.forEach(currency => {
-        if (currency.name == currencyName) return currencyId = currency.id
+        if (currency.name == currencyName) currencyId = currency.id
     })
     return currencyId 
 }
@@ -145,10 +164,11 @@ export function getShops(): Map<string, Shop> {
 }
 
 export function getShopId(shopName: string): string | undefined {
+    let shopId: string | undefined = undefined
     shopsDatabase.shops.forEach(shop => {
-        if (shop.name === shopName) return shop.id
+        if (shop.name === shopName) shopId = shop.id
     })
-    return undefined
+    return shopId
 }
 
 export function getShopName(shopId: string): string | undefined {
@@ -181,25 +201,41 @@ export async function removeShop(shopId: string) {
     save(shopsDatabase)
 }
 
-export async function updateShopName(shopId: string, name: string) {
-    if (!shopsDatabase.shops.has(shopId)) throw new DatabaseError(DatabaseErrors.ShopDoesNotExist)
 
-    shopsDatabase.shops.get(shopId)!.name = name
+export async function updateShop(shopId: string, options: ShopOptionsOptional) {
+    if (!shopsDatabase.shops.has(shopId)) throw new DatabaseError(DatabaseErrors.ShopDoesNotExist)
+    
+    const { name, description, emoji } = options
+
+    const shop = shopsDatabase.shops.get(shopId)!
+
+    if (name) shop.name = name
+    if (description) shop.description = description
+    if (emoji) shop.emoji = emoji
+
     await save(shopsDatabase)
 }
 
-export async function updateShopDescription(shopId: string, description: string) {
+export async function updateShopCurrency(shopId: string, currencyId: string) {
     if (!shopsDatabase.shops.has(shopId)) throw new DatabaseError(DatabaseErrors.ShopDoesNotExist)
+    if (!currenciesDatabase.currencies.has(currencyId)) throw new DatabaseError(DatabaseErrors.CurrencyDoesNotExist)
+    
+    const shop = shopsDatabase.shops.get(shopId)!
 
-    shopsDatabase.shops.get(shopId)!.description = description
+    shop.currency = currenciesDatabase.currencies.get(currencyId)!
+
     await save(shopsDatabase)
 }
 
-export async function updateShopEmoji(shopId: string, emoji: string) {
-    if (!shopsDatabase.shops.has(shopId)) throw new DatabaseError(DatabaseErrors.ShopDoesNotExist)
+export function getShopsWithCurrency(currencyId: string) {
+    const shopsWithCurrency: Map<string, Shop> = new Map()
 
-    shopsDatabase.shops.get(shopId)!.emoji = emoji
-    await save(shopsDatabase)
+    shopsDatabase.shops.forEach((shop: Shop, shopId: string) => {
+        if (shop.currency.id == currencyId) {
+            shopsWithCurrency.set(shopId, shop)
+        } 
+    })
+    return shopsWithCurrency
 }
 
 

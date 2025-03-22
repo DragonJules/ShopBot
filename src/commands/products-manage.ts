@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, Client, PermissionFlagsBits, SlashCommandBuilder } from "discord.js"
-import { AddProductFlow, EditProductOption, RemoveProductFlow, UpdateProductFlow } from "../user-flows/product-flows"
-import { replyErrorMessage } from "../utils/utils"
+import { AddProductFlow, EditProductFlow, EditProductOption, RemoveProductFlow } from "../user-flows/product-flows"
 import { ErrorMessages } from "../utils/constants"
+import { replyErrorMessage } from "../utils/utils"
 
 export const data = new SlashCommandBuilder()
     .setName('products-manage') 
@@ -103,12 +103,12 @@ export async function execute(_client: Client, interaction: ChatInputCommandInte
             break
         default:
             if (subCommandGroup == 'edit') {
-                const updateProductFlow = new UpdateProductFlow()
-                updateProductFlow.start(interaction)
+                const editProductFlow = new EditProductFlow()
+                editProductFlow.start(interaction)
                 
                 break
             }
             
-            return await replyErrorMessage(interaction, ErrorMessages.InvalidSubcommand)
+            await replyErrorMessage(interaction, ErrorMessages.InvalidSubcommand)
     }
 }

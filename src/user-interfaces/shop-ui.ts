@@ -38,7 +38,7 @@ export class ShopUserInterface extends EmbedUserInterface {
         )
     ]
 
-    public override async display(interaction: UserInterfaceInteraction) {
+    public override async display(interaction: UserInterfaceInteraction): Promise<unknown> {
         const shops = getShops()
         if (!shops.size) return replyErrorMessage(interaction, ErrorMessages.NoShops)
 
@@ -53,6 +53,7 @@ export class ShopUserInterface extends EmbedUserInterface {
         this.createComponentsCollectors(response)
 
         this.response = response
+        return
     }
 
     protected override getMessage(): string {
@@ -82,7 +83,7 @@ export class ShopUserInterface extends EmbedUserInterface {
                 if (!this.selectedShop) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
 
                 const buyProductUI = new BuyProductUserInterface(this.selectedShop)
-                buyProductUI.display(interaction)
+                return buyProductUI.display(interaction)
             },
             120_000
         )
@@ -204,7 +205,7 @@ export class ShopUserInterface extends EmbedUserInterface {
         if (this.shopPage == 0) return this.updateInteraction(interaction)
 
         this.shopPage -= 1
-        this.updateInteraction(interaction)
+        return this.updateInteraction(interaction)   
     }
 
     private nextPage(interaction: ButtonInteraction) {
@@ -213,7 +214,7 @@ export class ShopUserInterface extends EmbedUserInterface {
         if (this.shopPage == shopPages - 1) return this.updateInteraction(interaction)
 
         this.shopPage += 1
-        this.updateInteraction(interaction)
+        return this.updateInteraction(interaction)
     }
 
     getNumberOfPages(): number {
@@ -237,14 +238,14 @@ export class BuyProductUserInterface extends MessageUserInterface {
         this.selectedShop = selectedShop
     }
 
-    public override async display(interaction: UserInterfaceInteraction) {
+    public override async display(interaction: UserInterfaceInteraction): Promise<unknown> {
         if (!this.selectedShop.products.size) return await replyErrorMessage(interaction, ErrorMessages.NoProducts)
 
         this.initComponents()
         this.updateComponents()
 
         const response = await interaction.reply({ content: this.getMessage(), components: this.getComponentRows(), flags: MessageFlags.Ephemeral, withResponse: true })
-        this.createComponentsCollectors(response)
+        return this.createComponentsCollectors(response)
     }
 
     protected override getMessage(): string {
@@ -330,7 +331,7 @@ export class BuyProductUserInterface extends MessageUserInterface {
         this.updateInteraction(modalSubmit)
     }
 
-    private async buyProduct(interaction: UserInterfaceInteraction) {
+    private async buyProduct(interaction: UserInterfaceInteraction): Promise<unknown> {
         if (!this.selectedProduct) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
         try {
             const user = await getOrCreateAccount(interaction.user.id)
@@ -350,8 +351,10 @@ export class BuyProductUserInterface extends MessageUserInterface {
             await updateAsSuccessMessage(interaction, `You successfully bought ${bold(this.selectedProduct.name)} in ${bold(this.selectedShop.name)} for ${priceString}`)
 
             logToDiscord(interaction, `${interaction.member} purchased ${bold(this.selectedProduct.name)} from ${bold(this.selectedShop.name)} for ${priceString}** with discount code ${this.discountCode ? this.discountCode : 'none'}`)
-        } catch (error) {
-            await replyErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
+            return
+        } 
+        catch (error) {
+            return await replyErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
         }
     }
 }

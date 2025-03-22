@@ -1,9 +1,10 @@
-import { bold, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, MessageFlags, ModalSubmitInteraction, StringSelectMenuInteraction } from "discord.js"
-import { getCurrencies, removeCurrency, updateCurrency } from "../database/database-handler"
+import { bold, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, italic, MessageFlags, ModalSubmitInteraction, StringSelectMenuInteraction } from "discord.js"
+import { getCurrencies, getShopsWithCurrency, removeCurrency, takeCurrencyFromAccounts, updateCurrency } from "../database/database-handler"
 import { Currency, DatabaseError } from "../database/database-types"
 import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent, showConfirmationModal } from "../user-interfaces/extended-components"
 import { UserInterfaceInteraction } from "../user-interfaces/user-interfaces"
 import { EMOJI_REGEX, ErrorMessages } from "../utils/constants"
+import { PrettyLog } from "../utils/pretty-log"
 import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
 import { UserFlow } from "./user-flow"
 
@@ -13,9 +14,9 @@ export class CurrencyRemoveFlow extends UserFlow {
     protected components: Map<string, ExtendedComponent> = new Map()
     private selectedCurrency: Currency | null = null
 
-    async start(interaction: ChatInputCommandInteraction) {
+    async start(interaction: ChatInputCommandInteraction): Promise<unknown> {
         const currencies = getCurrencies()
-        if (currencies.size == 0) return replyErrorMessage(interaction, ErrorMessages.NoCurrencies)    
+        if (currencies.size == 0) return replyErrorMessage(interaction, ErrorMessages.NoCurrencies)
 
         this.selectedCurrency = null
 
@@ -24,6 +25,7 @@ export class CurrencyRemoveFlow extends UserFlow {
 
         const response = await interaction.reply({ content: this.getMessage(), components: this.getComponentRows(), flags: MessageFlags.Ephemeral, withResponse: true })
         this.createComponentsCollectors(response)
+        return 
     }
 
     initComponents(): void {
@@ -49,7 +51,7 @@ export class CurrencyRemoveFlow extends UserFlow {
                 
                 if (confirmed) return this.success(modalSubmitInteraction)
                 
-                this.updateInteraction(modalSubmitInteraction)
+                return this.updateInteraction(modalSubmitInteraction)
             },
             120_000
         )
@@ -58,34 +60,45 @@ export class CurrencyRemoveFlow extends UserFlow {
         this.components.set(submitButton.customId, submitButton)
     }
     
-    getMessage(): string {
-        return `Remove **[${this.selectedCurrency?.name || 'Select Currency'}]**, ⚠️ __**it will also remove shops using this currency and take it from user's accounts**__`
+    getMessage(): string {  
+        if (this.selectedCurrency) {
+            const shopsWithCurrency = getShopsWithCurrency(this.selectedCurrency.id)
+
+            if (shopsWithCurrency.size > 0) {
+                const shopsWithCurrencyNames = Array.from(shopsWithCurrency.values()).map(shop => bold(italic(shop.name))).join(', ')
+
+                return `⚠️ Can't remove **${this.selectedCurrency.name}** ! The following shops are still using it : ${shopsWithCurrencyNames}. \n-# Please consider removing them (\`/shops-manage remove\`) or changing their currency (\`/shops-manage change-currency\`) before removing the currency.`
+            }
+        }
+
+        return `Remove **[${this.selectedCurrency?.name || 'Select Currency'}]**, ⚠️ __**it will also take it from user's accounts**__`
     }
 
     protected updateComponents(): void {
         const submitButton = this.components.get(`${this.id}+submit`)
         if (!(submitButton instanceof ExtendedButtonComponent)) return
 
-        submitButton.toggle(this.selectedCurrency != null) 
+        const shopsWithCurrency = getShopsWithCurrency(this.selectedCurrency?.id || '')
+
+        submitButton.toggle((this.selectedCurrency != null) && (shopsWithCurrency.size == 0)) 
     }
 
-    protected async success(interaction: ButtonInteraction | ModalSubmitInteraction) {
+    protected async success(interaction: ButtonInteraction | ModalSubmitInteraction): Promise<unknown> {
         this.disableComponents()
 
-        // TODO : take currency from accounts owning it
-        // TODO : remove currency from shops using it
         try {
-            if (!this.selectedCurrency) return
+            if (this.selectedCurrency == null) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
+
+            await takeCurrencyFromAccounts(this.selectedCurrency.id)
+
             await removeCurrency(this.selectedCurrency.id)
-            await updateAsSuccessMessage(interaction, `You successfully removed the currency ${bold(this.selectedCurrency.name)}`)
+            return await updateAsSuccessMessage(interaction, `You successfully removed the currency ${bold(this.selectedCurrency.name)}`)
         } catch (error) {
-            await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
-            return 
+            return await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
         }
         
     }
 }
-
 
 export enum EditCurrencyOption {
     NAME = 'name',
@@ -100,7 +113,7 @@ export class EditCurrencyFlow extends UserFlow {
     private updateOption: EditCurrencyOption | null = null
     private updateOptionValue: string | null = null
 
-    async start(interaction: ChatInputCommandInteraction) {
+    async start(interaction: ChatInputCommandInteraction): Promise<unknown> {
         const currencies = getCurrencies()
         if (currencies.size == 0) return replyErrorMessage(interaction, ErrorMessages.NoCurrencies)    
 
@@ -115,10 +128,11 @@ export class EditCurrencyFlow extends UserFlow {
 
         const response = await interaction.reply({ content: this.getMessage(), components: this.getComponentRows(), flags: MessageFlags.Ephemeral, withResponse: true })
         this.createComponentsCollectors(response)
+        return
     }
 
     protected override getMessage(): string {
-        return `Update **[${this.selectedCurrency?.name || 'Select Currency'}]**.\n**New ${this.updateOption}**: ${bold(`${this.updateOptionValue}`)}`
+        return `Edit **[${this.selectedCurrency?.name || 'Select Currency'}]**.\n**New ${this.updateOption}**: ${bold(`${this.updateOptionValue}`)}`
     }
 
     protected override initComponents(): void {
@@ -135,7 +149,7 @@ export class EditCurrencyFlow extends UserFlow {
     
         const submitButton = new ExtendedButtonComponent(`${this.id}+submit`, 
             new ButtonBuilder()
-                .setLabel('Update Currency')
+                .setLabel('Edit Currency')
                 .setEmoji({name: '✅'})
                 .setStyle(ButtonStyle.Success)
                 .setDisabled(this.selectedCurrency == null),
@@ -160,17 +174,13 @@ export class EditCurrencyFlow extends UserFlow {
             if (!this.selectedCurrency) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
             if (!this.updateOption || this.updateOptionValue == undefined) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
             
-            const updateOption: Record<string, string | number> = {}
-            updateOption[this.updateOption.toString()] = this.updateOptionValue
-
             const oldName = this.selectedCurrency.name
 
-            await updateCurrency(this.selectedCurrency.id, updateOption)
+            await updateCurrency(this.selectedCurrency.id, { [this.updateOption.toString()]: this.updateOptionValue } )
 
-            await updateAsSuccessMessage(interaction, `You successfully updated the currency ${bold(oldName)}. \nNew ${bold(this.updateOption)}: ${bold(this.updateOptionValue)}`)
+            return await updateAsSuccessMessage(interaction, `You successfully edited the currency ${bold(oldName)}. \nNew ${bold(this.updateOption)}: ${bold(this.updateOptionValue)}`)
         } catch (error) {
-            await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
-            return
+            return await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
         }
     }
 
@@ -182,6 +192,7 @@ export class EditCurrencyFlow extends UserFlow {
                 const emojiOption = interaction.options.getString(`new-${subcommand}`)
                 return emojiOption?.match(EMOJI_REGEX)?.[0] || ''
             default:
+                PrettyLog.warning(`Unknown edit currency option: ${subcommand}`)
                 return ''
         }
     }
