@@ -1,20 +1,28 @@
 {
   "name": "shopbot",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "deploy": "node ./deploy-commands.js",
-    "dev": "nodemon .",
-    "start": "node ."
-  },
+  "version": "2.0.0",
   "author": "@roules_",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "cleanbuild": "rd /s /q \"dist\" && tsc",
+    "dev": "concurrently \"tsc -w\" \"nodemon .\"",
+    "start": "npm run build && node .",
+    "start-nobuild": "node .",
+    "deploy": "npm run build && node ./dist/deploy-commands.js",
+    "test": "npm run build && node ./dist/test.js",
+    "simulate": "npm run build && node ./dist/database/drawing_simulation.js"
+  },
   "license": "GPL-3.0",
   "devDependencies": {
-    "@discordjs/rest": "^2.3.0"
+    "@discordjs/rest": "^2.4.2",
+    "@types/luxon": "^3.4.2",
+    "@types/uuid": "^10.0.0"
   },
   "dependencies": {
-    "discord.js": "^14.15.3",
-    "uuid": "^10.0.0"
+    "discord.js": "^14.17.3",
+    "fs": "^0.0.1-security",
+    "luxon": "^3.5.0",
+    "uuid": "^11.0.5"
   }
 }

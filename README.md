@@ -1,9 +1,9 @@
-# ShopBot
+# ShopBot 2
 
-### Summary:
+## Summary:
 - [Introduction](#introduction)
 - [How to use](#how-to-use)
-- [Commands](#commands)
+- [Documentation](#documentation)
 - [Screenshots](#screenshots)
 - [Road Map](#roadmap)
 ---
@@ -47,14 +47,14 @@ If you love the bot, feel free to support me:
 <br>
 Now, let's configure your bot, caution, you need to do it carefully
 
-
 <br>
 
 ## How to use
 This repo is the bot's source code, not a bot itself. <br>
 To use it, you must host it yourself. There are several methods to do this, some are free, some are paid (Be careful that your hosting solution allows file editing, sometimes called local database, otherwise all the bot's data will be lost if the server restarts). <br>
 Once you found the hoster for your bot, here are the steps to follow: <br>
-We will first create the bot :
+### Installing the bot
+#### Creating the bot
 1. Go on [Discord Developer Portal](https://discord.com/developers/applications) and login
 2. Click **New Application**, give your bot a name, accept the ToS and developer policy
 3. In the **Installation** tab, untick **User Install**, and in **Install Link** select **None**
@@ -69,7 +69,8 @@ We will first create the bot :
 9. Select **Guild Install** and copy the generated URL
 10. Follow this URL and add the bot to the server you want, accept everything, the bot should be added to your server !
 
-Now, we can link the bot to the code, so you can start using it : 
+#### Configuring the bot
+Now, we'll link the code to the bot.
 1. You need to have [Node.js](https://nodejs.org/en) installed on your machine.
 2. [Download my code](https://github.com/DragonJules/ShopBot/archive/refs/heads/main.zip) and extract it from the ZIP file (or clone the repo), open the folder where it's located, and open a terminal from here.
 3. Install the required packages and compile the code by executing the following command:
@@ -80,12 +81,11 @@ npm install
 ```json
 {
   "clientId": "[The Application ID you have saved]",
-  "token": "[The Token you have saved]",
-  "logChannelId": "[The ID of the channel the log should be sent in]",
+  "token": "[The Token you have saved]"
 }
 ```
 
-
+#### Uploading the bot
 Your Bot is ready to be uploaded on the server ! The following steps may vary depending on your hosting solution.
 1. Upload the whole **ShopBot-main** folder on the server.
 2. Create a routine for restarting the server. Such that the following command is executed from the bot's folder each time the server is restarted.
@@ -104,85 +104,88 @@ npm run start
 All done ! You did it, your bot should be working perfectly ! 
 If you have any problem with it, feel free to message me on Discord, or open an [issue on Github](https://github.com/DragonJules/ShopBot/issues)
 
-<!-- ---
-## How to host
-
-**I will here present a way of hosting your bot, for free.** But if you have another solution to do it, feel free to use it. If you use another solution, just keep in mind that I used a local database, so for the bot to work, the infrastructure must let it change content of files (`data/accounts.json`, `data/currenies.json`, `data/shops.json`). Otherwise, you can change the database system.
-
-First, open the folder of your bot and select the following: <br>
-<img src="https://cdn.discordapp.com/attachments/828211235853434890/1115355676068294727/image.png" width="400px"/> <br>
-And zip them.
-
-<br>
-
-Then, join the [Discloud Server](https://discord.gg/rktxF6hgYg), follow server's instructions, and go to the commands channel: <br>
-<img src="https://cdn.discordapp.com/attachments/1109845198147702896/1109845264908427264/image.png" width="200px"/> <br>
-Send the command `.upc` in the channel and follow the instructions (you will be asked to join another channel and send the zip file)
-
-When it's done uploading, come back to the commands channel and send the command `.start`. Hopefully, the bot will start, if not, open an [issue on Github](https://github.com/DragonJules/ShopBot/issues)
-
-<br> -->
-
 ---
 
-## Commands
+## Documentation
 
-#### Here are all the commands available for the bot.
+### Here are all the commands available for the bot.
 
-**Commands for everyone:** <br>
+#### Commands for everyone:
 
-*• Shows the account*
-  `/account` <br>
+- Show user's account: `/account` 
  
-*• Displays the shops*
-  `/shop` 
-
-<br>
-
-**Admin commands:**
-`/set-log-channel`
-
-*• Creation commands*
-    `/create-currency`
-    `/create-shop` 
-    `/add-product`
-
-*• Update commands*
-    `/update-product`
-    `/reorder-shops`
-
-*• Remove commands*
-    `/remove-currency`
-    `/remove-shop`
-    `/remove-product`
-
-*• User management commands*
-    `/give`
-    `/take`
-    `/display-account`
+- Display the shops: `/shop` 
 
 
+#### Admin commands:
+- Settings
+```
+  /set-log-channel
+```
+
+- Manage Currencies
+```
+  /currencies-manage
+    | create <name> <emoji>
+    | edit <name/emoji> <new-value>
+    | remove
+```
+
+- Manage Shops
+```
+  /shops-manage
+    | create <name> <emoji>
+    | edit <name/description/emoji> <new-value>
+    | reorder
+    | remove
+```
+
+- Manage products
+```
+  /products-manage
+    | add <name> <price> <description> <emoji>
+    | edit <name/price/description/emoji> <new-value>
+    | remove
+```
+
+- Manage users
+```
+  /accounts-manage
+    | view-account <target>
+    | give <target> <amount>
+    | take <target> <amount>
+```
+
+#### How to use admin commands ?
+Commands that require selecting a specific Shop or Currency will prompt you to do so with a drop-down list after you executed the command.
+For example, when creating a shop (`/shops-manage create <name>`) you select the currency after sending the command, and then the shop is created.
+When you give some amount of any currency to a user, you first specify the amount and then select the currency. 
+When deleting any shop or currency, you also do select it after sending the command.
+
+This for you not to have to remember the name of each currency and shop to manage them.
+
+The use of those command is made as intuitive as possible using Discord's slash-commands and message components.
+If you encounter any issue with a command, you can open an [issue](https://github.com/DragonJules/ShopBot/issues).
+
+<!-- TODO Update Screenshots -->
 ## Screenshots 
+### What members of the discord can see
+#### Shop 
+<img src="./readme/assets/shop.png" height="320px"/> 
+
+#### Buy | Account
+<img src="./readme/assets/buy.png" height="200px"/>   <img src="./readme/assets/account.png" height="200px"/>
 
 
-
-##### What members of the discord can see:
-Shop <br>
-<img src="./readme/assets/shop.png" height="320px"/>   <br>
-Buy | Account <br>
-<img src="./readme/assets/buy.png" height="200px"/>   <img src="./readme/assets/account.png" height="200px"/>
-
-<br>
-
-##### Examples of what you as an administrator can see:
-Create | Delete a currency: <br>
+### Examples of what you, as an administrator, can see
+#### Create | Delete a currency
 <img src="./readme/assets/create-currency.png" height="120px"/> <img src="./readme/assets/remove-currency.png" height="120px"/> 
 
-Create | Delete a shop: <br>
+#### Create | Delete a shop
 <img src="./readme/assets/create-shop.png" height="166px"/> <img src="./readme/assets/remove-shop.png" height="166px"/> 
 
 
-Configuring bot's commands permissions: <br>
+#### Configuring bot's commands permissions
 <img src="./readme/assets/bot-perms1.png" height="290px"/> <img src="./readme/assets/bot-perms2.png" height="290px"/>
 
 
@@ -192,13 +195,16 @@ Configuring bot's commands permissions: <br>
 ## Road Map
 I plan to refactor the whole code base to migrate it to typescript and make it easier to update.
 I will after that add the following features, some of which have been suggested by users :
-- Inventory system
-- Discount codes 
-- Pagination system in shops
-- Custom emojis as currency name
-- New commands system, for easier use
+- ✅ Inventory system
+- ✅ Discount codes 
+- ✅ Pagination system in shops
+- ✅ emojis for products, currencies and products
+- ✅ New commands system, for easier use
+- ✅ Editable shops, products and currencies
+- ❓ API to automate actions like: filling accounts; managing currencies, shops and products 
+- Automatic action products (e.g. give a certain amount of currency to a user, give a role to a user, etc.)
 
-See how it's going on [this branch](https://github.com/DragonJules/ShopBot/tree/shop-bot-2)
+All those changes will be made on this branch.
 
 If you have a feature idea you think will fit this bot, feel free to suggest it [here](https://github.com/DragonJules/ShopBot/issues).
 
