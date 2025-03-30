@@ -152,7 +152,22 @@
             "emoji": "💵"
         },
         "discountCodes": {},
-        "products": {},
+        "products": {
+            "465e8974-5b9d-4203-93bd-dd6763b86da1": {
+                "id": "465e8974-5b9d-4203-93bd-dd6763b86da1",
+                "shopId": "a9d9627b-dc1f-48c0-8780-2f8aa9f21915",
+                "name": "Boss",
+                "description": "Earn the boss role by buying this !",
+                "emoji": "🧑",
+                "price": 5400,
+                "action": {
+                    "type": "give-role",
+                    "options": {
+                        "roleId": "1197195793191420035"
+                    }
+                }
+            }
+        },
         "currencyId": "d9997bc7-ce3b-491b-92de-cfa5afd7e955"
     }
 }

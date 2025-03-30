@@ -24,7 +24,7 @@ export const data = new SlashCommandBuilder()
         )        
         .addStringOption(option => option
             .setName('emoji')
-            .setDescription('The emoji of the currency')
+            .setDescription('The emoji of the shop')
             .setRequired(false)
         )
     )

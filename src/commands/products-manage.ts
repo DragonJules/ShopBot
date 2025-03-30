@@ -1,7 +1,8 @@
 import { ChatInputCommandInteraction, Client, PermissionFlagsBits, SlashCommandBuilder } from "discord.js"
-import { AddProductFlow, EditProductFlow, EditProductOption, RemoveProductFlow } from "../user-flows/product-flows"
+import { AddActionProductFlow, AddProductFlow, EditProductFlow, EditProductOption, RemoveProductFlow } from "../user-flows/product-flows"
 import { ErrorMessages } from "../utils/constants"
 import { replyErrorMessage } from "../utils/utils"
+import { ProductActionType } from "../database/database-types"
 
 export const data = new SlashCommandBuilder()
     .setName('products-manage') 
@@ -31,8 +32,17 @@ export const data = new SlashCommandBuilder()
         )
         .addStringOption(option => option
             .setName('emoji')
-            .setDescription('The emoji of the currency')
+            .setDescription('The emoji of the product')
             .setRequired(false)
+        )
+        .addStringOption(option => option
+            .setName('action')
+            .setDescription('The action of the product')
+            .setRequired(false)
+            .addChoices(
+                { name: 'Give Role', value: ProductActionType.GiveRole },
+                { name: 'Give Currency', value: ProductActionType.GiveCurrency }
+            )
         )
     )
     .addSubcommand(subcommand => subcommand
@@ -93,14 +103,23 @@ export async function execute(_client: Client, interaction: ChatInputCommandInte
 
     switch (subCommand) {
         case 'add':
+            if (interaction.options.getString('action')) {
+                const addActionProductFlow = new AddActionProductFlow()
+                addActionProductFlow.start(interaction)
+
+                break
+            }
+
             const addProductFlow = new AddProductFlow()
             addProductFlow.start(interaction)
             break
+
         case 'remove':
             const removeProductFlow = new RemoveProductFlow()
             removeProductFlow.start(interaction)
 
             break
+            
         default:
             if (subCommandGroup == 'edit') {
                 const editProductFlow = new EditProductFlow()
@@ -108,7 +127,7 @@ export async function execute(_client: Client, interaction: ChatInputCommandInte
                 
                 break
             }
-            
+
             await replyErrorMessage(interaction, ErrorMessages.InvalidSubcommand)
     }
 }

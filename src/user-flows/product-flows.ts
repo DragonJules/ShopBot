@@ -1,23 +1,25 @@
-import { bold, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, InteractionCallbackResponse, MessageFlags, StringSelectMenuInteraction } from "discord.js"
-import { addProduct, getShops, removeProduct, updateProduct } from "../database/database-handler"
-import { DatabaseError, Product, Shop } from "../database/database-types"
-import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent } from "../user-interfaces/extended-components"
+import { bold, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, InteractionCallbackResponse, MessageFlags, Role, RoleSelectMenuInteraction, Snowflake, StringSelectMenuInteraction } from "discord.js"
+import { addProduct, getCurrencies, getShops, removeProduct, updateProduct } from "../database/database-handler"
+import { createProductAction, Currency, DatabaseError, isProductActionType, Product, ProductAction, ProductActionType, Shop } from "../database/database-types"
+import { ExtendedButtonComponent, ExtendedComponent, ExtendedRoleSelectMenuComponent, ExtendedStringSelectMenuComponent } from "../user-interfaces/extended-components"
 import { UserInterfaceInteraction } from "../user-interfaces/user-interfaces"
-import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
-import { UserFlow } from "./user-flow"
 import { EMOJI_REGEX, ErrorMessages } from "../utils/constants"
 import { PrettyLog } from "../utils/pretty-log"
+import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
+import { UserFlow } from "./user-flow"
 
 export class AddProductFlow extends UserFlow {
     public id = "add-product"
     protected components: Map<string, ExtendedComponent> = new Map()
 
-    private productName: string | null = null
-    private productPrice: number | null = null
-    private productEmoji: string | null = null
-    private productDescription: string | null = null
+    protected productName: string | null = null
+    protected productPrice: number | null = null
+    protected productEmoji: string | null = null
+    protected productDescription: string | null = null
 
-    private selectedShop: Shop | null = null
+    protected selectedShop: Shop | null = null
+
+    protected response: InteractionCallbackResponse | null = null
 
     public async start(interaction: ChatInputCommandInteraction): Promise<unknown> {
         const shops = getShops()
@@ -44,12 +46,14 @@ export class AddProductFlow extends UserFlow {
 
         const response = await interaction.reply({ content: this.getMessage(), components: this.getComponentRows(), flags: MessageFlags.Ephemeral, withResponse: true })
         this.createComponentsCollectors(response)
+
+        this.response = response
         return
     }
     
     protected getMessage(): string {
         const descString = (this.productDescription) ? `. Description: ${bold(this.productDescription.replaceSpaces())}` : ''
-        return `Add Product: ${bold(`${this.productName}`)} for **${this.productPrice} ${this.selectedShop?.currency.name || '[]'}** in **[${this.selectedShop?.name || 'Select Shop'}]**${descString}`
+        return `Add Product: ${bold(`${this.productName}`)} for **${this.productPrice} ${this.selectedShop?.currency.name || '[ ]'}** in **[${this.selectedShop?.name || 'Select Shop'}]**${descString}`
     }
 
     protected initComponents(): void {
@@ -64,7 +68,7 @@ export class AddProductFlow extends UserFlow {
             120_000
         )
 
-        const submitButton = new ExtendedButtonComponent(`${this.id}+submit`,
+        const submitShopButton = new ExtendedButtonComponent(`${this.id}+submit-shop`,
             new ButtonBuilder()
                 .setLabel('Add Product')
                 .setEmoji({name: '✅'})
@@ -75,29 +79,185 @@ export class AddProductFlow extends UserFlow {
         )
 
         this.components.set(shopSelectMenu.customId, shopSelectMenu)
-        this.components.set(submitButton.customId, submitButton)
+        this.components.set(submitShopButton.customId, submitShopButton)
     }
 
     protected updateComponents(): void {
-        const submitButton = this.components.get(`${this.id}+submit`)
-        if (!(submitButton instanceof ExtendedButtonComponent)) return
+        const submitShopButton = this.components.get(`${this.id}+submit-shop`)
+        if (!(submitShopButton instanceof ExtendedButtonComponent)) return
 
-        submitButton.toggle(this.selectedShop != null)
+        submitShopButton.toggle(this.selectedShop != null)
     }
 
     protected async success(interaction: UserInterfaceInteraction): Promise<unknown> {
         try {
-            if (!this.selectedShop) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
-            if (!this.productName) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
-            if (!this.productPrice) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
+            if (!(this.selectedShop && this.productName && this.productPrice)) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
 
-            await addProduct(this.selectedShop.id, { name: this.productName, description: this.productDescription || '', emoji: this.productEmoji || '', price: this.productPrice })
+            await addProduct(this.selectedShop.id, { 
+                name: this.productName, 
+                description: this.productDescription || '', 
+                emoji: this.productEmoji || '', 
+                price: this.productPrice
+            })
 
             return await updateAsSuccessMessage(interaction, `You successfully added the product ${bold(this.productName)} to the shop ${bold(this.selectedShop.name)}`)
 
         } catch (error) {
             return await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
         }
+    }
+}
+
+enum AddActionProductFlowStage {
+    SELECT_SHOP,
+    SETUP_ACTION
+}
+
+export class AddActionProductFlow extends AddProductFlow {
+    public override id = "add-action-product"
+
+    private stage: AddActionProductFlowStage = AddActionProductFlowStage.SELECT_SHOP
+    private componentsByStage: Map<AddActionProductFlowStage, Map<string, ExtendedComponent>> = new Map()
+
+    private productActionType: ProductActionType | null = null
+    private productAction: ProductAction| null = null
+
+
+    public override async start(interaction: ChatInputCommandInteraction): Promise<unknown> {
+        const productActionType = interaction.options.getString('action')
+
+        if (productActionType != null && !isProductActionType(productActionType)) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
+
+        this.productActionType = productActionType
+
+        return await super.start(interaction)
+    }
+
+    protected override getMessage(): string {
+        switch (this.stage) {
+            case AddActionProductFlowStage.SELECT_SHOP:
+                return super.getMessage()
+
+            case AddActionProductFlowStage.SETUP_ACTION:
+                return `Setup the action for `
+        }
+    }
+
+    protected override initComponents(): void {
+        super.initComponents()
+
+        this.componentsByStage.set(AddActionProductFlowStage.SELECT_SHOP, new Map(this.components))
+
+        this.componentsByStage.set(AddActionProductFlowStage.SETUP_ACTION, new Map())
+        switch (this.productActionType) {
+            case ProductActionType.GiveRole:
+                const roleSelectMenu = new ExtendedRoleSelectMenuComponent(
+                    `${this.id}+select-role`,
+                    'Select a role',
+                    (interaction: RoleSelectMenuInteraction, selectedRoleId: Snowflake): void => {
+                        this.productAction = createProductAction(ProductActionType.GiveRole, { roleId: selectedRoleId })
+                        this.updateInteraction(interaction)
+                    },
+                    120_000
+                )
+
+                this.componentsByStage.get(AddActionProductFlowStage.SETUP_ACTION)?.set(roleSelectMenu.customId, roleSelectMenu)
+                break;
+        
+            case ProductActionType.GiveCurrency:
+                const currencySelectMenu = new ExtendedStringSelectMenuComponent<Currency>(
+                    `${this.id}+select-currency`,
+                    'Select a currency',
+                    getCurrencies(),
+                    (interaction: StringSelectMenuInteraction, selected: Currency): void => {
+                        this.productAction = createProductAction(ProductActionType.GiveCurrency, { currencyId: selected.id })
+                        this.updateInteraction(interaction)
+                    },
+                    120_000
+                )
+
+                this.componentsByStage.get(AddActionProductFlowStage.SETUP_ACTION)?.set(currencySelectMenu.customId, currencySelectMenu)
+                break
+            default:
+                break;
+        }
+
+        const submitButton = new ExtendedButtonComponent(
+            `${this.id}+submit`,
+            new ButtonBuilder()
+                .setLabel('Submit')
+                .setEmoji('✅')
+                .setStyle(ButtonStyle.Success)
+                .setDisabled(true),
+            (interaction: ButtonInteraction) => this.success(interaction),
+            120_000
+        )
+
+        const changeShopButton = new ExtendedButtonComponent(`${this.id}+change-shop`,
+            new ButtonBuilder()
+                .setLabel('Change Shop')
+                .setEmoji({name: '📝'})
+                .setStyle(ButtonStyle.Secondary),
+            (interaction: ButtonInteraction) => {
+                this.selectedShop = null
+                this.productAction = null
+
+                this.changeStage(AddActionProductFlowStage.SELECT_SHOP)
+                this.updateInteraction(interaction)
+            },
+            120_000
+        )
+
+        this.componentsByStage.get(AddActionProductFlowStage.SETUP_ACTION)?.set(submitButton.customId, submitButton)
+        this.componentsByStage.get(AddActionProductFlowStage.SETUP_ACTION)?.set(changeShopButton.customId, changeShopButton)
+    }
+
+    override updateComponents(): void {
+        if (this.stage == AddActionProductFlowStage.SELECT_SHOP) super.updateComponents()
+
+        if (this.stage == AddActionProductFlowStage.SETUP_ACTION) {
+            const submitButton = this.components.get(`${this.id}+submit`)
+            if (!(submitButton instanceof ExtendedButtonComponent)) return
+
+            submitButton.toggle(this.productAction != null)
+        }
+    }
+    private changeStage(newStage: AddActionProductFlowStage): void {
+        this.stage = newStage
+
+        this.destroyComponentsCollectors()
+
+        this.components = this.componentsByStage.get(newStage) || new Map()
+        this.updateComponents()
+
+
+        if (!this.response) return
+        this.createComponentsCollectors(this.response)
+    }
+
+    protected override async success(interaction: UserInterfaceInteraction): Promise<unknown> {
+        if (this.stage == AddActionProductFlowStage.SELECT_SHOP) {
+            this.changeStage(AddActionProductFlowStage.SETUP_ACTION)
+            return this.updateInteraction(interaction)
+        }
+        
+        try {
+            if (!(this.selectedShop && this.productName && this.productPrice && this.productAction)) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
+
+            await addProduct(this.selectedShop.id, { 
+                name: this.productName, 
+                description: this.productDescription || '', 
+                emoji: this.productEmoji || '', 
+                price: this.productPrice,
+                action: this.productAction 
+            })
+
+            return await updateAsSuccessMessage(interaction, `You successfully added the product ${bold(this.productName)} to the shop ${bold(this.selectedShop.name)} with the action ${bold(`${this.productActionType}`)}`)
+
+        } catch (error) {
+            return await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
+        }
+
     }
 }
 
@@ -297,7 +457,7 @@ export class EditProductFlow extends UserFlow {
         if (!shops.size) return replyErrorMessage(interaction, `There isn't any shop with products./n-# Use \`/shops-manage create\` to create a new shop, and \`/products-manage add\` to add products`)
 
         const subcommand = interaction.options.getSubcommand()
-        if (!subcommand || Object.values(EditProductOption).indexOf(subcommand as EditProductOption) == -1) return replyErrorMessage(interaction, ErrorMessages.InvalidSubcommand)
+        if (!subcommand || !Object.values(EditProductOption).includes(subcommand as EditProductOption)) return replyErrorMessage(interaction, ErrorMessages.InvalidSubcommand)
         this.updateOption = subcommand as EditProductOption
 
         this.updateOptionValue = this.getUpdateValue(interaction, subcommand)

@@ -118,7 +118,7 @@ export class EditCurrencyFlow extends UserFlow {
         if (currencies.size == 0) return replyErrorMessage(interaction, ErrorMessages.NoCurrencies)    
 
         const subcommand = interaction.options.getSubcommand()
-        if (!subcommand || Object.values(EditCurrencyOption).indexOf(subcommand as EditCurrencyOption) == -1) return replyErrorMessage(interaction, ErrorMessages.InvalidSubcommand)
+        if (!subcommand || !Object.values(EditCurrencyOption).includes(subcommand as EditCurrencyOption)) return replyErrorMessage(interaction, ErrorMessages.InvalidSubcommand)
         this.updateOption = subcommand as EditCurrencyOption
 
         this.updateOptionValue = this.getUpdateValue(interaction, subcommand)

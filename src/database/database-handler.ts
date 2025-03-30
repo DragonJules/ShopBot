@@ -279,10 +279,10 @@ export function getProducts(shopId: string): Map<string, Product> {
 export async function addProduct(shopId: string, options: ProductOptions) {
     if (!shopsDatabase.shops.has(shopId)) throw new DatabaseError(DatabaseErrors.ShopDoesNotExist)
 
-    const { name, description, price, emoji } = options
     const id = uuidv4()
+    const product = Object.assign({ id, shopId }, options)
 
-    shopsDatabase.shops.get(shopId)!.products.set(id, { id, shopId, name, emoji, description, price })
+    shopsDatabase.shops.get(shopId)!.products.set(id, product)
     await save(shopsDatabase)
 }
 
@@ -295,7 +295,7 @@ export async function removeProduct(shopId: string, productId: string) {
 export async function updateProduct(shopId: string, productId: string, options: ProductOptionsOptional) {
     if (!shopsDatabase.shops.has(shopId)) throw new DatabaseError(DatabaseErrors.ShopDoesNotExist)
     
-    const { name, description, price, emoji } = options
+    const { name, description, price, emoji, action } = options
     const product = shopsDatabase.shops.get(shopId)!.products.get(productId)
 
     if (!product) throw new DatabaseError(DatabaseErrors.ProductDoesNotExist)
@@ -304,6 +304,7 @@ export async function updateProduct(shopId: string, productId: string, options: 
     if (description) product.description = description
     if (price) product.price = price
     if (emoji) product.emoji = emoji
+    if (action) product.action = action
 
     await save(shopsDatabase)
 }

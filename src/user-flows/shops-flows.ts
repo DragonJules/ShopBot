@@ -334,7 +334,7 @@ export class EditShopFlow extends UserFlow {
         if (!shops.size) return replyErrorMessage(interaction, ErrorMessages.NoShops)
 
         const subcommand = interaction.options.getSubcommand()
-        if (!subcommand || Object.values(EditShopOption).indexOf(subcommand as EditShopOption) == -1) return replyErrorMessage(interaction, ErrorMessages.InvalidSubcommand)
+        if (!subcommand || !Object.values(EditShopOption).includes(subcommand as EditShopOption)) return replyErrorMessage(interaction, ErrorMessages.InvalidSubcommand)
         this.updateOption = subcommand as EditShopOption
 
         this.updateOptionValue = this.getUpdateValue(interaction, subcommand)

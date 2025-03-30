@@ -1,9 +1,9 @@
-import { ActionRowBuilder, ButtonBuilder, ChatInputCommandInteraction, ComponentType, EmbedBuilder, InteractionCallbackResponse, InteractionEditReplyOptions, MessageComponentInteraction, ModalSubmitInteraction, StringSelectMenuBuilder } from "discord.js"
+import { ActionRowBuilder, ButtonBuilder, ChatInputCommandInteraction, ComponentType, EmbedBuilder, InteractionCallbackResponse, InteractionEditReplyOptions, MessageComponentInteraction, ModalSubmitInteraction, RoleSelectMenuBuilder, StringSelectMenuBuilder } from "discord.js"
 import { replyErrorMessage, updateAsErrorMessage } from "../utils/utils"
 import { ExtendedComponent } from "./extended-components"
 
 export type UserInterfaceInteraction = ChatInputCommandInteraction | MessageComponentInteraction | ModalSubmitInteraction
-export type UserInterfaceComponentBuilder = ButtonBuilder | StringSelectMenuBuilder
+export type UserInterfaceComponentBuilder = ButtonBuilder | StringSelectMenuBuilder | RoleSelectMenuBuilder
 
 export abstract class UserInterface {
     public abstract id: string
@@ -23,14 +23,17 @@ export abstract class UserInterface {
                     rows.push(new ActionRowBuilder<UserInterfaceComponentBuilder>().addComponents(component.getComponent()))
                 }
                 else {
-                    if (rows[rows.length - 1].components[0]?.data.type == ComponentType.StringSelect) {
+                    const lastRow = rows[rows.length - 1]
+                    const lastRowFirstComponentType = lastRow.components[0]?.data.type
+        
+                    if (lastRowFirstComponentType == ComponentType.StringSelect || lastRowFirstComponentType == ComponentType.RoleSelect) {
                         rows.push(new ActionRowBuilder<UserInterfaceComponentBuilder>().addComponents(component.getComponent()))
                     } else {
-                        rows[rows.length - 1].addComponents(component.getComponent())
+                        lastRow.addComponents(component.getComponent())
                     }
                 }
             }
-            else if (component.componentType == ComponentType.StringSelect) {
+            else if (component.componentType == ComponentType.StringSelect || component.componentType == ComponentType.RoleSelect) {
                 rows.push(new ActionRowBuilder<UserInterfaceComponentBuilder>().addComponents(component.getComponent()))
             }
         })

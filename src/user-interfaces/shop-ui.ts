@@ -331,6 +331,8 @@ export class BuyProductUserInterface extends MessageUserInterface {
         this.updateInteraction(modalSubmit)
     }
 
+    // TODO Handle product actions
+
     private async buyProduct(interaction: UserInterfaceInteraction): Promise<unknown> {
         if (!this.selectedProduct) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
         try {
@@ -339,7 +341,7 @@ export class BuyProductUserInterface extends MessageUserInterface {
             const userCurrencyAmount = user.currencies.get(this.selectedShop.currency.id)?.amount || 0
             const price = this.selectedProduct.price * (1 - this.discount / 100)
 
-            if (userCurrencyAmount < price) return replyErrorMessage(interaction, `You don't have enough ${this.selectedShop.currency.name} to buy this product`)
+            if (userCurrencyAmount < price) return replyErrorMessage(interaction, `You don't have enough **${this.selectedShop.currency.emoji} ${this.selectedShop.currency.name}** to buy this product`)
             
             
             setAccountCurrencyAmount(interaction.user.id, this.selectedShop.currency.id, userCurrencyAmount - price)

@@ -47,6 +47,34 @@ export interface Currency {
 export type CurrencyOptions = Omit<Currency, 'id'>
 export type CurrencyOptionsOptional = Partial<CurrencyOptions>
 
+export enum ProductActionType {
+    GiveRole = 'give-role',
+    GiveCurrency = 'give-currency'
+}
+
+export type ProductActionOptions<Type extends ProductActionType> = 
+    Type extends ProductActionType.GiveRole ? { roleId: Snowflake } :
+    Type extends ProductActionType.GiveCurrency ? { currencyId: UUID } :
+    never;
+
+export type ProductAction = {
+    [T in ProductActionType]: {
+        type: T;
+        options: ProductActionOptions<T>;
+    };
+}[ProductActionType];
+
+export function createProductAction<Type extends ProductActionType>(type: Type, options: ProductActionOptions<Type>): ProductAction {
+    return {
+        type,
+        options
+    } as ProductAction
+}
+
+export function isProductActionType(actionType: string): actionType is ProductActionType {
+    return Object.values(ProductActionType).includes(actionType as ProductActionType)
+}
+
 export interface Product {
     id: UUID
     shopId: UUID
@@ -54,6 +82,7 @@ export interface Product {
     emoji: string
     description: string
     price: number
+    action?: ProductAction
 }
 
 export type ProductOptions = Omit<Product, 'id' | 'shopId'>
@@ -155,8 +184,21 @@ export interface Shop {
 export type ShopOptions = Omit<Shop, 'id' | 'products' | 'currency' | 'discountCodes'>
 export type ShopOptionsOptional = Partial<ShopOptions>
 
+
+
+export type ProductActionJSONBody = {
+    [T in ProductActionType]: {
+        type: string;
+        options: ProductActionOptions<T>;
+    };
+}[ProductActionType];
+
 export interface ShopsDatabaseJSONBody extends DatabaseJSONBody {
-    [shopId: UUID]: Omit<Shop, 'products' | 'currency'> & { products: {[productId: UUID]: Product} } & {currencyId: UUID}
+    [shopId: UUID]: Omit<Shop, 'products' | 'currency'> 
+        & { 
+            products: { [productId: UUID]: Omit<Product, 'action'> & { action?: ProductActionJSONBody } }
+        } 
+        & { currencyId: UUID }
 }
 
 export class ShopsDatabase extends Database {
@@ -183,7 +225,21 @@ export class ShopsDatabase extends Database {
 
         for (const [shopId, shop] of Object.entries(databaseRaw)) {
             if (!getCurrencies().has(shop.currencyId)) continue
-            shops.set(shopId, { ...shop, products: new Map(Object.entries(shop.products)), currency: getCurrencies().get(shop.currencyId)! })
+            
+            const products = new Map(
+                Object.entries(shop.products).map(
+                    ([id, product]) => {
+                        let action: ProductAction | undefined = undefined
+
+                        if (product.action && isProductActionType(product.action.type)) {
+                            action = createProductAction(product.action.type, product.action.options)
+                        }
+
+                        return [id, { ...product, action}]
+                })
+            )
+
+            shops.set(shopId, { ...shop, products, currency: getCurrencies().get(shop.currencyId)! })
         }
 
         return shops

@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ChatInputCommandInteraction, ComponentType, InteractionCallbackResponse, InteractionCollector, MessageComponentInteraction, MessageComponentType, ModalBuilder, ModalSubmitInteraction, ReadonlyCollection, StringSelectMenuBuilder, StringSelectMenuInteraction, StringSelectMenuOptionBuilder, TextInputBuilder, TextInputStyle } from "discord.js"
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ChatInputCommandInteraction, ComponentType, InteractionCallbackResponse, InteractionCollector, MessageComponentInteraction, MessageComponentType, ModalBuilder, ModalSubmitInteraction, ReadonlyCollection, Role, RoleSelectMenuBuilder, RoleSelectMenuInteraction, Snowflake, StringSelectMenuBuilder, StringSelectMenuInteraction, StringSelectMenuOptionBuilder, TextInputBuilder, TextInputStyle } from "discord.js"
 import { Currency, Product, Shop } from "../database/database-types"
 import { UserInterfaceComponentBuilder } from "./user-interfaces"
 
@@ -124,6 +124,37 @@ export class ExtendedStringSelectMenuComponent<T extends Currency | Shop | Produ
         this.map = map
         this.component.setOptions(this.getStringSelectOptions(map))
     }
+}
+
+export class ExtendedRoleSelectMenuComponent extends ExtendedComponent {
+    componentType = ComponentType.RoleSelect
+    customId: string
+    component: RoleSelectMenuBuilder
+
+    callback: (interaction: RoleSelectMenuInteraction, selectedRoleId: Snowflake) => void
+    time: number
+    
+    constructor(customId: string, label: string, callback: (interaction: RoleSelectMenuInteraction, selectedRoleId: Snowflake) => void, time: number) {
+        super()
+        this.customId = customId
+        this.component = new RoleSelectMenuBuilder()
+            .setCustomId(customId)
+            .setPlaceholder(label)
+        
+        this.callback = callback
+        this.time = time
+    }
+
+    onCollect(interaction: RoleSelectMenuInteraction): void {
+        if (!interaction.isRoleSelectMenu()) return
+
+        const selected = interaction.values[0]
+        if (selected == undefined) return
+
+        this.callback(interaction, selected)    
+    }
+
+    onEnd(collected: ReadonlyCollection<string, MessageComponentInteraction>): void {}
 }
 
 export async function showConfirmationModal(interaction: MessageComponentInteraction | ChatInputCommandInteraction): Promise<[ModalSubmitInteraction, boolean]> {
