@@ -1,12 +1,14 @@
 # ShopBot 2
 
-## Summary:
+### Contents
 - [Introduction](#introduction)
 - [How to use](#how-to-use)
 - [Documentation](#documentation)
 - [Screenshots](#screenshots)
 - [Road Map](#roadmap)
----
+- [Legal Stuff](#legal-information)
+
+
 ## Introduction
 
 Hi 👋 I created a cool bot for you !
@@ -42,14 +44,9 @@ If you love the bot, feel free to support me:
 <a href='https://ko-fi.com/roules_'><img src='https://ko-fi.com/img/githubbutton_sm.svg' height="27px"/></a>
 <br>
 <br>
+It's now time to [configure the bot](#how-to-use) !
 
----
-<br>
-Now, let's configure your bot, caution, you need to do it carefully
-
-<br>
-
-## How to use
+## 🚀 How to use
 This repo is the bot's source code, not a bot itself. <br>
 To use it, you must host it yourself. There are several methods to do this, some are free, some are paid (Be careful that your hosting solution allows file editing, sometimes called local database, otherwise all the bot's data will be lost if the server restarts). <br>
 Once you found the hoster for your bot, here are the steps to follow: <br>
@@ -106,7 +103,7 @@ If you have any problem with it, feel free to message me on Discord, or open an 
 
 ---
 
-## Documentation
+## 📝 Documentation
 
 ### Here are all the commands available for the bot.
 
@@ -168,7 +165,7 @@ The use of those command is made as intuitive as possible using Discord's slash-
 If you encounter any issue with a command, you can open an [issue](https://github.com/DragonJules/ShopBot/issues).
 
 <!-- TODO Update Screenshots -->
-## Screenshots 
+## 📸 Screenshots 
 ### What members of the discord can see
 #### Shop 
 <img src="./readme/assets/shop.png" height="320px"/> 
@@ -192,7 +189,7 @@ If you encounter any issue with a command, you can open an [issue](https://githu
 <sub><sup>The screenshots come from the project I originally created the bot for.</sup></sub>
 
 
-## Road Map
+## 🌟 Road Map
 I plan to refactor the whole code base to migrate it to typescript and make it easier to update.
 I will after that add the following features, some of which have been suggested by users :
 - ✅ Inventory system
@@ -208,6 +205,35 @@ All those changes will be made on this branch.
 
 If you have a feature idea you think will fit this bot, feel free to suggest it [here](https://github.com/DragonJules/ShopBot/issues).
 
---- 
+## ⚖️ Legal Information
+
+### License
+
+This project is licensed under the [GNU General Public License v3.0](LICENSE).
+
+### Legal Disclaimer
+
+This software is provided **"as is"**, without warranty of any kind, express or implied. The authors and contributors of this project **assume no responsibility or liability** for any misuse of this bot, including but not limited to, using it to conduct or facilitate **illegal activities or transactions**.
+
+By using this software, you agree that:
+- You are solely responsible for complying with all applicable laws and regulations in your jurisdiction.
+- The authors are **not liable** for any direct, indirect, or consequential damages arising from the use of this software.
+- This project is intended **solely for lawful and ethical use**.
+
+If you do not agree with these terms, **do not use this software**.
+
+### Contributing
+
+By submitting a pull request, you agree that your contributions will be licensed under the same GPL-3.0 License as the rest of the project.
+
+### Reporting Abuse
+
+If you discover that this bot is being used for illegal or abusive purposes, please report it by opening an issue [here](https://github.com/your-repo/issues).
+
+### Notice
+
+This project is **not affiliated with, endorsed by, or associated with Discord Inc.** All trademarks and copyrights related to Discord are owned by Discord Inc.
+
+---
 
 If something is missing in this document, please open an [issue](https://github.com/DragonJules/ShopBot/issues).
