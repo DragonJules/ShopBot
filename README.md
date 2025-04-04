@@ -41,7 +41,7 @@ You can check [screenshots](#screenshots) of the bot's commands to see how cool 
 
 If you love the bot, feel free to support me: 
 
-<a href='https://ko-fi.com/roules_'><img src='https://ko-fi.com/img/githubbutton_sm.svg' height="27px"/></a>
+<a href='https://ko-fi.com/B0B5L20B6' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi1.png?v=6' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
 <br>
 <br>
 It's now time to [configure the bot](#how-to-use) !
@@ -140,7 +140,7 @@ If you have any problem with it, feel free to message me on Discord, or open an 
 - Manage products
 ```
   /products-manage
-    | add <name> <price> <description> <emoji>
+    | add <name> <price> <description> <emoji> <action?>
     | edit <name/price/description/emoji> <new-value>
     | remove
 ```
@@ -199,7 +199,7 @@ I will after that add the following features, some of which have been suggested 
 - ✅ New commands system, for easier use
 - ✅ Editable shops, products and currencies
 - ❓ API to automate actions like: filling accounts; managing currencies, shops and products 
-- Automatic action products (e.g. give a certain amount of currency to a user, give a role to a user, etc.)
+- 🔄️ Automatic action products (e.g. give a certain amount of currency to a user, give a role to a user, etc.)
 
 All those changes will be made on this branch.
 
