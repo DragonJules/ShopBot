@@ -166,6 +166,36 @@
                         "roleId": "1197195793191420035"
                     }
                 }
+            },
+            "d812a77d-5633-4928-85fe-d2be8a4f826d": {
+                "id": "d812a77d-5633-4928-85fe-d2be8a4f826d",
+                "shopId": "a9d9627b-dc1f-48c0-8780-2f8aa9f21915",
+                "name": "Earn 50 $",
+                "description": "totally not a scam",
+                "emoji": "💵",
+                "price": 51,
+                "action": {
+                    "type": "give-currency",
+                    "options": {
+                        "currencyId": "d9997bc7-ce3b-491b-92de-cfa5afd7e955",
+                        "amount": 50
+                    }
+                }
+            },
+            "39aaa254-e5be-49e9-865f-26b66383ac89": {
+                "id": "39aaa254-e5be-49e9-865f-26b66383ac89",
+                "shopId": "a9d9627b-dc1f-48c0-8780-2f8aa9f21915",
+                "name": "admin give 10000$",
+                "description": "",
+                "emoji": "💵",
+                "price": 0,
+                "action": {
+                    "type": "give-currency",
+                    "options": {
+                        "currencyId": "d9997bc7-ce3b-491b-92de-cfa5afd7e955",
+                        "amount": 10000
+                    }
+                }
             }
         },
         "currencyId": "d9997bc7-ce3b-491b-92de-cfa5afd7e955"

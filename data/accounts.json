@@ -3,7 +3,7 @@
         "currencies": {
             "d9997bc7-ce3b-491b-92de-cfa5afd7e955": {
                 "item": "d9997bc7-ce3b-491b-92de-cfa5afd7e955",
-                "amount": 46.02
+                "amount": 5244.02
             }
         },
         "inventory": {
@@ -57,5 +57,14 @@
                 "amount": 1
             }
         }
+    },
+    "1109842206832988272": {
+        "currencies": {
+            "d9997bc7-ce3b-491b-92de-cfa5afd7e955": {
+                "item": "d9997bc7-ce3b-491b-92de-cfa5afd7e955",
+                "amount": 1000
+            }
+        },
+        "inventory": {}
     }
 }

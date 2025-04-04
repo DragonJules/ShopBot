@@ -54,7 +54,7 @@ export enum ProductActionType {
 
 export type ProductActionOptions<Type extends ProductActionType> = 
     Type extends ProductActionType.GiveRole ? { roleId: Snowflake } :
-    Type extends ProductActionType.GiveCurrency ? { currencyId: UUID } :
+    Type extends ProductActionType.GiveCurrency ? { currencyId: UUID, amount: number } :
     never;
 
 export type ProductAction = {

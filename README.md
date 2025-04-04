@@ -11,7 +11,8 @@
 
 ## Introduction
 
-Hi 👋 I created a cool bot for you !
+### Hi 👋 <br>
+I created a cool bot for you !
 Let me introduce you **ShopBot**, this bot aims at helping to you create your own shops and currencies to fit the needs of your community, your RP server, or anything you need.  
 <sub><sup>(See [screenshots](#screenshots))</sup></sub>
 <br>
@@ -200,6 +201,7 @@ I will after that add the following features, some of which have been suggested 
 - ✅ Editable shops, products and currencies
 - ❓ API to automate actions like: filling accounts; managing currencies, shops and products 
 - 🔄️ Automatic action products (e.g. give a certain amount of currency to a user, give a role to a user, etc.)
+- Shops reserved for specific roles
 
 All those changes will be made on this branch.
 

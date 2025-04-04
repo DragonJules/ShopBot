@@ -103,7 +103,7 @@ export async function execute(_client: Client, interaction: ChatInputCommandInte
 
     switch (subCommand) {
         case 'add':
-            if (interaction.options.getString('action')) {
+            if (interaction.options.getString('action') != null) {
                 const addActionProductFlow = new AddActionProductFlow()
                 addActionProductFlow.start(interaction)
 

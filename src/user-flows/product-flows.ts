@@ -1,6 +1,6 @@
-import { bold, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, InteractionCallbackResponse, MessageFlags, Role, RoleSelectMenuInteraction, Snowflake, StringSelectMenuInteraction } from "discord.js"
+import { ActionRowBuilder, bold, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, InteractionCallbackResponse, MessageFlags, ModalBuilder, ModalSubmitInteraction, Role, RoleSelectMenuInteraction, Snowflake, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from "discord.js"
 import { addProduct, getCurrencies, getShops, removeProduct, updateProduct } from "../database/database-handler"
-import { createProductAction, Currency, DatabaseError, isProductActionType, Product, ProductAction, ProductActionType, Shop } from "../database/database-types"
+import { createProductAction, Currency, DatabaseError, isProductActionType, Product, ProductAction, ProductActionOptions, ProductActionType, Shop } from "../database/database-types"
 import { ExtendedButtonComponent, ExtendedComponent, ExtendedRoleSelectMenuComponent, ExtendedStringSelectMenuComponent } from "../user-interfaces/extended-components"
 import { UserInterfaceInteraction } from "../user-interfaces/user-interfaces"
 import { EMOJI_REGEX, ErrorMessages } from "../utils/constants"
@@ -32,7 +32,7 @@ export class AddProductFlow extends UserFlow {
         const productEmojiOption = interaction.options.getString('emoji')
         const productEmoji = productEmojiOption?.match(EMOJI_REGEX)?.[0] || ''
 
-        if (!productName || !productPrice) return replyErrorMessage(interaction, ErrorMessages.InsufficientParameters)
+        if (!productName || productPrice == null) return replyErrorMessage(interaction, ErrorMessages.InsufficientParameters)
     
         if (productName.removeCustomEmojis().length == 0) return replyErrorMessage(interaction, ErrorMessages.NotOnlyEmojisInName)
         
@@ -122,6 +122,7 @@ export class AddActionProductFlow extends AddProductFlow {
     private productActionType: ProductActionType | null = null
     private productAction: ProductAction| null = null
 
+    private actionSetupCompleted: boolean = false
 
     public override async start(interaction: ChatInputCommandInteraction): Promise<unknown> {
         const productActionType = interaction.options.getString('action')
@@ -139,7 +140,7 @@ export class AddActionProductFlow extends AddProductFlow {
                 return super.getMessage()
 
             case AddActionProductFlowStage.SETUP_ACTION:
-                return `Setup the action for `
+                return `Setup the action for ` // TODO
         }
     }
 
@@ -156,6 +157,7 @@ export class AddActionProductFlow extends AddProductFlow {
                     'Select a role',
                     (interaction: RoleSelectMenuInteraction, selectedRoleId: Snowflake): void => {
                         this.productAction = createProductAction(ProductActionType.GiveRole, { roleId: selectedRoleId })
+                        this.actionSetupCompleted = true
                         this.updateInteraction(interaction)
                     },
                     120_000
@@ -170,16 +172,62 @@ export class AddActionProductFlow extends AddProductFlow {
                     'Select a currency',
                     getCurrencies(),
                     (interaction: StringSelectMenuInteraction, selected: Currency): void => {
-                        this.productAction = createProductAction(ProductActionType.GiveCurrency, { currencyId: selected.id })
+                        this.productAction = createProductAction(ProductActionType.GiveCurrency, { currencyId: selected.id, amount: 0 })
                         this.updateInteraction(interaction)
                     },
                     120_000
                 )
 
+                const setAmountButton = new ExtendedButtonComponent(`${this.id}+set-amount`, 
+                    new ButtonBuilder()
+                        .setLabel('Set Amount')
+                        .setEmoji({name: '🪙'})
+                        .setStyle(ButtonStyle.Secondary),
+                    async (interaction: ButtonInteraction) => {
+                        const modalId = `${this.id}+set-amount-modal`
+                
+                        const modal = new ModalBuilder()
+                            .setCustomId(modalId)
+                            .setTitle('Set Currency Amount')
+                        
+                        const amountInput = new TextInputBuilder()
+                            .setCustomId('amount-input')
+                            .setLabel('Amount')
+                            .setPlaceholder('0')
+                            .setStyle(TextInputStyle.Short)
+                            .setRequired(true)
+
+                
+                        modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(amountInput))
+                
+                        await interaction.showModal(modal)
+                
+                        const filter = (interaction: ModalSubmitInteraction) => interaction.customId === modalId
+                        const modalSubmit = await interaction.awaitModalSubmit({ filter, time: 120_000 })
+                        
+                        const input = modalSubmit.fields.getTextInputValue('amount-input')
+                        if (!input) return this.updateInteraction(modalSubmit)
+                
+                        const amount = parseInt(input)
+                        if (isNaN(amount)) return this.updateInteraction(modalSubmit)
+                
+                        this.productAction = createProductAction(ProductActionType.GiveCurrency, { 
+                            currencyId: (this.productAction!.options as ProductActionOptions<ProductActionType.GiveCurrency>).currencyId, 
+                            amount 
+                        })
+
+                        this.actionSetupCompleted = true
+                        this.updateInteraction(modalSubmit)
+                    },
+                    120_000
+                )
+
                 this.componentsByStage.get(AddActionProductFlowStage.SETUP_ACTION)?.set(currencySelectMenu.customId, currencySelectMenu)
+                this.componentsByStage.get(AddActionProductFlowStage.SETUP_ACTION)?.set(setAmountButton.customId, setAmountButton)
                 break
+
             default:
-                break;
+                break
         }
 
         const submitButton = new ExtendedButtonComponent(
@@ -201,6 +249,7 @@ export class AddActionProductFlow extends AddProductFlow {
             (interaction: ButtonInteraction) => {
                 this.selectedShop = null
                 this.productAction = null
+                this.actionSetupCompleted = false
 
                 this.changeStage(AddActionProductFlowStage.SELECT_SHOP)
                 this.updateInteraction(interaction)
@@ -219,7 +268,7 @@ export class AddActionProductFlow extends AddProductFlow {
             const submitButton = this.components.get(`${this.id}+submit`)
             if (!(submitButton instanceof ExtendedButtonComponent)) return
 
-            submitButton.toggle(this.productAction != null)
+            submitButton.toggle(this.productAction != null && this.actionSetupCompleted)
         }
     }
     private changeStage(newStage: AddActionProductFlowStage): void {
@@ -242,7 +291,7 @@ export class AddActionProductFlow extends AddProductFlow {
         }
         
         try {
-            if (!(this.selectedShop && this.productName && this.productPrice && this.productAction)) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
+            if (!(this.selectedShop && this.productName && this.productPrice != null && this.productAction)) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
 
             await addProduct(this.selectedShop.id, { 
                 name: this.productName, 

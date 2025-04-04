@@ -1,6 +1,6 @@
-import { ActionRowBuilder, APIEmbedField, bold, ButtonBuilder, ButtonInteraction, ButtonStyle, Colors, EmbedBuilder, InteractionCallbackResponse, MessageFlags, ModalBuilder, ModalSubmitInteraction, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from "discord.js"
+import { ActionRowBuilder, APIEmbedField, bold, ButtonBuilder, ButtonInteraction, ButtonStyle, Colors, EmbedBuilder, GuildMember, InteractionCallbackResponse, MessageFlags, ModalBuilder, ModalSubmitInteraction, roleMention, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from "discord.js"
 import { getOrCreateAccount, getShops, setAccountCurrencyAmount, setAccountItemAmount } from "../database/database-handler"
-import { DatabaseError, Product, Shop } from "../database/database-types"
+import { DatabaseError, Product, ProductActionType, Shop } from "../database/database-types"
 import { logToDiscord, replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
 import { AccountUserInterface } from "./account-ui"
 import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent } from "./extended-components"
@@ -331,8 +331,6 @@ export class BuyProductUserInterface extends MessageUserInterface {
         this.updateInteraction(modalSubmit)
     }
 
-    // TODO Handle product actions
-
     private async buyProduct(interaction: UserInterfaceInteraction): Promise<unknown> {
         if (!this.selectedProduct) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
         try {
@@ -343,20 +341,68 @@ export class BuyProductUserInterface extends MessageUserInterface {
 
             if (userCurrencyAmount < price) return replyErrorMessage(interaction, `You don't have enough **${this.selectedShop.currency.emoji} ${this.selectedShop.currency.name}** to buy this product`)
             
-            
             setAccountCurrencyAmount(interaction.user.id, this.selectedShop.currency.id, userCurrencyAmount - price)
 
-            const productCurrencyAmount = user.inventory.get(this.selectedProduct.id)?.amount || 0
-            setAccountItemAmount(interaction.user.id, this.selectedProduct, productCurrencyAmount + 1)
+            if (this.selectedProduct.action != undefined) return this.buyActionProduct(interaction)
 
-            const priceString = (this.discount == 0) ? `**${price} ${this.selectedShop.currency.name}**` : `~~${this.selectedProduct.price}~~ **${price} ${this.selectedShop.currency.name}**`
-            await updateAsSuccessMessage(interaction, `You successfully bought ${bold(this.selectedProduct.name)} in ${bold(this.selectedShop.name)} for ${priceString}`)
+            const userProductAmount = user.inventory.get(this.selectedProduct.id)?.amount || 0
+            setAccountItemAmount(interaction.user.id, this.selectedProduct, userProductAmount + 1)
 
-            logToDiscord(interaction, `${interaction.member} purchased ${bold(this.selectedProduct.name)} from ${bold(this.selectedShop.name)} for ${priceString} with discount code ${this.discountCode ? this.discountCode : 'none'}`)
+            await updateAsSuccessMessage(interaction, `You successfully bought ${bold(this.selectedProduct.name)} in ${bold(this.selectedShop.name)} for ${this.priceString()}`)
+
+            logToDiscord(interaction, `${interaction.member} purchased ${bold(this.selectedProduct.name)} from ${bold(this.selectedShop.name)} for ${this.priceString()} with discount code ${this.discountCode ? this.discountCode : 'none'}`)
             return
         } 
         catch (error) {
             return await replyErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
         }
+    }
+
+    private priceString(): string {
+        if (!this.selectedProduct) return '-1'
+        const price = this.selectedProduct.price * (1 - this.discount / 100)
+        return (this.discount == 0) ? `**${price} ${this.selectedShop.currency.name}**` : `~~${this.selectedProduct.price}~~ **${price} ${this.selectedShop.currency.name}**`
+    }
+
+    private async buyActionProduct(interaction: UserInterfaceInteraction): Promise<unknown> {
+        if (!this.selectedProduct) return
+
+        let actionMessage = ''
+
+        switch (this.selectedProduct.action?.type) {
+            case ProductActionType.GiveRole:
+                const roleId = this.selectedProduct.action.options.roleId
+                if (!roleId) return
+
+                const member = interaction.member
+                if (!(member instanceof GuildMember)) return
+
+                member.roles.add(roleId)
+
+                actionMessage = `You were granted the role ${bold(roleMention(roleId))}`
+                break
+
+            case ProductActionType.GiveCurrency:
+                const currency = this.selectedProduct.action.options.currencyId
+                if (!currency) return
+
+                const amount = this.selectedProduct.action.options.amount
+                if (!amount) return
+
+                const user = await getOrCreateAccount(interaction.user.id)
+                const userCurrencyAmount = user.currencies.get(this.selectedShop.currency.id)?.amount || 0
+
+                setAccountCurrencyAmount(interaction.user.id, currency, userCurrencyAmount + amount)
+                break
+            default:
+                break
+        }
+
+
+        await updateAsSuccessMessage(interaction, `You successfully bought ${bold(this.selectedProduct.name)} in ${bold(this.selectedShop.name)} for ${this.priceString()}.\n${actionMessage}`)
+
+        logToDiscord(interaction, `${interaction.member} purchased ${bold(this.selectedProduct.name)} from ${bold(this.selectedShop.name)} for ${this.priceString()} with discount code ${this.discountCode ? this.discountCode : 'none'}. Action: ${this.selectedProduct.action?.type || 'none'} ${actionMessage}`)
+        return
+
     }
 }
