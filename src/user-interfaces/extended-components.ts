@@ -190,7 +190,7 @@ export async function showEditModal(interaction: MessageComponentInteraction | C
 
     const modal = new ModalBuilder()
         .setCustomId(modalId)
-        .setTitle('Change Shop Name')
+        .setTitle(`Edit ${edit}`)
     
     const input = new TextInputBuilder()
         .setCustomId(`${editNormalized}-input`)

@@ -1,7 +1,7 @@
 import { ActionRowBuilder, bold, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, InteractionCallbackResponse, MessageFlags, ModalBuilder, ModalSubmitInteraction, Role, roleMention, RoleSelectMenuInteraction, Snowflake, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from "discord.js"
 import { addProduct, getCurrencies, getShops, removeProduct, updateProduct } from "../database/database-handler"
 import { createProductAction, Currency, DatabaseError, isProductActionType, Product, ProductAction, ProductActionOptions, ProductActionType, Shop } from "../database/database-types"
-import { ExtendedButtonComponent, ExtendedComponent, ExtendedRoleSelectMenuComponent, ExtendedStringSelectMenuComponent } from "../user-interfaces/extended-components"
+import { ExtendedButtonComponent, ExtendedComponent, ExtendedRoleSelectMenuComponent, ExtendedStringSelectMenuComponent, showEditModal } from "../user-interfaces/extended-components"
 import { UserInterfaceInteraction } from "../user-interfaces/user-interfaces"
 import { EMOJI_REGEX, ErrorMessages } from "../utils/constants"
 import { PrettyLog } from "../utils/pretty-log"
@@ -208,29 +208,7 @@ export class AddActionProductFlow extends AddProductFlow {
                         .setEmoji({name: '🪙'})
                         .setStyle(ButtonStyle.Secondary),
                     async (interaction: ButtonInteraction) => {
-                        const modalId = `${this.id}+set-amount-modal`
-                
-                        const modal = new ModalBuilder()
-                            .setCustomId(modalId)
-                            .setTitle('Set Currency Amount')
-                        
-                        const amountInput = new TextInputBuilder()
-                            .setCustomId('amount-input')
-                            .setLabel('Amount')
-                            .setPlaceholder('0')
-                            .setStyle(TextInputStyle.Short)
-                            .setRequired(true)
-
-                
-                        modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(amountInput))
-                
-                        await interaction.showModal(modal)
-                
-                        const filter = (interaction: ModalSubmitInteraction) => interaction.customId === modalId
-                        const modalSubmit = await interaction.awaitModalSubmit({ filter, time: 120_000 })
-                        
-                        const input = modalSubmit.fields.getTextInputValue('amount-input')
-                        if (!input) return this.updateInteraction(modalSubmit)
+                        const [modalSubmit, input] = await showEditModal(interaction, 'Amount', '0')
                 
                         const amount = parseInt(input)
                         if (isNaN(amount)) return this.updateInteraction(modalSubmit)
@@ -290,10 +268,15 @@ export class AddActionProductFlow extends AddProductFlow {
         if (this.stage == AddActionProductFlowStage.SELECT_SHOP) super.updateComponents()
 
         if (this.stage == AddActionProductFlowStage.SETUP_ACTION) {
-            const submitButton = this.components.get(`${this.id}+submit`)
-            if (!(submitButton instanceof ExtendedButtonComponent)) return
+            const setAmountButton = this.components.get(`${this.id}+set-amount`)
+            if (setAmountButton instanceof ExtendedButtonComponent) {
+                setAmountButton.toggle(this.productAction != null && this.productAction.type == ProductActionType.GiveCurrency)
+            }
 
-            submitButton.toggle(this.productAction != null && this.actionSetupCompleted)
+            const submitButton = this.components.get(`${this.id}+submit`)
+            if (submitButton instanceof ExtendedButtonComponent) {
+                submitButton.toggle(this.productAction != null && this.actionSetupCompleted)
+            }
         }
     }
     private changeStage(newStage: AddActionProductFlowStage): void {
