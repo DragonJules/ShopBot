@@ -1,4 +1,4 @@
-import { ActionRowBuilder, bold, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, InteractionCallbackResponse, MessageFlags, ModalBuilder, ModalSubmitInteraction, Role, RoleSelectMenuInteraction, Snowflake, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from "discord.js"
+import { ActionRowBuilder, bold, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, InteractionCallbackResponse, MessageFlags, ModalBuilder, ModalSubmitInteraction, Role, roleMention, RoleSelectMenuInteraction, Snowflake, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from "discord.js"
 import { addProduct, getCurrencies, getShops, removeProduct, updateProduct } from "../database/database-handler"
 import { createProductAction, Currency, DatabaseError, isProductActionType, Product, ProductAction, ProductActionOptions, ProductActionType, Shop } from "../database/database-types"
 import { ExtendedButtonComponent, ExtendedComponent, ExtendedRoleSelectMenuComponent, ExtendedStringSelectMenuComponent } from "../user-interfaces/extended-components"
@@ -53,7 +53,7 @@ export class AddProductFlow extends UserFlow {
     
     protected getMessage(): string {
         const descString = (this.productDescription) ? `. Description: ${bold(this.productDescription.replaceSpaces())}` : ''
-        return `Add Product: ${bold(`${this.productName}`)} for **${this.productPrice} ${this.selectedShop?.currency.name || '[ ]'}** in **[${this.selectedShop?.name || 'Select Shop'}]**${descString}`
+        return `Add Product: ${bold(`${this.productEmoji ? `${this.productEmoji} ` : ''}${this.productName}`)} for **${this.productPrice} ${this.selectedShop?.currency.name || '[ ]'}** in **[${this.selectedShop?.name || 'Select Shop'}]**${descString}`
     }
 
     protected initComponents(): void {
@@ -139,8 +139,32 @@ export class AddActionProductFlow extends AddProductFlow {
             case AddActionProductFlowStage.SELECT_SHOP:
                 return super.getMessage()
 
-            case AddActionProductFlowStage.SETUP_ACTION:
-                return `Setup the action for ` // TODO
+            case AddActionProductFlowStage.SETUP_ACTION: 
+                const descString = (this.productDescription) ? `. Description: ${bold(this.productDescription.replaceSpaces())}` : ''
+                const productString = `Add Product: ${bold(`${this.productEmoji ? `${this.productEmoji} ` : ''}${this.productName}`)} for **${this.productPrice} ${this.selectedShop?.currency.name || '[ ]'}** in **[${this.selectedShop?.name || 'Select Shop'}]**${descString}`
+
+                let actionString = ''
+
+                switch (this.productActionType) {
+                    case ProductActionType.GiveRole:
+                        const roleMentionString = (this.productAction?.options as ProductActionOptions<ProductActionType.GiveRole> | undefined)?.roleId ? roleMention((this.productAction?.options as ProductActionOptions<ProductActionType.GiveRole>).roleId) : 'Unset'
+                        actionString = `give **[${roleMentionString}]** role`
+                        break
+                    case ProductActionType.GiveCurrency:
+                        const productActionAsGiveCurrency = (this.productAction?.options as ProductActionOptions<ProductActionType.GiveCurrency>)
+                        const isProductActionGiveCurrency = this.productAction != null && this.productAction?.options != undefined && (this.productAction?.options as ProductActionOptions<ProductActionType.GiveCurrency>).amount !== undefined && (this.productAction?.options as ProductActionOptions<ProductActionType.GiveCurrency>).currencyId !== undefined && productActionAsGiveCurrency != undefined 
+
+                        const amountString = (isProductActionGiveCurrency && productActionAsGiveCurrency.amount >= 0) ? productActionAsGiveCurrency.amount : 'Unset'
+                        const currency = (isProductActionGiveCurrency && productActionAsGiveCurrency.currencyId) ? getCurrencies().get(productActionAsGiveCurrency.currencyId) : undefined
+                        const currencyString = currency ? `${currency?.emoji? `${currency.emoji} ` : ''}${currency?.name}` : '[ ]'
+
+                        actionString = `give **[${amountString}]** ${currencyString}`
+                        break
+                    default:
+                        break
+                }
+
+                return `${productString}\nAction: ${actionString}`
         }
     }
 
@@ -172,7 +196,7 @@ export class AddActionProductFlow extends AddProductFlow {
                     'Select a currency',
                     getCurrencies(),
                     (interaction: StringSelectMenuInteraction, selected: Currency): void => {
-                        this.productAction = createProductAction(ProductActionType.GiveCurrency, { currencyId: selected.id, amount: 0 })
+                        this.productAction = createProductAction(ProductActionType.GiveCurrency, { currencyId: selected.id, amount: -1 })
                         this.updateInteraction(interaction)
                     },
                     120_000
@@ -210,6 +234,7 @@ export class AddActionProductFlow extends AddProductFlow {
                 
                         const amount = parseInt(input)
                         if (isNaN(amount)) return this.updateInteraction(modalSubmit)
+                        if (amount < 0) return this.updateInteraction(modalSubmit)
                 
                         this.productAction = createProductAction(ProductActionType.GiveCurrency, { 
                             currencyId: (this.productAction!.options as ProductActionOptions<ProductActionType.GiveCurrency>).currencyId, 

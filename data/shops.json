@@ -196,6 +196,35 @@
                         "amount": 10000
                     }
                 }
+            },
+            "06f684ff-f82c-497a-b06b-13f3db9ebc02": {
+                "id": "06f684ff-f82c-497a-b06b-13f3db9ebc02",
+                "shopId": "a9d9627b-dc1f-48c0-8780-2f8aa9f21915",
+                "name": "Earn Cool Guy Role",
+                "description": "You will be very cool",
+                "emoji": "😎",
+                "price": 500,
+                "action": {
+                    "type": "give-role",
+                    "options": {
+                        "roleId": "1358489735542341683"
+                    }
+                }
+            },
+            "796c67ab-e505-4324-ab5e-34311c3dad64": {
+                "id": "796c67ab-e505-4324-ab5e-34311c3dad64",
+                "shopId": "a9d9627b-dc1f-48c0-8780-2f8aa9f21915",
+                "name": "earn 1 $ but it's very expensive",
+                "description": "if u can, do it",
+                "emoji": "🤑",
+                "price": 1000000,
+                "action": {
+                    "type": "give-currency",
+                    "options": {
+                        "currencyId": "d9997bc7-ce3b-491b-92de-cfa5afd7e955",
+                        "amount": 1000001
+                    }
+                }
             }
         },
         "currencyId": "d9997bc7-ce3b-491b-92de-cfa5afd7e955"
