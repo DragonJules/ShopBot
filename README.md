@@ -206,6 +206,10 @@ I will after that add the following features, some of which have been suggested 
 - ✅ Automatic action products (e.g. give a certain amount of currency to a user, give a role to a user, if you have more suggestions feel free to [give them here](https://github.com/DragonJules/ShopBot/issues))
 - Shops reserved for specific roles
 
+<br>
+
+- Create a release, a precompiled version of the bot, with an easier way of installing it. 
+
 All those changes will be made on this branch.
 
 If you have a feature idea you think will fit this bot, feel free to suggest it [here](https://github.com/DragonJules/ShopBot/issues).
