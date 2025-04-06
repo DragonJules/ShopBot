@@ -14,7 +14,7 @@
 ### Hi 👋 <br>
 I created a cool bot for you !
 Let me introduce you **ShopBot**, this bot aims at helping to you create your own shops and currencies to fit the needs of your community, your RP server, or anything you need.  
-<sub><sup>(See [screenshots](#screenshots))</sup></sub>
+<sub><sup>(See [screenshots](#-screenshots))</sup></sub>
 <br>
 
 ### Here is what the bot can do:
@@ -36,7 +36,7 @@ Users can **see** their own account, and **buy** in shops.
 
 Thanks to **Discord**'s features, you can customize the permissions for each command in the settings of your server.
 
-You can check [screenshots](#screenshots) of the bot's commands to see how cool it is :D
+You can check [screenshots](#-screenshots) of the bot's commands to see how cool it is :D
 
 <br>
 
@@ -47,7 +47,8 @@ If you love the bot, feel free to support me:
 And don't forget to leave a ⭐ Star
 
 <br>
-It's now time to [How to use](#-how-to-use) !
+
+It's now time to [configure the bot](#-how-to-use) !
 
 ## 🚀 How to use
 This repo is the bot's source code, not a bot itself. <br>
