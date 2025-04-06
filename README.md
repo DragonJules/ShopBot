@@ -171,23 +171,24 @@ If you encounter any issue with a command, you can open an [issue](https://githu
 ## 📸 Screenshots 
 ### What members of the discord can see
 #### Shop 
-<img src="./readme/assets/shop.png" height="320px"/> 
+<img src="./readme/assets/shop.png"/> 
 
 #### Buy | Account | Inventory
-<img src="./readme/assets/buy.png" height="180px"/>   <img src="./readme/assets/account.png" height="180px"/>  <img src="./readme/assets/inventory.png" height="180px"/>
+<img src="./readme/assets/buy.png"/> 
+<img src="./readme/assets/account.png"/> <img src="./readme/assets/inventory.png"/>
 
 
 ### Examples of what you, as an administrator, can see
 #### Create | Delete a currency
-<img src="./readme/assets/create-currency.png" height="180px"/> <img src="./readme/assets/remove-currency.png" height="180px"/> 
+<img src="./readme/assets/create-currency.png"/> <img src="./readme/assets/remove-currency.png"/> 
 
 #### Create | Delete a shop
-<img src="./readme/assets/create-shop.png" height="180px"/> <img src="./readme/assets/remove-shop.png" height="180px"/> 
+<img src="./readme/assets/create-shop.png"/> <img src="./readme/assets/remove-shop.png"/> 
 
 And you can do [many more things](#-documentation)... Create discount codes, add products, give currency to users, use the bot to discover the interfaces ! 
 
 #### Configuring bot's commands permissions
-<img src="./readme/assets/bot-perms1.png" width="400px"/>
+<img src="./readme/assets/bot-perms1.png" width="500px"/>
 
 <sub><sup>The screenshots come from the tests I'm doing for the bot. (latest images update: 06.04.2025)</sup></sub>
 
