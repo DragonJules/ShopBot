@@ -1,5 +1,5 @@
 import { bold, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, InteractionCallbackResponse, MessageFlags, StringSelectMenuInteraction } from "discord.js"
-import { createDiscountCode, createShop, getCurrencies, getShops, removeDiscountCode, removeShop, updateShop, updateShopCurrency, updateShopPosition } from "../database/database-handler"
+import { createDiscountCode, createShop, getCurrencies, getCurrencyName, getShopName, getShops, removeDiscountCode, removeShop, updateShop, updateShopCurrency, updateShopPosition } from "../database/database-handler"
 import { Currency, DatabaseError, Shop } from "../database/database-types"
 import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent, showEditModal } from "../user-interfaces/extended-components"
 import { UserInterfaceInteraction } from "../user-interfaces/user-interfaces"
@@ -7,6 +7,7 @@ import { EMOJI_REGEX, ErrorMessages } from "../utils/constants"
 import { PrettyLog } from "../utils/pretty-log"
 import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
 import { UserFlow } from "./user-flow"
+import { get } from "node:http"
 
 export class ShopCreateFlow extends UserFlow {
     public id = 'shop-create'
@@ -43,7 +44,8 @@ export class ShopCreateFlow extends UserFlow {
     }
 
     protected override getMessage(): string {
-        return `Create the shop **${this.shopName!}** with the Currency **[${this.selectedCurrency?.name || 'Select currency'}]**`
+        const shopNameString = bold(`${this.shopEmoji ? `${this.shopEmoji} ` : ''}${this.shopName!}`)
+        return `Create the shop **${shopNameString}** with the Currency **[${getCurrencyName(this.selectedCurrency?.id) || 'Select currency'}]**`
     }
 
     protected override initComponents(): void {
@@ -115,9 +117,9 @@ export class ShopCreateFlow extends UserFlow {
             if (!this.shopName) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
             if (!this.selectedCurrency) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
             
-            await createShop(this.shopName, this.shopDescription || '', this.selectedCurrency.id, this.shopEmoji || '')
+            const newShop = await createShop(this.shopName, this.shopDescription || '', this.selectedCurrency.id, this.shopEmoji || '')
 
-            return await updateAsSuccessMessage(interaction, `You successfully created the shop ${bold(this.shopName)} with the currency ${bold(this.selectedCurrency.name)}. \n-# Use \`/shops-manage remove\` to remove it`)
+            return await updateAsSuccessMessage(interaction, `You successfully created the shop ${bold(getShopName(newShop.id) || '')} with the currency ${bold(getCurrencyName(newShop.currency.id) || '')}. \n-# Use \`/shops-manage remove\` to remove it`)
         } catch (error) {
             return await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
         }
@@ -143,7 +145,7 @@ export class ShopRemoveFlow extends UserFlow {
     }
 
     protected override getMessage(): string {
-        return `Remove **[${this.selectedShop?.name || 'Select Shop'}]**`
+        return `Remove **[${getShopName(this.selectedShop?.id) || 'Select Shop'}]**`
     }
 
     protected override initComponents(): void {
@@ -188,7 +190,7 @@ export class ShopRemoveFlow extends UserFlow {
             
             await removeShop(this.selectedShop.id)
 
-            return await updateAsSuccessMessage(interaction, `You successfully removed the shop ${bold(this.selectedShop.name)}`)
+            return await updateAsSuccessMessage(interaction, `You successfully removed the shop ${bold(getShopName(this.selectedShop.id) || '')}`)
         }
         catch (error) {
             return await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
@@ -221,7 +223,7 @@ export class ShopReorderFlow extends UserFlow {
     }
 
     protected override getMessage(): string {
-        return `Change position of ${bold(`[${this.selectedShop?.name || 'Select Shop'}]`)} to ${bold(`${this.selectedPosition || 'Select Position'}`)}`
+        return `Change position of ${bold(`[${getShopName(this.selectedShop?.id) || 'Select Shop'}]`)} to ${bold(`${this.selectedPosition || 'Select Position'}`)}`
     }
 
     protected override initComponents(): void {
@@ -304,7 +306,7 @@ export class ShopReorderFlow extends UserFlow {
             if (!this.selectedShop || !this.selectedPosition) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
 
             updateShopPosition(this.selectedShop.id, this.selectedPosition - 1)
-            await updateAsSuccessMessage(interaction, `You successfully changed the position of ${bold(this.selectedShop.name)} to ${bold(`${this.selectedPosition}`)}`)
+            await updateAsSuccessMessage(interaction, `You successfully changed the position of ${bold(getShopName(this.selectedShop?.id) || '')} to ${bold(`${this.selectedPosition}`)}`)
             return
         }
         catch (error) {
@@ -348,7 +350,7 @@ export class EditShopFlow extends UserFlow {
     }
 
     protected override getMessage(): string {
-        return `Edit **[${this.selectedShop?.name || 'Select Shop'}]**.\n**New ${this.updateOption}**: ${bold(`${this.updateOptionValue}`)}`
+        return `Edit **[${getShopName(this.selectedShop?.id) || 'Select Shop'}]**.\n**New ${this.updateOption}**: ${bold(`${this.updateOptionValue}`)}`
     }
 
     protected override initComponents(): void {
@@ -391,7 +393,7 @@ export class EditShopFlow extends UserFlow {
             if (!this.selectedShop) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
             if (!this.updateOption || !this.updateOptionValue) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
             
-            const oldName = this.selectedShop.name
+            const oldName = getShopName(this.selectedShop?.id) || ''
 
             await updateShop(this.selectedShop.id, { [this.updateOption.toString()]: this.updateOptionValue })
 
@@ -450,8 +452,8 @@ export class EditShopCurrencyFlow extends UserFlow {
     }
 
     protected override getMessage(): string {
-        if (this.stage === EditShopCurrencyStage.SELECT_SHOP) return `Change the currency of **[${this.selectedShop?.name || 'Select Shop'}]**.`
-        if (this.stage === EditShopCurrencyStage.SELECT_CURRENCY) return `Change the currency of **${this.selectedShop!.name}** to **[${this.selectedCurrency?.name || 'Select Currency'}]**.`
+        if (this.stage === EditShopCurrencyStage.SELECT_SHOP) return `Change the currency of **[${getShopName(this.selectedShop?.id) || 'Select Shop'}]**.`
+        if (this.stage === EditShopCurrencyStage.SELECT_CURRENCY) return `Change the currency of **${getShopName(this.selectedShop?.id)}** to **[${getCurrencyName(this.selectedCurrency?.id) || 'Select Currency'}]**.`
 
         PrettyLog.warning(`Unknown stage: ${this.stage}`)
         return ''
@@ -565,7 +567,7 @@ export class EditShopCurrencyFlow extends UserFlow {
         try {
             updateShopCurrency(this.selectedShop.id, this.selectedCurrency.id)
             
-            return await updateAsSuccessMessage(interaction, `You successfully updated the currency for the shop ${bold(this.selectedShop.name)} to ${bold(this.selectedCurrency.name)}`)
+            return await updateAsSuccessMessage(interaction, `You successfully updated the currency for the shop ${bold(getShopName(this.selectedShop.id) || '')} to ${bold(getCurrencyName(this.selectedCurrency.id) || '')}`)
         }
         catch (error) {
             return await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
@@ -602,7 +604,7 @@ export class DiscountCodeCreateFlow extends UserFlow {
     }
 
     protected override getMessage(): string {
-        return `Create a discount code for **[${this.selectedShop?.name || 'Select Shop'}]**.\n**Code**: ${bold(`${this.discountCode}\nAmount: ${this.discountAmount}`)}%`
+        return `Create a discount code for **[${getShopName(this.selectedShop?.id) || 'Select Shop'}]**.\n**Code**: ${bold(`${this.discountCode}\nAmount: ${this.discountAmount}`)}%`
     }
 
     protected override initComponents(): void {
@@ -648,7 +650,7 @@ export class DiscountCodeCreateFlow extends UserFlow {
 
             await createDiscountCode(this.selectedShop.id, this.discountCode, this.discountAmount)
 
-            return await updateAsSuccessMessage(interaction, `You successfully created the discount code ${bold(this.discountCode)} for ${bold(this.selectedShop.name)}.\n${bold(`Amount: ${this.discountAmount}`)}%`)
+            return await updateAsSuccessMessage(interaction, `You successfully created the discount code ${bold(this.discountCode)} for ${bold(getShopName(this.selectedShop?.id) || '')}.\n${bold(`Amount: ${this.discountAmount}`)}%`)
         } catch (error) {
             return await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
         }
@@ -686,8 +688,8 @@ export class DiscountCodeRemoveFlow extends UserFlow {
     }
 
     protected override getMessage(): string {
-        if (this.stage == DiscountCodeRemoveStage.SELECT_SHOP) return `Remove a discount code from ${bold(`[${this.selectedShop?.name || 'Select Shop'}]`)}.`
-        if (this.stage == DiscountCodeRemoveStage.SELECT_DISCOUNT_CODE) return `Remove discount code ${bold(`[${this.selectedDiscountCode || 'Select Discount Code'}]`)} from ${bold(`[${this.selectedShop!.name }]`)}.`
+        if (this.stage == DiscountCodeRemoveStage.SELECT_SHOP) return `Remove a discount code from ${bold(`[${getShopName(this.selectedShop?.id) || 'Select Shop'}]`)}.`
+        if (this.stage == DiscountCodeRemoveStage.SELECT_DISCOUNT_CODE) return `Remove discount code ${bold(`[${this.selectedDiscountCode || 'Select Discount Code'}]`)} from ${bold(`[${getShopName(this.selectedShop?.id)}]`)}.`
 
         PrettyLog.warning(`Unknown stage: ${this.stage}`)
         return ''
@@ -813,7 +815,7 @@ export class DiscountCodeRemoveFlow extends UserFlow {
 
             await removeDiscountCode(this.selectedShop.id, this.selectedDiscountCode)
 
-            return await updateAsSuccessMessage(interaction, `You successfully removed the discount code ${bold(this.selectedDiscountCode)} from ${bold(this.selectedShop.name)}`)
+            return await updateAsSuccessMessage(interaction, `You successfully removed the discount code ${bold(this.selectedDiscountCode)} from ${bold(getShopName(this.selectedShop?.id)!)}`)
         } catch (error) {
             return await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
         }

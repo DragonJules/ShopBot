@@ -168,29 +168,28 @@ This for you not to have to remember the name of each currency and shop to manag
 The use of those command is made as intuitive as possible using Discord's slash-commands and message components.
 If you encounter any issue with a command, you can open an [issue](https://github.com/DragonJules/ShopBot/issues).
 
-<!-- TODO Update Screenshots -->
 ## 📸 Screenshots 
 ### What members of the discord can see
 #### Shop 
 <img src="./readme/assets/shop.png" height="320px"/> 
 
-#### Buy | Account
-<img src="./readme/assets/buy.png" height="200px"/>   <img src="./readme/assets/account.png" height="200px"/>
+#### Buy | Account | Inventory
+<img src="./readme/assets/buy.png" height="180px"/>   <img src="./readme/assets/account.png" height="180px"/>  <img src="./readme/assets/inventory.png" height="180px"/>
 
 
 ### Examples of what you, as an administrator, can see
 #### Create | Delete a currency
-<img src="./readme/assets/create-currency.png" height="120px"/> <img src="./readme/assets/remove-currency.png" height="120px"/> 
+<img src="./readme/assets/create-currency.png" height="180px"/> <img src="./readme/assets/remove-currency.png" height="180px"/> 
 
 #### Create | Delete a shop
-<img src="./readme/assets/create-shop.png" height="166px"/> <img src="./readme/assets/remove-shop.png" height="166px"/> 
+<img src="./readme/assets/create-shop.png" height="180px"/> <img src="./readme/assets/remove-shop.png" height="180px"/> 
 
+And you can do [many more things](#-documentation)... Create discount codes, add products, give currency to users, use the bot to discover the interfaces ! 
 
 #### Configuring bot's commands permissions
-<img src="./readme/assets/bot-perms1.png" height="290px"/> <img src="./readme/assets/bot-perms2.png" height="290px"/>
+<img src="./readme/assets/bot-perms1.png" width="400px"/>
 
-
-<sub><sup>The screenshots come from the project I originally created the bot for.</sup></sub>
+<sub><sup>The screenshots come from the tests I'm doing for the bot. (latest images update: 06.04.2025)</sup></sub>
 
 
 ## 🌟 Road Map

@@ -1,5 +1,5 @@
 import { ActionRowBuilder, bold, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, InteractionCallbackResponse, MessageFlags, ModalBuilder, ModalSubmitInteraction, Role, roleMention, RoleSelectMenuInteraction, Snowflake, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from "discord.js"
-import { addProduct, getCurrencies, getShops, removeProduct, updateProduct } from "../database/database-handler"
+import { addProduct, getCurrencies, getCurrencyName, getProductName, getShopName, getShops, removeProduct, updateProduct } from "../database/database-handler"
 import { createProductAction, Currency, DatabaseError, isProductActionType, Product, ProductAction, ProductActionOptions, ProductActionType, Shop } from "../database/database-types"
 import { ExtendedButtonComponent, ExtendedComponent, ExtendedRoleSelectMenuComponent, ExtendedStringSelectMenuComponent, showEditModal } from "../user-interfaces/extended-components"
 import { UserInterfaceInteraction } from "../user-interfaces/user-interfaces"
@@ -7,6 +7,7 @@ import { EMOJI_REGEX, ErrorMessages } from "../utils/constants"
 import { PrettyLog } from "../utils/pretty-log"
 import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
 import { UserFlow } from "./user-flow"
+import { get } from "node:http"
 
 export class AddProductFlow extends UserFlow {
     public id = "add-product"
@@ -53,7 +54,8 @@ export class AddProductFlow extends UserFlow {
     
     protected getMessage(): string {
         const descString = (this.productDescription) ? `. Description: ${bold(this.productDescription.replaceSpaces())}` : ''
-        return `Add Product: ${bold(`${this.productEmoji ? `${this.productEmoji} ` : ''}${this.productName}`)} for **${this.productPrice} ${this.selectedShop?.currency.name || '[ ]'}** in **[${this.selectedShop?.name || 'Select Shop'}]**${descString}`
+        const nameString = bold(`${this.productEmoji ? `${this.productEmoji} ` : ''}${this.productName}`)
+        return `Add Product: ${nameString} for **${this.productPrice} ${getCurrencyName(this.selectedShop?.currency.id) || '[ ]'}** in **[${getShopName(this.selectedShop?.id) || 'Select Shop'}]**${descString}`
     }
 
     protected initComponents(): void {
@@ -93,14 +95,14 @@ export class AddProductFlow extends UserFlow {
         try {
             if (!(this.selectedShop && this.productName && this.productPrice)) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
 
-            await addProduct(this.selectedShop.id, { 
+            const newProduct = await addProduct(this.selectedShop.id, { 
                 name: this.productName, 
                 description: this.productDescription || '', 
                 emoji: this.productEmoji || '', 
                 price: this.productPrice
             })
 
-            return await updateAsSuccessMessage(interaction, `You successfully added the product ${bold(this.productName)} to the shop ${bold(this.selectedShop.name)}`)
+            return await updateAsSuccessMessage(interaction, `You successfully added the product ${bold(getProductName(this.selectedShop.id, newProduct.id) || '')} to the shop ${bold(getShopName(this.selectedShop.id) || '')}`)
 
         } catch (error) {
             return await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
@@ -141,7 +143,9 @@ export class AddActionProductFlow extends AddProductFlow {
 
             case AddActionProductFlowStage.SETUP_ACTION: 
                 const descString = (this.productDescription) ? `. Description: ${bold(this.productDescription.replaceSpaces())}` : ''
-                const productString = `Add Product: ${bold(`${this.productEmoji ? `${this.productEmoji} ` : ''}${this.productName}`)} for **${this.productPrice} ${this.selectedShop?.currency.name || '[ ]'}** in **[${this.selectedShop?.name || 'Select Shop'}]**${descString}`
+                const productNameString = bold(`${this.productEmoji ? `${this.productEmoji} ` : ''}${this.productName}`)
+
+                const productString = `Add Product: ${productNameString} for **${this.productPrice} ${getCurrencyName(this.selectedShop?.currency.id) || '[ ]'}** in **[${getShopName(this.selectedShop?.id) || 'Select Shop'}]**${descString}`
 
                 let actionString = ''
 
@@ -156,7 +160,7 @@ export class AddActionProductFlow extends AddProductFlow {
 
                         const amountString = (isProductActionGiveCurrency && productActionAsGiveCurrency.amount >= 0) ? productActionAsGiveCurrency.amount : 'Unset'
                         const currency = (isProductActionGiveCurrency && productActionAsGiveCurrency.currencyId) ? getCurrencies().get(productActionAsGiveCurrency.currencyId) : undefined
-                        const currencyString = currency ? `${currency?.emoji? `${currency.emoji} ` : ''}${currency?.name}` : '[ ]'
+                        const currencyString = getCurrencyName(currency?.id) || '[ ]'
 
                         actionString = `give **[${amountString}]** ${currencyString}`
                         break
@@ -301,7 +305,7 @@ export class AddActionProductFlow extends AddProductFlow {
         try {
             if (!(this.selectedShop && this.productName && this.productPrice != null && this.productAction)) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
 
-            await addProduct(this.selectedShop.id, { 
+            const newProduct = await addProduct(this.selectedShop.id, { 
                 name: this.productName, 
                 description: this.productDescription || '', 
                 emoji: this.productEmoji || '', 
@@ -309,7 +313,7 @@ export class AddActionProductFlow extends AddProductFlow {
                 action: this.productAction 
             })
 
-            return await updateAsSuccessMessage(interaction, `You successfully added the product ${bold(this.productName)} to the shop ${bold(this.selectedShop.name)} with the action ${bold(`${this.productActionType}`)}`)
+            return await updateAsSuccessMessage(interaction, `You successfully added the product ${bold(getProductName(this.selectedShop.id, newProduct.id) || '')} to the shop ${bold(getShopName(this.selectedShop.id) || '')} with the action ${bold(`${this.productActionType}`)}`)
 
         } catch (error) {
             return await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
@@ -349,8 +353,8 @@ export class RemoveProductFlow extends UserFlow {
     }
 
     protected getMessage(): string {
-        if (this.stage == RemoveProductFlowStage.SELECT_SHOP) return `Remove a Product from: **[${this.selectedShop?.name || 'Select Shop'}]**`
-        if (this.stage == RemoveProductFlowStage.SELECT_PRODUCT) return `Remove Product: **[${this.selectedProduct?.name || 'Select Product'}]** from **[${this.selectedShop?.name}]**`
+        if (this.stage == RemoveProductFlowStage.SELECT_SHOP) return `Remove a Product from: **[${getShopName(this.selectedShop?.id) || 'Select Shop'}]**`
+        if (this.stage == RemoveProductFlowStage.SELECT_PRODUCT) return `Remove Product: **[${getProductName(this.selectedShop?.id, this.selectedProduct?.id) || 'Select Product'}]** from ${bold(getShopName(this.selectedShop?.id) || '')}`
 
         PrettyLog.warning(`Unknown stage: ${this.stage}`)
         return ''
@@ -472,9 +476,11 @@ export class RemoveProductFlow extends UserFlow {
             if (!this.selectedShop) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
             if (!this.selectedProduct) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
 
+            const oldProductName = getProductName(this.selectedShop.id, this.selectedProduct.id) || ''
+
             await removeProduct(this.selectedShop.id, this.selectedProduct.id)
 
-            return await updateAsSuccessMessage(interaction, `You successfully removed the product ${bold(this.selectedProduct.name)} from the shop ${bold(this.selectedShop.name)}`)
+            return await updateAsSuccessMessage(interaction, `You successfully removed the product ${bold(oldProductName)} from the shop ${bold(getShopName(this.selectedShop.id) || '')}`)
 
         } catch (error) {
             return await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
@@ -529,8 +535,8 @@ export class EditProductFlow extends UserFlow {
     }
 
     protected getMessage(): string {
-        if (this.stage == EditProductFlowStage.SELECT_SHOP) return `Edit product from ${bold(`[${this.selectedShop?.name || 'Select Shop'}]`)}.\nNew ${bold(`${this.updateOption}`)}: ${bold(`${this.updateOptionValue}`)}`
-        if (this.stage == EditProductFlowStage.SELECT_PRODUCT) return `Edit Product: ${bold(`[${this.selectedProduct?.name || 'Select Product'}]`)} from ${bold(this.selectedShop!.name)}. \nNew ${bold(`${this.updateOption}`)}: ${bold(`${this.updateOptionValue}`)}`
+        if (this.stage == EditProductFlowStage.SELECT_SHOP) return `Edit product from ${bold(`[${getShopName(this.selectedShop?.id) || 'Select Shop'}]`)}.\nNew ${bold(`${this.updateOption}`)}: ${bold(`${this.updateOptionValue}`)}`
+        if (this.stage == EditProductFlowStage.SELECT_PRODUCT) return `Edit Product: ${bold(`[${getProductName(this.selectedShop?.id, this.selectedProduct?.id) || 'Select Product'}]`)} from ${bold(getShopName(this.selectedShop?.id) || '')}. \nNew ${bold(`${this.updateOption}`)}: ${bold(`${this.updateOptionValue}`)}`
 
         PrettyLog.warning(`Unknown stage: ${this.stage}`)
         return ''
@@ -656,11 +662,11 @@ export class EditProductFlow extends UserFlow {
             const updateOption: Record<string, string | number> = {}
             updateOption[this.updateOption.toString()] = (this.updateOption == EditProductOption.PRICE) ? Number(this.updateOptionValue) : this.updateOptionValue
 
-            const oldName = this.selectedProduct.name
+            const oldName = getProductName(this.selectedShop.id, this.selectedProduct.id) || ''
 
             await updateProduct(this.selectedShop.id, this.selectedProduct.id, updateOption)
 
-            return await updateAsSuccessMessage(interaction, `You successfully updated the product ${bold(oldName)} from the shop ${bold(this.selectedShop.name)}. \nNew ${bold(this.updateOption)}: ${bold(this.updateOptionValue)}`)
+            return await updateAsSuccessMessage(interaction, `You successfully updated the product ${bold(oldName)} from the shop ${bold(getShopName(this.selectedShop.id) || '')}. \nNew ${bold(this.updateOption)}: ${bold(this.updateOptionValue)}`)
 
         } catch (error) {
             await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)

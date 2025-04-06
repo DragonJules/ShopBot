@@ -1,5 +1,5 @@
 import { ActionRowBuilder, APIEmbedField, bold, ButtonBuilder, ButtonInteraction, ButtonStyle, Colors, EmbedBuilder, GuildMember, InteractionCallbackResponse, MessageFlags, ModalBuilder, ModalSubmitInteraction, roleMention, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from "discord.js"
-import { getOrCreateAccount, getShops, setAccountCurrencyAmount, setAccountItemAmount } from "../database/database-handler"
+import { getCurrencyName, getOrCreateAccount, getProductName, getShopName, getShops, setAccountCurrencyAmount, setAccountItemAmount } from "../database/database-handler"
 import { DatabaseError, Product, ProductActionType, Shop } from "../database/database-types"
 import { logToDiscord, replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
 import { AccountUserInterface } from "./account-ui"
@@ -117,7 +117,7 @@ export class ShopUserInterface extends EmbedUserInterface {
 
         const shopEmbed = new EmbedBuilder()
             .setFooter({ text: `Page ${this.shopPage + 1}/${shopPages}`, iconURL: interaction.client.user.displayAvatarURL()})
-            .setTitle(this.selectedShop.name)
+            .setTitle(getShopName(this.selectedShop.id)!)
             .setDescription(`${this.selectedShop.description}\n\nProducts:`)
             .setColor(Colors.Gold)
 
@@ -168,9 +168,8 @@ export class ShopUserInterface extends EmbedUserInterface {
         const shopEmbed = this.embeds.get('shop-embed')
         if (shopEmbed instanceof EmbedBuilder && this.selectedShop != null) {
             const shopPages = this.getNumberOfPages()
-            const emojiString = this.selectedShop.emoji != null ? `${this.selectedShop.emoji} ` : ''
 
-            shopEmbed.setTitle(`${emojiString}${this.selectedShop.name}`)
+            shopEmbed.setTitle(getShopName(this.selectedShop.id)!)
             shopEmbed.setDescription(`${this.selectedShop.description}\n\nProducts: `)
             shopEmbed.setFooter({ text: `Page ${this.shopPage + 1}/${shopPages}`})
 
@@ -187,13 +186,10 @@ export class ShopUserInterface extends EmbedUserInterface {
 
         this.selectedShop.products.forEach(product => {
             const descString = product.description ? product.description : '\u200b'
-            
-            const productEmojiString = product.emoji ? `${product.emoji} ` : ''
-            const currencyEmojiString = this.selectedShop!.currency.emoji ? `${this.selectedShop!.currency.emoji} ` : ''
 
             fields.push({ 
-                name: `${productEmojiString}${product.name}`, 
-                value: `Price: **${product.price} ${currencyEmojiString}${this.selectedShop!.currency.name}**\n${descString}`, 
+                name: getProductName(this.selectedShop!.id, product.id)!,
+                value: `Price: **${product.price} ${getCurrencyName(this.selectedShop!.currency.id)}**\n${descString}`, 
                 inline: true 
             })
         })
@@ -250,7 +246,8 @@ export class BuyProductUserInterface extends MessageUserInterface {
 
     protected override getMessage(): string {
         const discountCodeString = this.discountCode ? `\nDiscount code: ${bold(this.discountCode)}` : ''
-        return `Buy **[${this.selectedProduct?.name || 'Select Product'}]** from ${bold(this.selectedShop.name)}.${discountCodeString}`
+        const priceString = this.priceString() != '' ? ` for ${this.priceString()}` : ''
+        return `Buy **[${getProductName(this.selectedShop.id, this.selectedProduct?.id) || 'Select Product'}]** from ${bold(getShopName(this.selectedShop.id)!)}${priceString}.${discountCodeString}`
     }
 
     protected override initComponents(): void {
@@ -339,7 +336,7 @@ export class BuyProductUserInterface extends MessageUserInterface {
             const userCurrencyAmount = user.currencies.get(this.selectedShop.currency.id)?.amount || 0
             const price = this.selectedProduct.price * (1 - this.discount / 100)
 
-            if (userCurrencyAmount < price) return replyErrorMessage(interaction, `You don't have enough **${this.selectedShop.currency.emoji} ${this.selectedShop.currency.name}** to buy this product`)
+            if (userCurrencyAmount < price) return replyErrorMessage(interaction, `You don't have enough **${getCurrencyName(this.selectedShop.currency.id)!}** to buy this product`)
             
             setAccountCurrencyAmount(interaction.user.id, this.selectedShop.currency.id, userCurrencyAmount - price)
 
@@ -348,9 +345,9 @@ export class BuyProductUserInterface extends MessageUserInterface {
             const userProductAmount = user.inventory.get(this.selectedProduct.id)?.amount || 0
             setAccountItemAmount(interaction.user.id, this.selectedProduct, userProductAmount + 1)
 
-            await updateAsSuccessMessage(interaction, `You successfully bought ${bold(this.selectedProduct.name)} in ${bold(this.selectedShop.name)} for ${this.priceString()}`)
+            await updateAsSuccessMessage(interaction, `You successfully bought ${bold(getProductName(this.selectedShop.id, this.selectedProduct.id)!)} in ${bold(getShopName(this.selectedShop.id)!)} for ${this.priceString()}`)
 
-            logToDiscord(interaction, `${interaction.member} purchased ${bold(this.selectedProduct.name)} from ${bold(this.selectedShop.name)} for ${this.priceString()} with discount code ${this.discountCode ? this.discountCode : 'none'}`)
+            logToDiscord(interaction, `${interaction.member} purchased ${bold(getProductName(this.selectedShop.id, this.selectedProduct.id)!)} from ${bold(getShopName(this.selectedShop.id)!)} for ${this.priceString()} with discount code ${this.discountCode ? this.discountCode : 'none'}`)
             return
         } 
         catch (error) {
@@ -359,9 +356,9 @@ export class BuyProductUserInterface extends MessageUserInterface {
     }
 
     private priceString(): string {
-        if (!this.selectedProduct) return '-1'
+        if (!this.selectedProduct) return ''
         const price = this.selectedProduct.price * (1 - this.discount / 100)
-        return (this.discount == 0) ? `**${price} ${this.selectedShop.currency.name}**` : `~~${this.selectedProduct.price}~~ **${price} ${this.selectedShop.currency.name}**`
+        return (this.discount == 0) ? `**${price} ${getCurrencyName(this.selectedShop.currency.id)!}**` : `~~${this.selectedProduct.price}~~ **${price} ${getCurrencyName(this.selectedShop.currency.id)!}**`
     }
 
     private async buyActionProduct(interaction: UserInterfaceInteraction): Promise<unknown> {
@@ -399,9 +396,9 @@ export class BuyProductUserInterface extends MessageUserInterface {
         }
 
 
-        await updateAsSuccessMessage(interaction, `You successfully bought ${bold(this.selectedProduct.name)} in ${bold(this.selectedShop.name)} for ${this.priceString()}.\n${actionMessage}`)
+        await updateAsSuccessMessage(interaction, `You successfully bought ${bold(getProductName(this.selectedShop.id, this.selectedProduct.id)!)} in ${bold(getShopName(this.selectedShop.id)!)} for ${this.priceString()}.\n${actionMessage}`)
 
-        logToDiscord(interaction, `${interaction.member} purchased ${bold(this.selectedProduct.name)} from ${bold(this.selectedShop.name)} for ${this.priceString()} with discount code ${this.discountCode ? this.discountCode : 'none'}. Action: ${this.selectedProduct.action?.type || 'none'} ${actionMessage}`)
+        logToDiscord(interaction, `${interaction.member} purchased ${bold(getProductName(this.selectedShop.id, this.selectedProduct.id)!)} from ${bold(getShopName(this.selectedShop.id)!)} for ${this.priceString()} with discount code ${this.discountCode ? this.discountCode : 'none'}. Action: ${this.selectedProduct.action?.type || 'none'} ${actionMessage}`)
         return
 
     }

@@ -1,5 +1,5 @@
 import { bold, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, italic, MessageFlags, ModalSubmitInteraction, StringSelectMenuInteraction } from "discord.js"
-import { getCurrencies, getShopsWithCurrency, removeCurrency, takeCurrencyFromAccounts, updateCurrency } from "../database/database-handler"
+import { getCurrencies, getCurrencyName, getShopName, getShopsWithCurrency, removeCurrency, takeCurrencyFromAccounts, updateCurrency } from "../database/database-handler"
 import { Currency, DatabaseError } from "../database/database-types"
 import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent, showConfirmationModal } from "../user-interfaces/extended-components"
 import { UserInterfaceInteraction } from "../user-interfaces/user-interfaces"
@@ -65,13 +65,13 @@ export class CurrencyRemoveFlow extends UserFlow {
             const shopsWithCurrency = getShopsWithCurrency(this.selectedCurrency.id)
 
             if (shopsWithCurrency.size > 0) {
-                const shopsWithCurrencyNames = Array.from(shopsWithCurrency.values()).map(shop => bold(italic(shop.name))).join(', ')
+                const shopsWithCurrencyNames = Array.from(shopsWithCurrency.values()).map(shop => bold(italic(getShopName(shop.id) || ''))).join(', ')
 
-                return `⚠️ Can't remove **${this.selectedCurrency.name}** ! The following shops are still using it : ${shopsWithCurrencyNames}. \n-# Please consider removing them (\`/shops-manage remove\`) or changing their currency (\`/shops-manage change-currency\`) before removing the currency.`
+                return `⚠️ Can't remove **${getCurrencyName(this.selectedCurrency.id)}** ! The following shops are still using it : ${shopsWithCurrencyNames}. \n-# Please consider removing them (\`/shops-manage remove\`) or changing their currency (\`/shops-manage change-currency\`) before removing the currency.`
             }
         }
 
-        return `Remove **[${this.selectedCurrency?.name || 'Select Currency'}]**, ⚠️ __**it will also take it from user's accounts**__`
+        return `Remove **[${getCurrencyName(this.selectedCurrency?.id) || 'Select Currency'}]**, ⚠️ __**it will also take it from user's accounts**__`
     }
 
     protected updateComponents(): void {
@@ -91,8 +91,10 @@ export class CurrencyRemoveFlow extends UserFlow {
 
             await takeCurrencyFromAccounts(this.selectedCurrency.id)
 
+            const currencyName = getCurrencyName(this.selectedCurrency.id) || ''
+
             await removeCurrency(this.selectedCurrency.id)
-            return await updateAsSuccessMessage(interaction, `You successfully removed the currency ${bold(this.selectedCurrency.name)}`)
+            return await updateAsSuccessMessage(interaction, `You successfully removed the currency ${bold(currencyName)}`)
         } catch (error) {
             return await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
         }
@@ -132,7 +134,7 @@ export class EditCurrencyFlow extends UserFlow {
     }
 
     protected override getMessage(): string {
-        return `Edit **[${this.selectedCurrency?.name || 'Select Currency'}]**.\n**New ${this.updateOption}**: ${bold(`${this.updateOptionValue}`)}`
+        return `Edit **[${getCurrencyName(this.selectedCurrency?.id) || 'Select Currency'}]**.\n**New ${this.updateOption}**: ${bold(`${this.updateOptionValue}`)}`
     }
 
     protected override initComponents(): void {
@@ -174,7 +176,7 @@ export class EditCurrencyFlow extends UserFlow {
             if (!this.selectedCurrency) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
             if (!this.updateOption || this.updateOptionValue == undefined) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
             
-            const oldName = this.selectedCurrency.name
+            const oldName = getCurrencyName(this.selectedCurrency.id) || ''
 
             await updateCurrency(this.selectedCurrency.id, { [this.updateOption.toString()]: this.updateOptionValue } )
 

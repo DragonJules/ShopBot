@@ -110,7 +110,6 @@ export interface AccountsDatabaseJSONBody extends DatabaseJSONBody {
     }
 }
 
-
 export class AccountsDatabase extends Database {
     public accounts: Map<Snowflake, Account>
 
@@ -245,3 +244,4 @@ export class ShopsDatabase extends Database {
         return shops
     }
 }
+

@@ -21,7 +21,7 @@
                 "id": "54940be1-3d10-4ea5-91b6-2e12cc02603a",
                 "shopId": "22b6f8dd-3ab7-41eb-9e99-6ba6370e8441",
                 "name": "Between Past and Future",
-                "emoji": "",
+                "emoji": "📖",
                 "description": "Hannah Arendt",
                 "price": 5
             },
@@ -29,7 +29,7 @@
                 "id": "b6329e22-a10c-4466-879a-90d732440f0e",
                 "shopId": "22b6f8dd-3ab7-41eb-9e99-6ba6370e8441",
                 "name": "Super Expensive Quantum Physics book",
-                "emoji": "",
+                "emoji": "📗",
                 "description": "",
                 "price": 770
             }

@@ -123,8 +123,13 @@ export function getCurrencyId(currencyName: string): string | undefined {
     return currencyId 
 }
 
-export function getCurrencyName(currencyId: string): string | undefined {
-    return currenciesDatabase.currencies.get(currencyId)?.name
+export function getCurrencyName(currencyId: string | undefined): string | undefined {
+    if (!currencyId) return undefined
+
+    const currency = getCurrencies().get(currencyId)
+    if (!currency) return undefined
+
+    return `${currency.emoji != '' ? `${currency.emoji} ` : ''}${currency.name}`    
 }
 
 export async function createCurrency(currencyName: string, emoji: string) {
@@ -170,9 +175,12 @@ export function getShopId(shopName: string): string | undefined {
     })
     return shopId
 }
+export function getShopName(shopId: string | undefined): string | undefined {
+    if (!shopId) return undefined
+    const shop = getShops().get(shopId)
+    if (!shop) return undefined
 
-export function getShopName(shopId: string): string | undefined {
-    return shopsDatabase.shops.get(shopId)?.name
+    return `${shop.emoji != '' ? `${shop.emoji} ` : ''}${shop.name}`
 }
 
 export async function createShop(shopName: string, description: string, currencyId: string, emoji: string) {
@@ -191,7 +199,9 @@ export async function createShop(shopName: string, description: string, currency
         products: new Map()
     })
 
-    save(shopsDatabase)
+    await save(shopsDatabase)
+
+    return shopsDatabase.shops.get(newShopId)!
 }
 
 export async function removeShop(shopId: string) {
@@ -284,6 +294,8 @@ export async function addProduct(shopId: string, options: ProductOptions) {
 
     shopsDatabase.shops.get(shopId)!.products.set(id, product)
     await save(shopsDatabase)
+
+    return shopsDatabase.shops.get(shopId)!.products.get(id)!
 }
 
 export async function removeProduct(shopId: string, productId: string) {
@@ -307,5 +319,14 @@ export async function updateProduct(shopId: string, productId: string, options: 
     if (action) product.action = action
 
     await save(shopsDatabase)
+}
+
+export function getProductName(shopId: string | undefined, productId: string | undefined): string | undefined {
+    if (!shopId || !productId) return undefined
+
+    const product = getShops().get(shopId)?.products.get(productId)
+    if (!product) return undefined
+
+    return `${product.emoji != '' ? `${product.emoji} ` : ''}${product.name}`    
 }
 // #endregion

@@ -8,7 +8,7 @@ enum AccountDisplayMode {
     CURRENCIES,
     INVENTORY
 }
-
+// TODO Pagination
 export class AccountUserInterface extends EmbedUserInterface {
     public override id: string = 'account-ui'
     protected override components: Map<string, ExtendedComponent> = new Map()

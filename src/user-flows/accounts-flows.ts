@@ -1,5 +1,5 @@
 import { bold, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, MessageFlags, StringSelectMenuInteraction, User, userMention } from "discord.js"
-import { emptyAccount, getCurrencies, getOrCreateAccount, setAccountCurrencyAmount } from "../database/database-handler"
+import { emptyAccount, getCurrencies, getCurrencyName, getOrCreateAccount, setAccountCurrencyAmount } from "../database/database-handler"
 import { Currency, DatabaseError } from "../database/database-types"
 import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent, showConfirmationModal } from "../user-interfaces/extended-components"
 import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
@@ -36,7 +36,7 @@ export class AccountGiveFlow extends UserFlow {
     }
 
     protected override getMessage(): string {
-        return `Give ${bold(`${this.amount} [${this.selectedCurrency?.name || 'Select Currency'}]`)} to ${bold(`${this.target}`)}`
+        return `Give ${bold(`${this.amount} [${getCurrencyName(this.selectedCurrency?.id) || 'Select Currency'}]`)} to ${bold(`${this.target}`)}`
     }
 
     protected override initComponents(): void {
@@ -81,7 +81,7 @@ export class AccountGiveFlow extends UserFlow {
             const currentBalance = (await getOrCreateAccount(this.target!.id)).currencies.get(this.selectedCurrency.id)?.amount || 0
             await setAccountCurrencyAmount(this.target!.id, this.selectedCurrency.id, currentBalance + this.amount)
 
-            return await updateAsSuccessMessage(interaction, `You successfully gave ${bold(`${this.amount}`)} ${this.selectedCurrency.name} to ${userMention(this.target.id)}`)
+            return await updateAsSuccessMessage(interaction, `You successfully gave ${bold(`${this.amount}`)} ${getCurrencyName(this.selectedCurrency.id)} to ${userMention(this.target.id)}`)
             
         } catch (error) {
             return await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
@@ -119,7 +119,7 @@ export class AccountTakeFlow extends UserFlow {
     }
 
     protected override getMessage(): string {
-        return `Take ${bold(`${this.amount} [${this.selectedCurrency?.name || 'Select Currency'}]`)} from ${bold(`${this.target}`)}`
+        return `Take ${bold(`${this.amount} [${getCurrencyName(this.selectedCurrency?.id) || 'Select Currency'}]`)} from ${bold(`${this.target}`)}`
     }
 
     protected override initComponents() {
@@ -203,7 +203,7 @@ export class AccountTakeFlow extends UserFlow {
             
             await setAccountCurrencyAmount(this.target!.id, this.selectedCurrency.id, newBalance)
 
-            return await updateAsSuccessMessage(interaction, `You successfully took ${bold(`${this.amount}`)} ${this.selectedCurrency.name} from ${bold(`${this.target}`)}`)
+            return await updateAsSuccessMessage(interaction, `You successfully took ${bold(`${this.amount}`)} ${getCurrencyName(this.selectedCurrency.id)} from ${bold(`${this.target}`)}`)
         } catch (error) {
             return await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
         }
