@@ -1,12 +1,12 @@
 # ShopBot 2
 
 ### Contents
-- [Introduction](#introduction)
-- [How to use](#how-to-use)
-- [Documentation](#documentation)
-- [Screenshots](#screenshots)
-- [Road Map](#roadmap)
-- [Legal Stuff](#legal-information)
+- [👋 Introduction](#introduction)
+- [🚀 How to use](#-how-to-use)
+- [📝 Documentation](#-documentation)
+- [📸 Screenshots](#-screenshots)
+- [🌟 Road Map](#-road-map)
+- [⚖️ Legal Stuff](#%EF%B8%8F-legal-information)
 
 
 ## Introduction
@@ -43,9 +43,11 @@ You can check [screenshots](#screenshots) of the bot's commands to see how cool 
 If you love the bot, feel free to support me: 
 
 <a href='https://ko-fi.com/B0B5L20B6' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi1.png?v=6' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
+
+And don't forget to leave a ⭐ Star
+
 <br>
-<br>
-It's now time to [configure the bot](#how-to-use) !
+It's now time to [How to use](#-how-to-use) !
 
 ## 🚀 How to use
 This repo is the bot's source code, not a bot itself. <br>
