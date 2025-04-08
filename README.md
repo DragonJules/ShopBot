@@ -24,8 +24,7 @@ This bot uses the power of ***Slash Commands*** to let you interact with it with
 
 You can **create** **currencies**, then use them in **shops** you created, in which you can add **products**, with a name, a description and a price.
 
-Of course, you can **manage** these currencies, shops and products. You can **delete** the currencies and the shops.
-You can **update** the name, description or price of the products.
+Of course, you can **manage** these currencies, shops and products. You can **delete** and **edit** them, if you want to change their name, description.. or get rid of them !
 
 Admins can **give** and **take** money to users and even **empty** an account, they can also **see** the account of anyone.
 They can see logs (for purchase, give and take) by setting a log channel on your server.
