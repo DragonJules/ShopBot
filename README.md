@@ -26,10 +26,10 @@ You can **create** **currencies**, then use them in **shops** you created, in wh
 
 Of course, you can **manage** these currencies, shops and products. You can **delete** and **edit** them, if you want to change their name, description.. or get rid of them !
 
-Admins can **give** and **take** money to users and even **empty** an account, they can also **see** the account of anyone.
+Admins can **give** and **take** money to users and even **empty** an account, they can also **see** the account and inventory of anyone.
 They can see logs (for purchase, give and take) by setting a log channel on your server.
 
-Users can **see** their own account, and **buy** in shops.
+Users can **see** their own account and inventory, and **buy** in shops.
 
 <br>
 
