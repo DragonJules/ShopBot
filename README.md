@@ -24,13 +24,12 @@ This bot uses the power of ***Slash Commands*** to let you interact with it with
 
 You can **create** **currencies**, then use them in **shops** you created, in which you can add **products**, with a name, a description and a price.
 
-Of course, you can **manage** these currencies, shops and products. You can **delete** the currencies and the shops.
-You can **update** the name, description or price of the products.
+Of course, you can **manage** these currencies, shops and products. You can **delete** and **edit** them, if you want to change their name, description.. or get rid of them !
 
-Admins can **give** and **take** money to users and even **empty** an account, they can also **see** the account of anyone.
+Admins can **give** and **take** money to users and even **empty** an account, they can also **see** the account and inventory of anyone.
 They can see logs (for purchase, give and take) by setting a log channel on your server.
 
-Users can **see** their own account, and **buy** in shops.
+Users can **see** their own account and inventory, and **buy** in shops.
 
 <br>
 
@@ -171,23 +170,24 @@ If you encounter any issue with a command, you can open an [issue](https://githu
 ## 📸 Screenshots 
 ### What members of the discord can see
 #### Shop 
-<img src="./readme/assets/shop.png" height="320px"/> 
+<img src="./readme/assets/shop.png"/> 
 
 #### Buy | Account | Inventory
-<img src="./readme/assets/buy.png" height="180px"/>   <img src="./readme/assets/account.png" height="180px"/>  <img src="./readme/assets/inventory.png" height="180px"/>
+<img src="./readme/assets/buy.png"/> 
+<img src="./readme/assets/account.png"/> <img src="./readme/assets/inventory.png"/>
 
 
 ### Examples of what you, as an administrator, can see
 #### Create | Delete a currency
-<img src="./readme/assets/create-currency.png" height="180px"/> <img src="./readme/assets/remove-currency.png" height="180px"/> 
+<img src="./readme/assets/create-currency.png"/> <img src="./readme/assets/remove-currency.png"/> 
 
 #### Create | Delete a shop
-<img src="./readme/assets/create-shop.png" height="180px"/> <img src="./readme/assets/remove-shop.png" height="180px"/> 
+<img src="./readme/assets/create-shop.png"/> <img src="./readme/assets/remove-shop.png"/> 
 
 And you can do [many more things](#-documentation)... Create discount codes, add products, give currency to users, use the bot to discover the interfaces ! 
 
 #### Configuring bot's commands permissions
-<img src="./readme/assets/bot-perms1.png" width="400px"/>
+<img src="./readme/assets/bot-perms1.png" width="500px"/>
 
 <sub><sup>The screenshots come from the tests I'm doing for the bot. (latest images update: 06.04.2025)</sup></sub>
 
