@@ -72,7 +72,7 @@ export function createProductAction<Type extends ProductActionType>(type: Type, 
 }
 
 export function isProductActionType(actionType: string): actionType is ProductActionType {
-    return Object.values(ProductActionType).includes(actionType as ProductActionType)
+    return actionType in ProductActionType
 }
 
 export interface Product {
