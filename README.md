@@ -205,7 +205,7 @@ I will after that add the following features, some of which have been suggested 
 - ✅ Automatic action products (e.g. give a certain amount of currency to a user, give a role to a user, if you have more suggestions feel free to [give them here](https://github.com/DragonJules/ShopBot/issues))
 - Shops reserved for specific roles
 
-The roadmap is now visible [here](https://github.com/DragonJules/ShopBot/roadmap.md).
+The roadmap is now visible [here](https://github.com/DragonJules/ShopBot/blob/main/roadmap.md).
 <br>
 
 - Create a release, a precompiled version of the bot, with an easier way of installing it. 
