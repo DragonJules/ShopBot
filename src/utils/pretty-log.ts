@@ -10,7 +10,7 @@ export class PrettyLog {
         this.saveLogs(`✓ Step ${this.loadStepCount - 1} - ${message} ${more != undefined ? more : ''}`)
     }
     
-    static logLoadSucces() {
+    static logLoadSuccess() {
         console.log(`\n\x1b[7m ✓ \x1b[32m Loading finished after ${this.loadStepCount - 1} steps \x1b[0m\n`)
         
         this.saveLogs(`✓ Loading finished after ${this.loadStepCount - 1} steps`)
@@ -39,7 +39,7 @@ export class PrettyLog {
         this.saveLogs(`? Info - ${message}`)
     }
 
-    static succes(message: string, save = true) {
+    static success(message: string, save = true) {
         console.log(`\x1b[7m ✓ \x1b[32m Success \x1b[0m \x1b[32m${message}\x1b[0m`)
 
         if (!save) return

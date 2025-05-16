@@ -28,7 +28,7 @@ export class AccountUserInterface extends EmbedUserInterface {
 
     public override async display(interaction: UserInterfaceInteraction): Promise<void> {
         this.account = await getOrCreateAccount(this.user.id)
-
+ 
         this.initComponents()
         this.initEmbeds(interaction)
 

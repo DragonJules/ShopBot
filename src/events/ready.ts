@@ -8,7 +8,7 @@ export async function execute(client: Client) {
 	if (!client.user) return
 
 	PrettyLog.logLoadStep(`Bot connected with username:`, `${client.user.username}`)
-	PrettyLog.logLoadSucces()
+	PrettyLog.logLoadSuccess()
 
 }
 

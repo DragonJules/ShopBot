@@ -19,22 +19,22 @@ const rest = new REST({ version: '10' }).setToken(token)
 
 function appDeployCommands()  {
 	rest.put(Routes.applicationCommands(clientId), { body: commands })
-		.then(() => PrettyLog.succes('Successfully registered application commands.'))
+		.then(() => PrettyLog.success('Successfully registered application commands.'))
 		.catch(console.error)
 }
 function appDeleteCommands() {
 	rest.put(Routes.applicationCommands(clientId), { body: [] })
-	.then(() => PrettyLog.succes('Successfully deleted application commands.'))
+	.then(() => PrettyLog.success('Successfully deleted application commands.'))
 	.catch(console.error)
 }
 function guildDeployCommands(guildId: Snowflake) {
 	rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commands })
-		.then(() => PrettyLog.succes('Successfully registered all guild commands.'))
+		.then(() => PrettyLog.success('Successfully registered all guild commands.'))
 		.catch(console.error)
 }
 function guildDeleteCommands(guildId: Snowflake) {
 	rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: [] })
-		.then(() => PrettyLog.succes('Successfully deleted all guild commands.'))
+		.then(() => PrettyLog.success('Successfully deleted all guild commands.'))
 		.catch(console.error)
 }
 
