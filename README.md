@@ -243,6 +243,19 @@ If you discover that this bot is being used for illegal or abusive purposes, ple
 
 This project is **not affiliated with, endorsed by, or associated with Discord Inc.** All trademarks and copyrights related to Discord are owned by Discord Inc.
 
+## ⭐ Star History
+
+<a href="https://www.star-history.com/#DragonJules/ShopBot&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=DragonJules/ShopBot&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=DragonJules/ShopBot&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=DragonJules/ShopBot&type=Date" />
+ </picture>
+</a>
+
+Don't forget to leave a star, it helps a lot !
+
 ---
 
 If something is missing in this document, please open an [issue](https://github.com/DragonJules/ShopBot/issues).
+
