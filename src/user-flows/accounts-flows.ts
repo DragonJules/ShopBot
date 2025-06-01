@@ -41,24 +41,24 @@ export class AccountGiveFlow extends UserFlow {
 
     protected override initComponents(): void {
         const currencySelectMenu = new ExtendedStringSelectMenuComponent(
-            `${this.id}+select-currency`,
-            'Select a currency',
+            { customId: `${this.id}+select-currency`, placeholder: 'Select a currency', time: 120_000 },
             getCurrencies(),
             (interaction: StringSelectMenuInteraction, selectedCurrency: Currency): void => {
                 this.selectedCurrency = selectedCurrency
                 this.updateInteraction(interaction)
-            },
-            120_000
+            }
         )
 
-        const submitButton = new ExtendedButtonComponent(`${this.id}+submit`, 
-            new ButtonBuilder()
-                .setLabel('Submit')
-                .setEmoji('✅')
-                .setStyle(ButtonStyle.Success)
-                .setDisabled(true),
-            (interaction: ButtonInteraction) => this.success(interaction),
-            120_000
+        const submitButton = new ExtendedButtonComponent(
+            { 
+                customId: `${this.id}+submit`, 
+                label: 'Submit', 
+                emoji: '✅', 
+                style: ButtonStyle.Success, 
+                disabled: true,
+                time: 120_000, 
+            },
+            (interaction: ButtonInteraction) => this.success(interaction)
         )
     
         this.components.set(currencySelectMenu.customId, currencySelectMenu)
@@ -124,46 +124,51 @@ export class AccountTakeFlow extends UserFlow {
 
     protected override initComponents() {
         const currencySelectMenu = new ExtendedStringSelectMenuComponent(
-            `${this.id}+select-currency`,
-            'Select a currency',
+            { customId: `${this.id}+select-currency`, placeholder: 'Select a currency', time: 120_000 },
             getCurrencies(),
             (interaction: StringSelectMenuInteraction, selectedCurrency: Currency): void => {
                 this.selectedCurrency = selectedCurrency
                 this.updateInteraction(interaction)
+            }
+        )
+
+        const submitButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+submit`,
+                label: 'Submit',
+                emoji: '✅',
+                style: ButtonStyle.Success,
+                disabled: true,
+                time: 120_000,
             },
-            120_000
+            (interaction: ButtonInteraction) => this.success(interaction)
         )
 
-        const submitButton = new ExtendedButtonComponent(`${this.id}+submit`, 
-            new ButtonBuilder()
-                .setLabel('Submit')
-                .setEmoji('✅')
-                .setStyle(ButtonStyle.Success)
-                .setDisabled(true),
-            (interaction: ButtonInteraction) => this.success(interaction),
-            120_000
-        )
-
-        const takeAllButton = new ExtendedButtonComponent(`${this.id}+take-all`, 
-            new ButtonBuilder()
-                .setLabel('Take all')
-                .setEmoji('🔥')
-                .setStyle(ButtonStyle.Danger)
-                .setDisabled(true),
+        const takeAllButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+take-all`,
+                label: 'Take all',
+                emoji: '🔥',
+                style: ButtonStyle.Danger,
+                disabled: true,
+                time: 120_000,
+            },
             async (interaction: ButtonInteraction) => {
                 if (!this.selectedCurrency || !this.target) return this.updateInteraction(interaction)
 
                 this.amount = (await getOrCreateAccount(this.target!.id)).currencies.get(this.selectedCurrency!.id)?.amount || 0
                 this.success(interaction)
-            },
-            120_000
+            }
         )
 
-        const emptyAccountButton = new ExtendedButtonComponent(`${this.id}+empty-account`,
-            new ButtonBuilder()
-                .setLabel('Empty account')
-                .setEmoji('🗑️')
-                .setStyle(ButtonStyle.Danger),
+        const emptyAccountButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+empty-account`,
+                label: 'Empty account',
+                emoji: '🗑️',
+                style: ButtonStyle.Danger,
+                time: 120_000,
+            },
             async (interaction: ButtonInteraction) => {
                 const [modalSubmitInteraction, confirmed] = await showConfirmationModal(interaction)
 
@@ -171,8 +176,7 @@ export class AccountTakeFlow extends UserFlow {
 
                 await emptyAccount(this.target!.id, 'currencies')
                 await updateAsSuccessMessage(modalSubmitInteraction, `You successfully emptied ${bold(`${this.target}`)} account`)
-            },
-            120_000
+            }
         )
 
         this.components.set(currencySelectMenu.customId, currencySelectMenu)

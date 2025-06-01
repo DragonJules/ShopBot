@@ -1,39 +1,38 @@
-import { APIEmbedField, ButtonBuilder, ButtonInteraction, ButtonStyle, Colors, EmbedBuilder, MessageFlags, User } from "discord.js"
-import { getOrCreateAccount } from "../database/database-handler"
+import { APIEmbedField, ButtonBuilder, ButtonInteraction, ButtonStyle, Colors, EmbedBuilder, InteractionCallbackResponse, MessageFlags, User } from "discord.js"
+import { getCurrencies, getOrCreateAccount } from "../database/database-handler"
 import { Account } from "../database/database-types"
 import { ExtendedButtonComponent, ExtendedComponent } from "./extended-components"
-import { EmbedUserInterface, UserInterfaceInteraction } from "./user-interfaces"
+import { EmbedUserInterface, ObjectValues, PaginatedMultipleEmbedUserInterface, UserInterfaceInteraction } from "./user-interfaces"
 
-enum AccountDisplayMode {
-    CURRENCIES,
-    INVENTORY
-}
-// TODO Pagination
-export class AccountUserInterface extends EmbedUserInterface {
+
+export class AccountUserInterface extends PaginatedMultipleEmbedUserInterface {
     public override id: string = 'account-ui'
     protected override components: Map<string, ExtendedComponent> = new Map()
-    protected override embeds: Map<string, EmbedBuilder> = new Map()
+    
+    protected override readonly modes = {
+        CURRENCIES:'currencies',
+        INVENTORY: 'inventory'
+    } as const;
+    
+    protected override mode: ObjectValues<typeof this.modes> = this.modes.CURRENCIES
+    
+    protected override embed: EmbedBuilder | null = null
+    protected override embedByMode: Map<ObjectValues<typeof this.modes>, EmbedBuilder> = new Map()
 
-    private embedsByDisplayMode: Map<AccountDisplayMode, Map<string, EmbedBuilder>> = new Map()
+    protected override page: number = 0
+    
+    protected override response: InteractionCallbackResponse | null = null
 
     private user: User
     private account: Account | null = null
-
-    private displayMode: AccountDisplayMode = AccountDisplayMode.CURRENCIES
 
     constructor(user: User) {
         super()
         this.user = user
     }
 
-    public override async display(interaction: UserInterfaceInteraction): Promise<void> {
+    protected override async predisplay(interaction: UserInterfaceInteraction) {
         this.account = await getOrCreateAccount(this.user.id)
- 
-        this.initComponents()
-        this.initEmbeds(interaction)
-
-        const response = await interaction.reply({ embeds: this.getEmbeds(), components: this.getComponentRows(), flags: MessageFlags.Ephemeral, withResponse: true })
-        this.createComponentsCollectors(response)
     }
 
     protected override getMessage(): string {
@@ -41,68 +40,60 @@ export class AccountUserInterface extends EmbedUserInterface {
     }
 
     protected override initEmbeds(interaction: UserInterfaceInteraction): void {
+        this.mode = this.modes.CURRENCIES
         const currenciesEmbed = new EmbedBuilder()
             .setTitle(`💰 _${this.user.displayName}_'s Account`)
             .setColor(Colors.Gold)
             .setFooter({ text: 'ShopBot', iconURL: interaction.client.user.displayAvatarURL()})
-            .setFields(this.getAccountFields())
+            .setFields(this.getPageEmbedFields())
 
+
+        this.mode = this.modes.INVENTORY
         const inventoryEmbed = new EmbedBuilder()
             .setTitle(`💼 _${this.user.displayName}_'s Inventory`)
             .setColor(Colors.DarkGreen)
             .setFooter({ text: 'ShopBot', iconURL: interaction.client.user.displayAvatarURL()})
-            .setFields(this.getInventoryFields())
+            .setFields(this.getPageEmbedFields())
 
-        this.embedsByDisplayMode.set(AccountDisplayMode.CURRENCIES, new Map([['currencies-embed', currenciesEmbed]]))
-        this.embedsByDisplayMode.set(AccountDisplayMode.INVENTORY, new Map([['inventory-embed', inventoryEmbed]]))
+        this.embedByMode.set(this.modes.CURRENCIES, currenciesEmbed)
+        this.embedByMode.set(this.modes.INVENTORY, inventoryEmbed)
 
-        this.embeds.set('currencies-embed', currenciesEmbed)
+        this.embed = currenciesEmbed
+
+        this.mode = this.modes.CURRENCIES
     }
 
     protected override updateEmbeds(): void {
-        switch (this.displayMode) {
-            case AccountDisplayMode.CURRENCIES:
-                const currenciesEmbed = this.embedsByDisplayMode.get(AccountDisplayMode.CURRENCIES)?.get('currencies-embed') 
-                if (!currenciesEmbed) return
+        const currentModeEmbed = this.embedByMode.get(this.mode)
+        if (!currentModeEmbed) return
 
-                currenciesEmbed.setFields(this.getAccountFields()) 
-
-                this.embeds = new Map()
-                this.embeds.set('currencies-embed', this.embedsByDisplayMode.get(AccountDisplayMode.CURRENCIES)!.get('currencies-embed')!)
-                break
-            case AccountDisplayMode.INVENTORY:
-                const inventoryEmbed = this.embedsByDisplayMode.get(AccountDisplayMode.INVENTORY)?.get('inventory-embed') 
-                if (!inventoryEmbed) return
-
-                inventoryEmbed.setFields(this.getInventoryFields())
-
-                this.embeds = new Map()
-                this.embeds.set('inventory-embed', this.embedsByDisplayMode.get(AccountDisplayMode.INVENTORY)!.get('inventory-embed')!)
-                break
-        }
+        currentModeEmbed.setFields(this.getPageEmbedFields())
+        this.embed = currentModeEmbed
     }
 
     protected override initComponents(): void {
         const showAccountButton = new ExtendedButtonComponent(
-            `${this.id}+show-account`,
-            new ButtonBuilder()
-                .setLabel('Show account')
-                .setEmoji({name: '💰'})
-                .setStyle(ButtonStyle.Secondary)
-                .setDisabled(this.displayMode == AccountDisplayMode.CURRENCIES),
-            (interaction: ButtonInteraction) => this.changeDisplayMode(interaction, AccountDisplayMode.CURRENCIES), 
-            120_000
+            {
+                customId: `${this.id}+show-account`,
+                label: 'Show account',
+                emoji: {name: '💰'},
+                style: ButtonStyle.Secondary,
+                disabled: this.mode == this.modes.CURRENCIES,
+                time: 120_000
+            }, 
+            (interaction: ButtonInteraction) => this.changeDisplayMode(interaction, this.modes.CURRENCIES)
         )
 
         const showInventoryButton = new ExtendedButtonComponent(
-            `${this.id}+show-inventory`,
-            new ButtonBuilder()
-                .setLabel('Show inventory')
-                .setEmoji({name: '💼'})
-                .setStyle(ButtonStyle.Secondary)
-                .setDisabled(this.displayMode == AccountDisplayMode.INVENTORY),
-            (interaction: ButtonInteraction) => this.changeDisplayMode(interaction, AccountDisplayMode.INVENTORY),
-            120_000
+            {
+                customId: `${this.id}+show-inventory`,
+                label: 'Show inventory',
+                emoji: {name: '💼'},
+                style: ButtonStyle.Secondary,
+                disabled: this.mode == this.modes.INVENTORY,
+                time: 120_000
+            }, 
+            (interaction: ButtonInteraction) => this.changeDisplayMode(interaction, this.modes.INVENTORY)
         )
 
         this.components.set(showAccountButton.customId, showAccountButton)
@@ -112,24 +103,23 @@ export class AccountUserInterface extends EmbedUserInterface {
     protected override updateComponents(): void {
         const showAccountButton = this.components.get(`${this.id}+show-account`)
         if (showAccountButton instanceof ExtendedButtonComponent) {
-            showAccountButton.toggle(this.displayMode != AccountDisplayMode.CURRENCIES)
+            showAccountButton.toggle(this.mode != this.modes.CURRENCIES)
         }
 
         const showInventoryButton = this.components.get(`${this.id}+show-inventory`)
         if (showInventoryButton instanceof ExtendedButtonComponent) {
-            showInventoryButton.toggle(this.displayMode != AccountDisplayMode.INVENTORY)
+            showInventoryButton.toggle(this.mode != this.modes.INVENTORY)
         }
     }
 
-    private changeDisplayMode(interaction: UserInterfaceInteraction, newDisplayMode: AccountDisplayMode): void {
-        this.displayMode = newDisplayMode
-    
-        this.updateEmbeds()
-        this.updateComponents()
-
-        this.updateInteraction(interaction)
+    protected override getInputSize(): number {
+        switch (this.mode) {
+            case this.modes.CURRENCIES:
+                return getCurrencies().size
+            case this.modes.INVENTORY:
+                return this.account?.inventory.size ?? 0
+        }
     }
-
 
     private getAccountFields(): APIEmbedField[] {
         if (!this.account || !this.account.currencies.size) return [{ name: '❌ Account is empty', value: '\u200b' }]
@@ -155,5 +145,14 @@ export class AccountUserInterface extends EmbedUserInterface {
         })
 
         return fields
+    }
+
+    protected override getEmbedFields(): APIEmbedField[] {
+        switch (this.mode) {
+            case this.modes.CURRENCIES:
+                return this.getAccountFields()
+            case this.modes.INVENTORY:
+                return this.getInventoryFields()
+        }
     }
 }

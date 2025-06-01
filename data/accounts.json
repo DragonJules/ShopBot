@@ -3,7 +3,7 @@
         "currencies": {
             "d9997bc7-ce3b-491b-92de-cfa5afd7e955": {
                 "item": "d9997bc7-ce3b-491b-92de-cfa5afd7e955",
-                "amount": 482
+                "amount": 476.9
             },
             "f222099b-7afd-4381-9b7d-be594eebd4f3": {
                 "item": "f222099b-7afd-4381-9b7d-be594eebd4f3",
@@ -30,7 +30,7 @@
                     "id": "d26c10f6-2214-40a4-934a-50724c016b0f",
                     "shopId": "4783f4bf-da40-468d-94fd-3e80f659a76e"
                 },
-                "amount": 1
+                "amount": 2
             },
             "6749e140-3482-4dd2-95b2-528e8ae3165f": {
                 "item": {
@@ -57,6 +57,27 @@
                 "item": {
                     "id": "54940be1-3d10-4ea5-91b6-2e12cc02603a",
                     "shopId": "22b6f8dd-3ab7-41eb-9e99-6ba6370e8441"
+                },
+                "amount": 1
+            },
+            "39b7ad2e-5228-43fe-ad87-edcc3bd6ed76": {
+                "item": {
+                    "id": "39b7ad2e-5228-43fe-ad87-edcc3bd6ed76",
+                    "shopId": "4783f4bf-da40-468d-94fd-3e80f659a76e"
+                },
+                "amount": 1
+            },
+            "1602844c-c798-495c-aa5c-e11e28f19a35": {
+                "item": {
+                    "id": "1602844c-c798-495c-aa5c-e11e28f19a35",
+                    "shopId": "4783f4bf-da40-468d-94fd-3e80f659a76e"
+                },
+                "amount": 1
+            },
+            "66a22b1b-7fa7-4219-82f5-b31490286676": {
+                "item": {
+                    "id": "66a22b1b-7fa7-4219-82f5-b31490286676",
+                    "shopId": "4783f4bf-da40-468d-94fd-3e80f659a76e"
                 },
                 "amount": 1
             }

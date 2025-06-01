@@ -50,51 +50,55 @@ export class ShopCreateFlow extends UserFlow {
 
     protected override initComponents(): void {
         const selectCurrencyMenu = new ExtendedStringSelectMenuComponent(
-            `${this.id}+select-currency`, 
-            'Select a currency', getCurrencies(), 
+            { customId: `${this.id}+select-currency`, placeholder: 'Select a currency', time: 120_000 },
+            getCurrencies(),
             (interaction: StringSelectMenuInteraction, selectedCurrency: Currency): void => {
                 this.selectedCurrency = selectedCurrency
                 this.updateInteraction(interaction)
             },
-            120_000
+        )
+        const submitButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+submit`,
+                label: 'Submit',
+                emoji: '✅',
+                style: ButtonStyle.Success,
+                disabled: true,
+                time: 120_000
+            },
+            (interaction: ButtonInteraction) => this.success(interaction)
         )
 
-        const submitButton = new ExtendedButtonComponent(`${this.id}+submit`, 
-            new ButtonBuilder()
-                .setLabel('Submit')
-                .setEmoji('✅')
-                .setStyle(ButtonStyle.Success)
-                .setDisabled(true),
-            (interaction: ButtonInteraction) => this.success(interaction),
-            120_000
-        )
-
-        const changeShopNameButton = new ExtendedButtonComponent(`${this.id}+change-shop-name`, 
-            new ButtonBuilder()
-                .setLabel('Change Shop Name')
-                .setEmoji('📝')
-                .setStyle(ButtonStyle.Secondary),
+        const changeShopNameButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+change-shop-name`,
+                label: 'Change Shop Name',
+                emoji: '📝',
+                style: ButtonStyle.Secondary,
+                time: 120_000
+            },
             async (interaction: ButtonInteraction) => {
-                const [modalSubmit, newShopName] = await showEditModal(interaction, 'Shop Name', this.shopName || undefined)
+                const [modalSubmit, newShopName] = await showEditModal(interaction, { edit: 'Shop Name', previousValue: this.shopName || undefined })
                 
                 this.shopName = newShopName
                 this.updateInteraction(modalSubmit)
-            },
-            120_000
+            }
         )
 
-        const changeShopEmojiButton = new ExtendedButtonComponent(`${this.id}+change-shop-emoji`, 
-            new ButtonBuilder()
-                .setLabel('Change Shop Emoji')
-                .setEmoji('✏️')
-                .setStyle(ButtonStyle.Secondary),
-            async (interaction: ButtonInteraction) => {
-                const [modalSubmit, newShopEmoji] = await showEditModal(interaction, 'Shop Emoji', this.shopEmoji || undefined)
-                
-                this.shopEmoji = newShopEmoji?.match(EMOJI_REGEX)?.[0] || this.shopEmoji 
-                this.updateInteraction(modalSubmit)
+        const changeShopEmojiButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+change-shop-emoji`,
+                label: 'Change Shop Emoji',
+                emoji: '✏️',
+                style: ButtonStyle.Secondary,
+                time: 120_000
             },
-            120_000
+            async (interaction: ButtonInteraction) => {
+                const [modalSubmit, newShopEmoji] = await showEditModal(interaction, { edit: 'Shop Emoji', previousValue: this.shopEmoji || undefined })
+                
+                this.shopEmoji = newShopEmoji?.match(EMOJI_REGEX)?.[0] || this.shopEmoji
+                this.updateInteraction(modalSubmit)
+            }
         )
 
         this.components.set(selectCurrencyMenu.customId, selectCurrencyMenu)
@@ -149,26 +153,23 @@ export class ShopRemoveFlow extends UserFlow {
     }
 
     protected override initComponents(): void {
-        const shopSelectMenu = new ExtendedStringSelectMenuComponent<Shop>(
-            `${this.id}+select-shop`,
-            'Select a shop',
-            getShops(),
-            (interaction: StringSelectMenuInteraction, selected: Shop): void => {
-                this.selectedShop = selected
-                this.updateInteraction(interaction)
-            },
-            120_000
-        )
+        const shopSelectMenu = new ExtendedStringSelectMenuComponent<Shop>({
+            customId: `${this.id}+select-shop`,
+            placeholder: 'Select a shop',
+            time: 120_000
+        }, getShops(), (interaction: StringSelectMenuInteraction, selected: Shop): void => {
+            this.selectedShop = selected
+            this.updateInteraction(interaction)
+        })
 
-        const submitButton = new ExtendedButtonComponent(`${this.id}+submit`,
-            new ButtonBuilder()
-                .setLabel('Remove Shop')
-                .setEmoji({name: '⛔'})
-                .setStyle(ButtonStyle.Danger)
-                .setDisabled(true),
-            (interaction: ButtonInteraction) => this.success(interaction),
-            120_000
-        )
+        const submitButton = new ExtendedButtonComponent({
+            customId: `${this.id}+submit`,
+            time: 120_000,
+            label: 'Remove Shop',
+            emoji: {name: '⛔'},
+            style: ButtonStyle.Danger,
+            disabled: true
+        }, (interaction: ButtonInteraction) => this.success(interaction))
 
         this.components.set(shopSelectMenu.customId, shopSelectMenu)
         this.components.set(submitButton.customId, submitButton)
@@ -228,8 +229,11 @@ export class ShopReorderFlow extends UserFlow {
 
     protected override initComponents(): void {
         const shopSelectMenu = new ExtendedStringSelectMenuComponent<Shop>(
-            `${this.id}+select-shop`,
-            'Select a shop',
+            {
+                customId: `${this.id}+select-shop`,
+                placeholder: 'Select a shop',
+                time: 120_000,
+            },
             getShops(),
             (interaction: StringSelectMenuInteraction, selected: Shop): void => {
                 this.selectedShop = selected
@@ -239,43 +243,51 @@ export class ShopReorderFlow extends UserFlow {
                 this.selectedPosition = shopIndex + 1
                 this.updateInteraction(interaction)
             },
-            120_000
         )
 
-        const upButton = new ExtendedButtonComponent(`${this.id}+up`,
-            new ButtonBuilder()
-                .setEmoji({name: '⬆️'})
-                .setStyle(ButtonStyle.Primary)
-                .setDisabled(this.selectedPosition != null && this.selectedPosition < getShops().size),
+        const upButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+up`,
+                time: 120_000,
+                label: '',
+                emoji: {name: '⬆️'},
+                style: ButtonStyle.Primary,
+                disabled: this.selectedPosition != null && this.selectedPosition < getShops().size,
+            },
             (interaction: ButtonInteraction) => {
                 if (!this.selectedPosition) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
                 this.selectedPosition = Math.max(this.selectedPosition - 1, 1)
                 return this.updateInteraction(interaction)
-            },
-            120_000
+            }
         )
 
-        const downButton = new ExtendedButtonComponent(`${this.id}+down`,
-            new ButtonBuilder()
-                .setEmoji({name: '⬇️'})
-                .setStyle(ButtonStyle.Primary)
-                .setDisabled(this.selectedPosition != null && this.selectedPosition > 1),
+        const downButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+down`,
+                time: 120_000,
+                label: '',
+                emoji: {name: '⬇️'},
+                style: ButtonStyle.Primary,
+                disabled: this.selectedPosition != null && this.selectedPosition > 1,
+            },
             (interaction: ButtonInteraction) => {
                 if (!this.selectedPosition) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
                 this.selectedPosition = Math.min(this.selectedPosition + 1, getShops().size)
             
                 return this.updateInteraction(interaction)
-            },
-            120_000
+            }
         )
 
-        const submitNewPositionButton = new ExtendedButtonComponent(`${this.id}+submit-new-position`,
-            new ButtonBuilder()
-                .setLabel('Submit position')
-                .setStyle(ButtonStyle.Success)
-                .setDisabled(true),
-            (interaction: ButtonInteraction) => this.success(interaction),
-            120_000
+        const submitNewPositionButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+submit-new-position`,
+                time: 120_000,
+                label: 'Submit position',
+                emoji: {name: ''},
+                style: ButtonStyle.Success,
+                disabled: true,
+            },
+            (interaction: ButtonInteraction) => this.success(interaction)
         )
 
         this.components.set(shopSelectMenu.customId, shopSelectMenu)
@@ -354,25 +366,28 @@ export class EditShopFlow extends UserFlow {
     }
 
     protected override initComponents(): void {
-        const shopSelectMenu = new ExtendedStringSelectMenuComponent<Shop>(
-            `${this.id}+select-shop`,
-            'Select a shop',
-            getShops(),
-            (interaction: StringSelectMenuInteraction, selected: Shop): void => {
-                this.selectedShop = selected
-                this.updateInteraction(interaction)
-            },
-            120_000
+        const shopSelectMenu = new ExtendedStringSelectMenuComponent<Shop>({
+            customId: `${this.id}+select-shop`,
+            placeholder: 'Select a shop',
+            time: 120_000,
+        },
+        getShops(),
+        (interaction: StringSelectMenuInteraction, selected: Shop): void => {
+            this.selectedShop = selected
+            this.updateInteraction(interaction)
+        },
         )
 
-        const submitButton = new ExtendedButtonComponent(`${this.id}+submit`,
-            new ButtonBuilder()
-                .setLabel('Edit Shop')
-                .setEmoji({name: '✅'})
-                .setStyle(ButtonStyle.Success)
-                .setDisabled(true),
+        const submitButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+submit`,
+                time: 120_000,
+                label: 'Edit Shop',
+                emoji: {name: '✅'},
+                style: ButtonStyle.Success,
+                disabled: true,
+            },
             (interaction: ButtonInteraction) => this.success(interaction),
-            120_000
         )
 
         this.components.set(shopSelectMenu.customId, shopSelectMenu)
@@ -461,27 +476,31 @@ export class EditShopCurrencyFlow extends UserFlow {
 
     protected override initComponents(): void {
         const shopSelectMenu = new ExtendedStringSelectMenuComponent<Shop>(
-            `${this.id}+select-shop`,
-            'Select a shop',
+            {
+                customId: `${this.id}+select-shop`,
+                placeholder: 'Select a shop',
+                time: 120_000,
+            },
             getShops(),
             (interaction: StringSelectMenuInteraction, selected: Shop): void => {
                 this.selectedShop = selected
                 this.updateInteraction(interaction)
             },
-            120_000
         )
 
-        const submitShopButton = new ExtendedButtonComponent(`${this.id}+submit-shop`,
-            new ButtonBuilder()
-                .setLabel('Submit Shop')
-                .setEmoji({name: '✅'})
-                .setStyle(ButtonStyle.Success)
-                .setDisabled(true),
+        const submitShopButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+submit-shop`,
+                time: 120_000,
+                label: 'Submit Shop',
+                emoji: {name: '✅'},
+                style: ButtonStyle.Success,
+                disabled: true,
+            },
             (interaction: ButtonInteraction) => {
                 this.changeStage(EditShopCurrencyStage.SELECT_CURRENCY)
                 this.updateInteraction(interaction)
-            },
-            120_000
+            }
         )
 
         this.componentsByStage.set(EditShopCurrencyStage.SELECT_SHOP, new Map())
@@ -492,39 +511,44 @@ export class EditShopCurrencyFlow extends UserFlow {
         this.components.set(submitShopButton.customId, submitShopButton)
 
         const currencySelectMenu = new ExtendedStringSelectMenuComponent<Currency>(
-            `${this.id}+select-currency`,
-            'Select a currency',
+            {
+                customId: `${this.id}+select-currency`,
+                placeholder: 'Select a currency',
+                time: 120_000,
+            },
             getCurrencies(),
             (interaction: StringSelectMenuInteraction, selectedCurrency: Currency): void => {
                 this.selectedCurrency = selectedCurrency
                 this.updateInteraction(interaction)
             },
-            120_000
+        )
+        const submitCurrencyButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+submit-currency`,
+                time: 120_000,
+                label: 'Submit Currency',
+                emoji: {name: '✅'},
+                style: ButtonStyle.Success,
+                disabled: true
+            },
+            (interaction: ButtonInteraction) => this.success(interaction)
         )
 
-        const submitCurrencyButton = new ExtendedButtonComponent(`${this.id}+submit-currency`,
-            new ButtonBuilder()
-                .setLabel('Submit Currency')
-                .setEmoji({name: '✅'})
-                .setStyle(ButtonStyle.Success)
-                .setDisabled(true),
-            (interaction: ButtonInteraction) => this.success(interaction),
-            120_000
-        )
-
-        const changeShopButton = new ExtendedButtonComponent(`${this.id}+change-shop`,
-            new ButtonBuilder()
-                .setLabel('Change Shop')
-                .setEmoji({name: '📝'})
-                .setStyle(ButtonStyle.Secondary),
+        const changeShopButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+change-shop`,
+                time: 120_000,
+                label: 'Change Shop',
+                emoji: {name: '📝'},
+                style: ButtonStyle.Secondary
+            },
             (interaction: ButtonInteraction) => {
                 this.selectedShop = null
                 this.selectedCurrency = null
 
                 this.changeStage(EditShopCurrencyStage.SELECT_SHOP)
                 this.updateInteraction(interaction)
-            },
-            120_000
+            }
         )
 
         this.componentsByStage.set(EditShopCurrencyStage.SELECT_CURRENCY, new Map())
@@ -608,25 +632,27 @@ export class DiscountCodeCreateFlow extends UserFlow {
     }
 
     protected override initComponents(): void {
-        const shopSelectMenu = new ExtendedStringSelectMenuComponent<Shop>(
-            `${this.id}+select-shop`,
-            'Select a shop',
-            getShops(),
-            (interaction: StringSelectMenuInteraction, selected: Shop): void => {
-                this.selectedShop = selected
-                this.updateInteraction(interaction)
-            },
-            120_000
-        )
+        const shopSelectMenu = new ExtendedStringSelectMenuComponent<Shop>({
+            customId: `${this.id}+select-shop`,
+            placeholder: 'Select a shop',
+            time: 120_000,
+        },
+        getShops(),
+        (interaction: StringSelectMenuInteraction, selected: Shop): void => {
+            this.selectedShop = selected
+            this.updateInteraction(interaction)
+        })
 
-        const submitButton = new ExtendedButtonComponent(`${this.id}+submit`,
-            new ButtonBuilder()
-                .setLabel('Create Discount Code')
-                .setEmoji({name: '✅'})
-                .setStyle(ButtonStyle.Success)
-                .setDisabled(true),
-            (interaction: ButtonInteraction) => this.success(interaction),
-            120_000
+        const submitButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+submit`,
+                label: 'Create Discount Code',
+                emoji: {name: '✅'},
+                style: ButtonStyle.Success,
+                disabled: true,
+                time: 120_000
+            },
+            (interaction: ButtonInteraction) => this.success(interaction)
         )
 
         this.components.set(shopSelectMenu.customId, shopSelectMenu)    
@@ -697,22 +723,27 @@ export class DiscountCodeRemoveFlow extends UserFlow {
 
     protected override initComponents(): void {
         const shopSelectMenu = new ExtendedStringSelectMenuComponent<Shop>(
-            `${this.id}+select-shop`,
-            'Select a shop',
+            {
+                customId: `${this.id}+select-shop`,
+                placeholder: 'Select a shop',
+                time: 120_000,
+            },
             getShops(),
             (interaction: StringSelectMenuInteraction, selected: Shop): void => {
                 this.selectedShop = selected
                 this.updateInteraction(interaction)
-            },
-            120_000
+            }
         )
 
-        const submitButton = new ExtendedButtonComponent(`${this.id}+submit`,
-            new ButtonBuilder()
-                .setLabel('Submit Shop')
-                .setEmoji({name: '✅'})
-                .setStyle(ButtonStyle.Success)
-                .setDisabled(true),
+        const submitButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+submit`,
+                time: 120_000,
+                label: 'Submit Shop',
+                emoji: {name: '✅'},
+                style: ButtonStyle.Success,
+                disabled: true,
+            },
             (interaction: ButtonInteraction) => {
                 const shopDiscountCodes = this.selectedShop?.discountCodes
 
@@ -720,8 +751,7 @@ export class DiscountCodeRemoveFlow extends UserFlow {
 
                 this.changeStage(DiscountCodeRemoveStage.SELECT_DISCOUNT_CODE)
                 return this.updateInteraction(interaction)
-            },
-            120_000
+            }
         )
 
         this.componentsByStage.set(DiscountCodeRemoveStage.SELECT_SHOP, new Map())
@@ -731,32 +761,37 @@ export class DiscountCodeRemoveFlow extends UserFlow {
         this.components.set(shopSelectMenu.customId, shopSelectMenu)    
         this.components.set(submitButton.customId, submitButton)
 
-        const discountCodeSelectMenu = new ExtendedStringSelectMenuComponent<string>(
-            `${this.id}+select-discount-code`,
-            'Select a discount code',
-            new Map(),
-            (interaction: StringSelectMenuInteraction, selected: string): void => {
-                this.selectedDiscountCode = selected
-                this.updateInteraction(interaction)
+        const discountCodeSelectMenu = new ExtendedStringSelectMenuComponent<string>({
+            customId: `${this.id}+select-discount-code`,
+            placeholder: 'Select a discount code',
+            time: 120_000,
+        },
+        new Map(),
+        (interaction: StringSelectMenuInteraction, selected: string): void => {
+            this.selectedDiscountCode = selected
+            this.updateInteraction(interaction)
+        })
+
+        const submitRemoveButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+remove-discount-code`,
+                time: 120_000,
+                label: 'Remove Discount Code',
+                emoji: {name: '⛔'},
+                style: ButtonStyle.Danger,
+                disabled: true
             },
-            120_000
-        )
-
-        const submitRemoveButton = new ExtendedButtonComponent(`${this.id}+remove-discount-code`,
-            new ButtonBuilder()
-                .setLabel('Remove Discount Code')
-                .setEmoji({name: '⛔'})
-                .setStyle(ButtonStyle.Danger)
-                .setDisabled(true),
             (interaction: ButtonInteraction) => this.success(interaction),
-            120_000
         )
 
-        const changeShopButton = new ExtendedButtonComponent(`${this.id}+change-shop`,
-            new ButtonBuilder()
-                .setLabel('Change Shop')
-                .setEmoji({name: '📝'})
-                .setStyle(ButtonStyle.Secondary),
+        const changeShopButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+change-shop`,
+                time: 120_000,
+                label: 'Change Shop',
+                emoji: {name: '📝'},
+                style: ButtonStyle.Secondary
+            },
             (interaction: ButtonInteraction) => {
                 this.selectedShop = null
                 this.selectedDiscountCode = null
@@ -764,7 +799,6 @@ export class DiscountCodeRemoveFlow extends UserFlow {
                 this.changeStage(DiscountCodeRemoveStage.SELECT_SHOP)
                 this.updateInteraction(interaction)
             },
-            120_000
         )
 
         this.componentsByStage.set(DiscountCodeRemoveStage.SELECT_DISCOUNT_CODE, new Map())

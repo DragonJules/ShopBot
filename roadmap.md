@@ -9,7 +9,7 @@
 - [ ] Products with a set stock
 
 ### Code refactoring
-- [ ] Add pagination at the level of user interface class
-- [ ] Improve UI Implementation
+- [x] Add pagination at the level of user interface class
+- [x] Improve UI Implementation
 
 ## Roadmap

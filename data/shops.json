@@ -133,6 +133,14 @@
                 "emoji": "<:chouquette:1342277376406716476>",
                 "description": "",
                 "price": 2
+            },
+            "66a22b1b-7fa7-4219-82f5-b31490286676": {
+                "id": "66a22b1b-7fa7-4219-82f5-b31490286676",
+                "shopId": "4783f4bf-da40-468d-94fd-3e80f659a76e",
+                "name": "overcooked baguette",
+                "description": "a little bit burnt baguette, that's why its a bit cheaper",
+                "emoji": "🔥",
+                "price": 0.8
             }
         },
         "currency": {
@@ -159,13 +167,7 @@
                 "name": "Boss",
                 "description": "Earn the boss role by buying this !",
                 "emoji": "🧑",
-                "price": 5400,
-                "action": {
-                    "type": "give-role",
-                    "options": {
-                        "roleId": "1197195793191420035"
-                    }
-                }
+                "price": 5400
             },
             "d812a77d-5633-4928-85fe-d2be8a4f826d": {
                 "id": "d812a77d-5633-4928-85fe-d2be8a4f826d",
@@ -173,14 +175,7 @@
                 "name": "Earn 50 $",
                 "description": "totally not a scam",
                 "emoji": "💵",
-                "price": 51,
-                "action": {
-                    "type": "give-currency",
-                    "options": {
-                        "currencyId": "d9997bc7-ce3b-491b-92de-cfa5afd7e955",
-                        "amount": 50
-                    }
-                }
+                "price": 51
             },
             "39aaa254-e5be-49e9-865f-26b66383ac89": {
                 "id": "39aaa254-e5be-49e9-865f-26b66383ac89",
@@ -188,14 +183,7 @@
                 "name": "admin give 10000$",
                 "description": "",
                 "emoji": "💵",
-                "price": 0,
-                "action": {
-                    "type": "give-currency",
-                    "options": {
-                        "currencyId": "d9997bc7-ce3b-491b-92de-cfa5afd7e955",
-                        "amount": 10000
-                    }
-                }
+                "price": 0
             },
             "06f684ff-f82c-497a-b06b-13f3db9ebc02": {
                 "id": "06f684ff-f82c-497a-b06b-13f3db9ebc02",
@@ -203,13 +191,7 @@
                 "name": "Earn Cool Guy Role",
                 "description": "You will be very cool",
                 "emoji": "😎",
-                "price": 500,
-                "action": {
-                    "type": "give-role",
-                    "options": {
-                        "roleId": "1358489735542341683"
-                    }
-                }
+                "price": 500
             },
             "796c67ab-e505-4324-ab5e-34311c3dad64": {
                 "id": "796c67ab-e505-4324-ab5e-34311c3dad64",
@@ -217,14 +199,7 @@
                 "name": "earn 1 $ but it's very expensive",
                 "description": "if u can, do it",
                 "emoji": "🤑",
-                "price": 1000000,
-                "action": {
-                    "type": "give-currency",
-                    "options": {
-                        "currencyId": "d9997bc7-ce3b-491b-92de-cfa5afd7e955",
-                        "amount": 1000001
-                    }
-                }
+                "price": 1000000
             }
         },
         "currencyId": "d9997bc7-ce3b-491b-92de-cfa5afd7e955"

@@ -60,24 +60,28 @@ export class AddProductFlow extends UserFlow {
 
     protected initComponents(): void {
         const shopSelectMenu = new ExtendedStringSelectMenuComponent<Shop>(
-            `${this.id}+select-shop`,
-            'Select a shop',
+            {
+                customId: `${this.id}+select-shop`,
+                placeholder: 'Select a shop',
+                time: 120_000
+            },
             getShops(),
             (interaction: StringSelectMenuInteraction, selected: Shop): void => {
                 this.selectedShop = selected
                 this.updateInteraction(interaction)
-            },
-            120_000
+            }
         )
 
-        const submitShopButton = new ExtendedButtonComponent(`${this.id}+submit-shop`,
-            new ButtonBuilder()
-                .setLabel('Add Product')
-                .setEmoji({name: '✅'})
-                .setStyle(ButtonStyle.Success)
-                .setDisabled(true),
-            (interaction: ButtonInteraction) => this.success(interaction),
-            120_000
+        const submitShopButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+submit-shop`,
+                label: 'Add Product',
+                emoji: {name: '✅'},
+                style: ButtonStyle.Success,
+                disabled: true,
+                time: 120_000
+            },
+            (interaction: ButtonInteraction) => this.success(interaction)
         )
 
         this.components.set(shopSelectMenu.customId, shopSelectMenu)
@@ -181,14 +185,16 @@ export class AddActionProductFlow extends AddProductFlow {
         switch (this.productActionType) {
             case ProductActionType.GiveRole:
                 const roleSelectMenu = new ExtendedRoleSelectMenuComponent(
-                    `${this.id}+select-role`,
-                    'Select a role',
+                    {
+                        customId: `${this.id}+select-role`,
+                        placeholder: 'Select a role',
+                        time: 120_000
+                    },
                     (interaction: RoleSelectMenuInteraction, selectedRoleId: Snowflake): void => {
                         this.productAction = createProductAction(ProductActionType.GiveRole, { roleId: selectedRoleId })
                         this.actionSetupCompleted = true
                         this.updateInteraction(interaction)
-                    },
-                    120_000
+                    }
                 )
 
                 this.componentsByStage.get(AddActionProductFlowStage.SETUP_ACTION)?.set(roleSelectMenu.customId, roleSelectMenu)
@@ -196,37 +202,40 @@ export class AddActionProductFlow extends AddProductFlow {
         
             case ProductActionType.GiveCurrency:
                 const currencySelectMenu = new ExtendedStringSelectMenuComponent<Currency>(
-                    `${this.id}+select-currency`,
-                    'Select a currency',
+                    {
+                        customId: `${this.id}+select-currency`,
+                        placeholder: 'Select a currency',
+                        time: 120_000
+                    },
                     getCurrencies(),
                     (interaction: StringSelectMenuInteraction, selected: Currency): void => {
                         this.productAction = createProductAction(ProductActionType.GiveCurrency, { currencyId: selected.id, amount: -1 })
                         this.updateInteraction(interaction)
-                    },
-                    120_000
+                    }
                 )
 
-                const setAmountButton = new ExtendedButtonComponent(`${this.id}+set-amount`, 
-                    new ButtonBuilder()
-                        .setLabel('Set Amount')
-                        .setEmoji({name: '🪙'})
-                        .setStyle(ButtonStyle.Secondary),
+                const setAmountButton = new ExtendedButtonComponent(
+                    {
+                        customId: `${this.id}+set-amount`,
+                        label: 'Set Amount',
+                        emoji: { name: '🪙' },
+                        style: ButtonStyle.Secondary,
+                        time: 120_000
+                    },
                     async (interaction: ButtonInteraction) => {
-                        const [modalSubmit, input] = await showEditModal(interaction, 'Amount', '0')
-                
+                        const [modalSubmit, input] = await showEditModal(interaction, { edit: 'Amount', previousValue: '0' })
+
                         const amount = parseInt(input)
-                        if (isNaN(amount)) return this.updateInteraction(modalSubmit)
-                        if (amount < 0) return this.updateInteraction(modalSubmit)
-                
-                        this.productAction = createProductAction(ProductActionType.GiveCurrency, { 
-                            currencyId: (this.productAction!.options as ProductActionOptions<ProductActionType.GiveCurrency>).currencyId, 
-                            amount 
+                        if (isNaN(amount) || amount < 0) return this.updateInteraction(modalSubmit)
+
+                        this.productAction = createProductAction(ProductActionType.GiveCurrency, {
+                            currencyId: (this.productAction!.options as ProductActionOptions<ProductActionType.GiveCurrency>).currencyId,
+                            amount
                         })
 
                         this.actionSetupCompleted = true
                         this.updateInteraction(modalSubmit)
-                    },
-                    120_000
+                    }
                 )
 
                 this.componentsByStage.get(AddActionProductFlowStage.SETUP_ACTION)?.set(currencySelectMenu.customId, currencySelectMenu)
@@ -238,21 +247,25 @@ export class AddActionProductFlow extends AddProductFlow {
         }
 
         const submitButton = new ExtendedButtonComponent(
-            `${this.id}+submit`,
-            new ButtonBuilder()
-                .setLabel('Submit')
-                .setEmoji('✅')
-                .setStyle(ButtonStyle.Success)
-                .setDisabled(true),
-            (interaction: ButtonInteraction) => this.success(interaction),
-            120_000
+            {
+                customId: `${this.id}+submit`,
+                label: 'Submit',
+                emoji: '✅',
+                style: ButtonStyle.Success,
+                disabled: true,
+                time: 120_000
+            },
+            (interaction: ButtonInteraction) => this.success(interaction)
         )
 
-        const changeShopButton = new ExtendedButtonComponent(`${this.id}+change-shop`,
-            new ButtonBuilder()
-                .setLabel('Change Shop')
-                .setEmoji({name: '📝'})
-                .setStyle(ButtonStyle.Secondary),
+        const changeShopButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+change-shop`,
+                label: 'Change Shop',
+                emoji: {name: '📝'},
+                style: ButtonStyle.Secondary,
+                time: 120_000
+            },
             (interaction: ButtonInteraction) => {
                 this.selectedShop = null
                 this.productAction = null
@@ -260,8 +273,7 @@ export class AddActionProductFlow extends AddProductFlow {
 
                 this.changeStage(AddActionProductFlowStage.SELECT_SHOP)
                 this.updateInteraction(interaction)
-            },
-            120_000
+            }
         )
 
         this.componentsByStage.get(AddActionProductFlowStage.SETUP_ACTION)?.set(submitButton.customId, submitButton)
@@ -362,29 +374,33 @@ export class RemoveProductFlow extends UserFlow {
 
     protected initComponents(): void {
         const shopSelectMenu = new ExtendedStringSelectMenuComponent<Shop>(
-            `${this.id}+select-shop`,
-            'Select a shop',
+            {
+                customId: `${this.id}+select-shop`,
+                placeholder: 'Select a shop',
+                time: 120_000
+            },
             getShops(),
             (interaction: StringSelectMenuInteraction, selected: Shop): void => {
                 this.selectedShop = selected
                 this.updateInteraction(interaction)
-            },
-            120_000
+            }
         )
 
-        const submitShopButton = new ExtendedButtonComponent(`${this.id}+submit-shop`,
-            new ButtonBuilder()
-                .setLabel('Submit Shop')
-                .setEmoji({name: '✅'})
-                .setStyle(ButtonStyle.Success)
-                .setDisabled(true),
+        const submitShopButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+submit-shop`,
+                time: 120_000,
+                label: 'Submit Shop',
+                emoji: {name: '✅'},
+                style: ButtonStyle.Success,
+                disabled: true,
+            },
             (interaction: ButtonInteraction) => {
                 if (this.selectedShop!.products.size == 0) return updateAsErrorMessage(interaction, ErrorMessages.NoProducts)
 
                 this.changeStage(RemoveProductFlowStage.SELECT_PRODUCT)
                 return this.updateInteraction(interaction)
-            },
-            120_000
+            }
         )
 
         this.componentsByStage.set(RemoveProductFlowStage.SELECT_SHOP, new Map())
@@ -394,40 +410,42 @@ export class RemoveProductFlow extends UserFlow {
         this.components.set(shopSelectMenu.customId, shopSelectMenu)
         this.components.set(submitShopButton.customId, submitShopButton)
 
-        const productSelectMenu = new ExtendedStringSelectMenuComponent<Product>(
-            `${this.id}+select-product`,
-            'Select a product',
-            new Map(),
-            (interaction: StringSelectMenuInteraction, selected: Product): void => {
-                this.selectedProduct = selected
-                this.updateInteraction(interaction)
-            },    
-            120_000
+        const productSelectMenu = new ExtendedStringSelectMenuComponent<Product>({
+            customId: `${this.id}+select-product`,
+            placeholder: 'Select a product',
+            time: 120_000
+        }, new Map(), (interaction: StringSelectMenuInteraction, selected: Product): void => {
+            this.selectedProduct = selected
+            this.updateInteraction(interaction)
+        })
+
+        const submitRemoveButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+remove-product`,
+                label: 'Remove Product',
+                emoji: {name: '⛔'},
+                style: ButtonStyle.Danger,
+                disabled: true,
+                time: 120_000
+            },
+            (interaction: ButtonInteraction) => this.success(interaction)
         )
 
-        const submitRemoveButton = new ExtendedButtonComponent(`${this.id}+remove-product`,
-            new ButtonBuilder()
-                .setLabel('Remove Product')
-                .setEmoji({name: '⛔'})
-                .setStyle(ButtonStyle.Danger)
-                .setDisabled(true),
-            (interaction: ButtonInteraction) => this.success(interaction),
-            120_000
-        )
-
-        const changeShopButton = new ExtendedButtonComponent(`${this.id}+change-shop`,
-            new ButtonBuilder()
-                .setLabel('Change Shop')
-                .setEmoji({name: '📝'})
-                .setStyle(ButtonStyle.Secondary),
+        const changeShopButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+change-shop`,
+                label: 'Change Shop',
+                emoji: {name: '📝'},
+                style: ButtonStyle.Secondary,
+                time: 120_000
+            },
             (interaction: ButtonInteraction) => {
                 this.selectedShop = null
                 this.selectedProduct = null
 
                 this.changeStage(RemoveProductFlowStage.SELECT_SHOP)
                 this.updateInteraction(interaction)
-            },
-            120_000
+            }
         )
 
         this.componentsByStage.set(RemoveProductFlowStage.SELECT_PRODUCT, new Map())
@@ -544,29 +562,33 @@ export class EditProductFlow extends UserFlow {
 
     protected initComponents(): void {
         const shopSelectMenu = new ExtendedStringSelectMenuComponent<Shop>(
-            `${this.id}+select-shop`,
-            'Select a shop',
+            {
+                customId: `${this.id}+select-shop`,
+                placeholder: 'Select a shop',
+                time: 120_000
+            },
             getShops(),
             (interaction: StringSelectMenuInteraction, selected: Shop): void => {
                 this.selectedShop = selected
                 this.updateInteraction(interaction)
-            },
-            120_000
+            }
         )
 
-        const submitShopButton = new ExtendedButtonComponent(`${this.id}+submit-shop`,
-            new ButtonBuilder()
-                .setLabel('Submit Shop')
-                .setEmoji({name: '✅'})
-                .setStyle(ButtonStyle.Success)
-                .setDisabled(true),
+        const submitShopButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+submit-shop`,
+                time: 120_000,
+                label: 'Submit Shop',
+                emoji: {name: '✅'},
+                style: ButtonStyle.Success,
+                disabled: true,
+            },
             (interaction: ButtonInteraction) => {
                 if (this.selectedShop!.products.size == 0) return updateAsErrorMessage(interaction, ErrorMessages.NoProducts)
 
                 this.changeStage(EditProductFlowStage.SELECT_PRODUCT)
                 return this.updateInteraction(interaction)
-            },
-            120_000
+            }
         )
 
         this.componentsByStage.set(EditProductFlowStage.SELECT_SHOP, new Map())
@@ -576,40 +598,42 @@ export class EditProductFlow extends UserFlow {
         this.components.set(shopSelectMenu.customId, shopSelectMenu)
         this.components.set(submitShopButton.customId, submitShopButton)
 
-        const productSelectMenu = new ExtendedStringSelectMenuComponent<Product>(
-            `${this.id}+select-product`,
-            'Select a product',
-            new Map(),
-            (interaction: StringSelectMenuInteraction, selected: Product): void => {
-                this.selectedProduct = selected
-                this.updateInteraction(interaction)
-            },    
-            120_000
+        const productSelectMenu = new ExtendedStringSelectMenuComponent<Product>({
+            customId: `${this.id}+select-product`,
+            placeholder: 'Select a product',
+            time: 120_000
+        }, new Map(), (interaction: StringSelectMenuInteraction, selected: Product): void => {
+            this.selectedProduct = selected
+            this.updateInteraction(interaction)
+        })
+
+        const submitEditButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+edit-product`,
+                time: 120_000,
+                label: 'Edit Product',
+                emoji: {name: '✅'},
+                style: ButtonStyle.Success,
+                disabled: true
+            },
+            (interaction: ButtonInteraction) => this.success(interaction)
         )
 
-        const submitEditButton = new ExtendedButtonComponent(`${this.id}+edit-product`,
-            new ButtonBuilder()
-                .setLabel('Edit Product')
-                .setEmoji({name: '✅'})
-                .setStyle(ButtonStyle.Success)
-                .setDisabled(true),
-            (interaction: ButtonInteraction) => this.success(interaction),
-            120_000
-        )
-
-        const changeShopButton = new ExtendedButtonComponent(`${this.id}+change-shop`,
-            new ButtonBuilder()
-                .setLabel('Change Shop')
-                .setEmoji({name: '📝'})
-                .setStyle(ButtonStyle.Secondary),
+        const changeShopButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+change-shop`,
+                time: 120_000,
+                label: 'Change Shop',
+                emoji: {name: '📝'},
+                style: ButtonStyle.Secondary
+            },
             (interaction: ButtonInteraction) => {
                 this.selectedShop = null
                 this.selectedProduct = null
 
                 this.changeStage(EditProductFlowStage.SELECT_SHOP)
                 this.updateInteraction(interaction)
-            },
-            120_000
+            }
         )
 
         this.componentsByStage.set(EditProductFlowStage.SELECT_PRODUCT, new Map())

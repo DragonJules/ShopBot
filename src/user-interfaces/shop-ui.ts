@@ -4,102 +4,69 @@ import { DatabaseError, Product, ProductActionType, Shop } from "../database/dat
 import { logToDiscord, replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
 import { AccountUserInterface } from "./account-ui"
 import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent } from "./extended-components"
-import { EmbedUserInterface, MessageUserInterface, UserInterfaceInteraction } from "./user-interfaces"
+import { EmbedUserInterface, MessageUserInterface, PaginatedEmbedUserInterface, UserInterfaceInteraction } from "./user-interfaces"
 import { ErrorMessages } from "../utils/constants"
 
-const PRODUCTS_PER_PAGE = 9
-
-export class ShopUserInterface extends EmbedUserInterface {
+export class ShopUserInterface extends PaginatedEmbedUserInterface {
     public override id = 'shop-ui'
     protected override components: Map<string, ExtendedComponent> = new Map()
-    protected override embeds: Map<string, EmbedBuilder> = new Map()
+    protected override embed: EmbedBuilder | null = null
 
     private selectedShop: Shop | null = null
-    private shopPage: number = 0
 
-    private response: InteractionCallbackResponse | null = null
+    protected override page: number = 0
+    protected override response: InteractionCallbackResponse | null = null
 
-    private paginationButtons: [ExtendedButtonComponent, ExtendedButtonComponent] = [
-        new ExtendedButtonComponent(
-            `${this.id}+previous-page`,
-            new ButtonBuilder()
-                .setEmoji({name: '⬅️'})
-                .setStyle(ButtonStyle.Secondary),
-            (interaction: ButtonInteraction) => this.previousPage(interaction),
-            120_000
-        ),
-        new ExtendedButtonComponent(
-            `${this.id}+next-page`,
-            new ButtonBuilder()
-                .setEmoji({name: '➡️'})
-                .setStyle(ButtonStyle.Secondary),
-            (interaction: ButtonInteraction) => this.nextPage(interaction),
-            120_000
-        )
-    ]
 
-    public override async display(interaction: UserInterfaceInteraction): Promise<unknown> {
+    protected override async predisplay(interaction: UserInterfaceInteraction): Promise<any> {
         const shops = getShops()
         if (!shops.size) return replyErrorMessage(interaction, ErrorMessages.NoShops)
 
         this.selectedShop = shops.entries().next().value?.[1]!
-
-        this.initComponents()
-        this.initEmbeds(interaction)
-        this.updateComponents()
-        this.updateEmbeds()
-
-        const response = await interaction.reply({ embeds: this.getEmbeds(), components: this.getComponentRows(), flags: MessageFlags.Ephemeral, withResponse: true })
-        this.createComponentsCollectors(response)
-
-        this.response = response
-        return
     }
 
-    protected override getMessage(): string {
-        return ''
-    }
+    protected override getMessage(): string { return '' }
 
     protected override initComponents(): void {
         const selectShopMenu = new ExtendedStringSelectMenuComponent(
-            `${this.id}+select-shop`,
-            'Select a shop',
+            { customId : `${this.id}+select-shop`, placeholder: 'Select a shop', time: 120_000 },
             getShops(),
             (interaction: StringSelectMenuInteraction, selected: Shop): void => {
-                this.shopPage = 0
+                this.page = 0
                 this.selectedShop = selected
                 this.updateInteraction(interaction)
-            },
-            120_000
+            }
         )
 
         const buyButton = new ExtendedButtonComponent(
-            `${this.id}+buy`,
-            new ButtonBuilder()
-                .setLabel('Buy a product')
-                .setEmoji({name: '🪙'})
-                .setStyle(ButtonStyle.Primary),
+            {
+                customId: `${this.id}+buy`,
+                label: 'Buy a product',
+                emoji: {name: '🪙'},
+                style: ButtonStyle.Primary,
+                time: 120_000,
+            },
             (interaction: ButtonInteraction) => {
                 if (!this.selectedShop) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
 
                 const buyProductUI = new BuyProductUserInterface(this.selectedShop)
                 return buyProductUI.display(interaction)
-            },
-            120_000
+            }
         )
 
         const showAccountButton = new ExtendedButtonComponent(
-            `${this.id}+show-account`,
-            new ButtonBuilder()
-                .setLabel('My account')
-                .setEmoji({name: '💰'})
-                .setStyle(ButtonStyle.Secondary),
+            {
+                customId: `${this.id}+show-account`,
+                label: 'My account',
+                emoji: {name: '💰'},
+                style: ButtonStyle.Secondary,
+                time: 120_000,
+            },
             (interaction: ButtonInteraction) => {
                 const user = interaction.user
                 const accountUI = new AccountUserInterface(user)
                 accountUI.display(interaction)
-            },
-            120_000
+            }
         )
 
         
@@ -110,21 +77,18 @@ export class ShopUserInterface extends EmbedUserInterface {
         this.components.set(showAccountButton.customId, showAccountButton)
     }
 
-    protected override initEmbeds(interaction: UserInterfaceInteraction): void {
+    protected override initEmbeds(_interaction: UserInterfaceInteraction): void {
         if (!this.selectedShop) return
 
-        const shopPages = this.getNumberOfPages()
-
         const shopEmbed = new EmbedBuilder()
-            .setFooter({ text: `Page ${this.shopPage + 1}/${shopPages}`, iconURL: interaction.client.user.displayAvatarURL()})
             .setTitle(getShopName(this.selectedShop.id)!)
             .setDescription(`${this.selectedShop.description}\n\nProducts:`)
             .setColor(Colors.Gold)
 
 
-        shopEmbed.setFields(this.getEmbedFields(this.shopPage))
+        shopEmbed.setFields(this.getPageEmbedFields())
 
-        this.embeds.set('shop-embed', shopEmbed)
+        this.embed = shopEmbed
     }
 
     protected override updateComponents(): void {
@@ -132,53 +96,23 @@ export class ShopUserInterface extends EmbedUserInterface {
         if (buyButton instanceof ExtendedButtonComponent && this.selectedShop != null) {
             buyButton.toggle(this.selectedShop.products.size > 0)
         }
-
-        const shopPages = this.getNumberOfPages()
-
-        if (shopPages > 1) {
-            if (this.response) {
-                this.destroyComponentsCollectors()
-            }
-            
-            this.paginationButtons[0].toggle(this.shopPage > 0)
-            this.paginationButtons[1].toggle(this.shopPage < shopPages - 1)
-
-            this.components.set(this.paginationButtons[0].customId, this.paginationButtons[0])
-            this.components.set(this.paginationButtons[1].customId, this.paginationButtons[1])
-
-            if (this.response) {
-                this.createComponentsCollectors(this.response)
-            }
-        }
-        else {
-            if (this.response) {
-                this.destroyComponentsCollectors()
-            }
-            
-            this.components.delete(this.paginationButtons[0].customId)
-            this.components.delete(this.paginationButtons[1].customId)
-
-            if (this.response) {
-                this.createComponentsCollectors(this.response)
-            }
-        }
     }
 
     protected override updateEmbeds() {
-        const shopEmbed = this.embeds.get('shop-embed')
-        if (shopEmbed instanceof EmbedBuilder && this.selectedShop != null) {
-            const shopPages = this.getNumberOfPages()
+        const shopEmbed = this.embed
 
-            shopEmbed.setTitle(getShopName(this.selectedShop.id)!)
-            shopEmbed.setDescription(`${this.selectedShop.description}\n\nProducts: `)
-            shopEmbed.setFooter({ text: `Page ${this.shopPage + 1}/${shopPages}`})
+        if (!shopEmbed || !this.selectedShop) return
 
-            shopEmbed.setFields(this.getEmbedFields(this.shopPage))
-        }
+        shopEmbed.setTitle(getShopName(this.selectedShop.id)!)
+        shopEmbed.setDescription(`${this.selectedShop.description}\n\nProducts: `)
+
+        shopEmbed.setFields(this.getPageEmbedFields())
+
+        this.embed = shopEmbed
     }
 
 
-    private getEmbedFields(page: number = 0): APIEmbedField[] {
+    protected override getEmbedFields(): APIEmbedField[] {
         if (!this.selectedShop) return []
         if (this.selectedShop.products.size == 0) return [{ name: '\u200b', value: '🛒 *There is no product available here*' }]
 
@@ -194,27 +128,11 @@ export class ShopUserInterface extends EmbedUserInterface {
             })
         })
 
-        return fields.slice(page * PRODUCTS_PER_PAGE, page * PRODUCTS_PER_PAGE + PRODUCTS_PER_PAGE)
+        return fields
     }
 
-    private previousPage(interaction: ButtonInteraction) {
-        if (this.shopPage == 0) return this.updateInteraction(interaction)
-
-        this.shopPage -= 1
-        return this.updateInteraction(interaction)   
-    }
-
-    private nextPage(interaction: ButtonInteraction) {
-        const shopPages = this.getNumberOfPages()
-
-        if (this.shopPage == shopPages - 1) return this.updateInteraction(interaction)
-
-        this.shopPage += 1
-        return this.updateInteraction(interaction)
-    }
-
-    getNumberOfPages(): number {
-        return Math.max(Math.ceil(this.selectedShop!.products.size / PRODUCTS_PER_PAGE), 1)
+    protected override getInputSize(): number {
+        return this.selectedShop ? this.selectedShop.products.size : 0
     }
 }
 
@@ -234,14 +152,8 @@ export class BuyProductUserInterface extends MessageUserInterface {
         this.selectedShop = selectedShop
     }
 
-    public override async display(interaction: UserInterfaceInteraction): Promise<unknown> {
+    protected override async predisplay(interaction: UserInterfaceInteraction): Promise<any> {
         if (!this.selectedShop.products.size) return await replyErrorMessage(interaction, ErrorMessages.NoProducts)
-
-        this.initComponents()
-        this.updateComponents()
-
-        const response = await interaction.reply({ content: this.getMessage(), components: this.getComponentRows(), flags: MessageFlags.Ephemeral, withResponse: true })
-        return this.createComponentsCollectors(response)
     }
 
     protected override getMessage(): string {
@@ -252,34 +164,38 @@ export class BuyProductUserInterface extends MessageUserInterface {
 
     protected override initComponents(): void {
         const selectProductMenu = new ExtendedStringSelectMenuComponent(
-            `${this.id}+select-product`,
-            'Select a product',
+            {
+                customId: `${this.id}+select-product`,
+                placeholder: 'Select a product',
+                time: 120_000,
+            },
             this.selectedShop.products,
             (interaction: StringSelectMenuInteraction, selected: Product): void => {
                 this.selectedProduct = selected
                 this.updateInteraction(interaction)
-            },
-            120_000
+            }
         )
 
         const buyButton = new ExtendedButtonComponent(
-            `${this.id}+buy`,
-            new ButtonBuilder()
-                .setLabel('Buy')
-                .setEmoji({name: '✅'})
-                .setStyle(ButtonStyle.Success),
-            (interaction: ButtonInteraction) => this.buyProduct(interaction),
-            120_000
+            {
+                customId: `${this.id}+buy`,
+                label: 'Buy',
+                emoji: {name: '✅'},
+                style: ButtonStyle.Success,
+                time: 120_000,
+            },
+            (interaction: ButtonInteraction) => this.buyProduct(interaction)
         )
 
         const discountCodeButton = new ExtendedButtonComponent(
-            `${this.id}+discount-code`,
-            new ButtonBuilder()
-                .setLabel('I have a discount code')
-                .setEmoji({name: '🎁'})
-                .setStyle(ButtonStyle.Secondary),
-            (interaction: ButtonInteraction) => this.handleSetDiscountCodeInteraction(interaction),
-            120_000
+            {
+                customId: `${this.id}+discount-code`,
+                label: 'I have a discount code',
+                emoji: {name: '🎁'},
+                style: ButtonStyle.Secondary,
+                time: 120_000,
+            },
+            (interaction: ButtonInteraction) => this.handleSetDiscountCodeInteraction(interaction)
         )
 
         this.components.set(selectProductMenu.customId, selectProductMenu)

@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ChatInputCommandInteraction, ComponentType, InteractionCallbackResponse, InteractionCollector, MessageComponentInteraction, MessageComponentType, ModalBuilder, ModalSubmitInteraction, ReadonlyCollection, Role, RoleSelectMenuBuilder, RoleSelectMenuInteraction, Snowflake, StringSelectMenuBuilder, StringSelectMenuInteraction, StringSelectMenuOptionBuilder, TextInputBuilder, TextInputStyle } from "discord.js"
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelSelectMenuBuilder, ChannelSelectMenuInteraction, ChannelType, ChatInputCommandInteraction, ComponentEmojiResolvable, ComponentType, InteractionCallbackResponse, InteractionCollector, MessageComponentInteraction, MessageComponentType, ModalBuilder, ModalSubmitInteraction, ReadonlyCollection, Role, RoleSelectMenuBuilder, RoleSelectMenuInteraction, Snowflake, StringSelectMenuBuilder, StringSelectMenuInteraction, StringSelectMenuOptionBuilder, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder, UserSelectMenuInteraction } from "discord.js"
 import { Currency, Product, Shop } from "../database/database-types"
 import { UserInterfaceComponentBuilder } from "./user-interfaces"
 
@@ -30,6 +30,7 @@ export abstract class ExtendedComponent {
         if (this.collector == null) return
 
         this.collector.stop()
+        this.collector = null
     }
 
     getComponent(): UserInterfaceComponentBuilder {
@@ -42,6 +43,20 @@ export abstract class ExtendedComponent {
     }
 } 
 
+type ExtendButtonOptions = {
+    customId: string
+    time: number
+    style: ButtonStyle
+    disabled?: boolean
+} & ({
+    label: string
+    emoji?: ComponentEmojiResolvable
+} | {
+    label?: string
+    emoji: ComponentEmojiResolvable
+})
+
+
 export class ExtendedButtonComponent extends ExtendedComponent {
     componentType = ComponentType.Button
     customId: string
@@ -49,10 +64,16 @@ export class ExtendedButtonComponent extends ExtendedComponent {
     callback: (interaction: ButtonInteraction) => void
     time: number
 
-    constructor(customId: string, button: ButtonBuilder, callback: (interaction: ButtonInteraction) => void, time: number) {
+    constructor({ customId, time, label, emoji, style, disabled }: ExtendButtonOptions, callback: (interaction: ButtonInteraction) => void) {
         super()
         this.customId = customId
-        this.component = button.setCustomId(customId)
+        this.component = new ButtonBuilder()
+            .setStyle(style)
+            .setDisabled(disabled ?? false)
+            .setCustomId(customId)
+
+        if (label) this.component.setLabel(label)
+        if (emoji) this.component.setEmoji(emoji)
 
         this.callback = callback
         this.time = time
@@ -65,6 +86,12 @@ export class ExtendedButtonComponent extends ExtendedComponent {
     onEnd(collected: ReadonlyCollection<string, MessageComponentInteraction>): void {}
 }
 
+interface ExtendedSelectMenuOptions {
+    customId: string
+    placeholder: string
+    time: number
+}
+
 export class ExtendedStringSelectMenuComponent<T extends Currency | Shop | Product | string> extends ExtendedComponent {
     componentType = ComponentType.StringSelect
     customId: string
@@ -73,11 +100,13 @@ export class ExtendedStringSelectMenuComponent<T extends Currency | Shop | Produ
     callback: (interaction: StringSelectMenuInteraction, selected: T) => void
     time: number
 
-    constructor(customId: string, label: string, map: Map<string, T>, callback: (interaction: StringSelectMenuInteraction, selected: T) => void, time: number) {
+    constructor({ customId, placeholder, time }: ExtendedSelectMenuOptions, 
+        map: Map<string, T>, callback: (interaction: StringSelectMenuInteraction, selected: T) => void
+    ) {
         super()
         this.customId = customId
         this.map = map
-        this.component = this.createSelectMenu(customId, label, map)
+        this.component = this.createSelectMenu(customId, placeholder, map)
 
         this.callback = callback
         this.time = time
@@ -94,10 +123,10 @@ export class ExtendedStringSelectMenuComponent<T extends Currency | Shop | Produ
 
     onEnd(collected: ReadonlyCollection<string, MessageComponentInteraction>): void {}
 
-    private createSelectMenu(id: string, label: string, map: Map<string, T>): StringSelectMenuBuilder {
+    private createSelectMenu(id: string, placeholder: string, map: Map<string, T>): StringSelectMenuBuilder {
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId(id)
-            .setPlaceholder(label)
+            .setPlaceholder(placeholder)
             .addOptions(this.getStringSelectOptions(map))
     
         return selectMenu
@@ -126,28 +155,39 @@ export class ExtendedStringSelectMenuComponent<T extends Currency | Shop | Produ
     }
 }
 
-export class ExtendedRoleSelectMenuComponent extends ExtendedComponent {
-    componentType = ComponentType.RoleSelect
-    customId: string
-    component: RoleSelectMenuBuilder
 
-    callback: (interaction: RoleSelectMenuInteraction, selectedRoleId: Snowflake) => void
+
+
+type SelectMenuBuilders<T extends MessageComponentType> = 
+    T extends ComponentType.RoleSelect ? RoleSelectMenuBuilder : 
+    T extends ComponentType.ChannelSelect ? ChannelSelectMenuBuilder :
+    T extends ComponentType.UserSelect ? UserSelectMenuBuilder : 
+    never
+
+type SelectMenuInteractions<T extends MessageComponentType> = 
+    T extends ComponentType.RoleSelect ? RoleSelectMenuInteraction : 
+    T extends ComponentType.ChannelSelect ? ChannelSelectMenuInteraction :
+    T extends ComponentType.UserSelect ? UserSelectMenuInteraction : 
+    never
+
+export abstract class ExtendedSelectMenuComponent<T extends MessageComponentType> extends ExtendedComponent {
+    override customId: string
+    abstract override component: SelectMenuBuilders<T>
+
+    callback: (interaction: SelectMenuInteractions<T>, selected: Snowflake) => void
     time: number
-    
-    constructor(customId: string, label: string, callback: (interaction: RoleSelectMenuInteraction, selectedRoleId: Snowflake) => void, time: number) {
+
+    constructor({ customId, time }: Omit<ExtendedSelectMenuOptions, 'placeholder'>, 
+        callback: (interaction: SelectMenuInteractions<T>, selected: Snowflake) => void
+    ) {
         super()
         this.customId = customId
-        this.component = new RoleSelectMenuBuilder()
-            .setCustomId(customId)
-            .setPlaceholder(label)
         
         this.callback = callback
         this.time = time
     }
 
-    onCollect(interaction: RoleSelectMenuInteraction): void {
-        if (!interaction.isRoleSelectMenu()) return
-
+    onCollect(interaction: SelectMenuInteractions<T>): void {
         const selected = interaction.values[0]
         if (selected == undefined) return
 
@@ -155,6 +195,58 @@ export class ExtendedRoleSelectMenuComponent extends ExtendedComponent {
     }
 
     onEnd(collected: ReadonlyCollection<string, MessageComponentInteraction>): void {}
+}
+
+interface ExtendedChannelSelectOptions extends ExtendedSelectMenuOptions {
+    channelTypes?: ChannelType[]
+}
+
+export class ExtendedChannelSelectMenuComponent extends ExtendedSelectMenuComponent<ComponentType.ChannelSelect> {
+    override componentType = ComponentType.ChannelSelect
+    override component: ChannelSelectMenuBuilder
+    
+    constructor({ customId, placeholder, time, channelTypes }: ExtendedChannelSelectOptions, 
+        callback: (interaction: ChannelSelectMenuInteraction, selectedChannelId: Snowflake) => void
+    ) {
+        super({ customId, time }, callback)
+
+        this.component = new ChannelSelectMenuBuilder()
+            .setCustomId(customId)
+            .setPlaceholder(placeholder)
+        
+        if (channelTypes) this.component.setChannelTypes(channelTypes)
+    }
+}
+
+export class ExtendedRoleSelectMenuComponent extends ExtendedSelectMenuComponent<ComponentType.RoleSelect> {
+    override componentType = ComponentType.RoleSelect
+    override component: RoleSelectMenuBuilder
+    
+    constructor({ customId, placeholder, time }: ExtendedSelectMenuOptions, 
+        callback: (interaction: RoleSelectMenuInteraction, selectedRoleId: Snowflake) => void
+    ) {
+        super({ customId, time }, callback)
+
+        this.component = new RoleSelectMenuBuilder()
+            .setCustomId(customId)
+            .setPlaceholder(placeholder)
+    }
+}
+
+
+export class ExtendedUserSelectMenuComponent extends ExtendedSelectMenuComponent<ComponentType.UserSelect> {
+    override componentType = ComponentType.UserSelect
+    override component: UserSelectMenuBuilder
+    
+    constructor({ customId, placeholder, time }: ExtendedSelectMenuOptions, 
+        callback: (interaction: UserSelectMenuInteraction, selectedUserId: Snowflake) => void
+    ) {
+        super({ customId, time }, callback)
+
+        this.component = new UserSelectMenuBuilder()
+            .setCustomId(customId)
+            .setPlaceholder(placeholder)
+    }
 }
 
 export async function showConfirmationModal(interaction: MessageComponentInteraction | ChatInputCommandInteraction): Promise<[ModalSubmitInteraction, boolean]> {
@@ -184,7 +276,18 @@ export async function showConfirmationModal(interaction: MessageComponentInterac
     return [modalSubmit, modalSubmit.fields.getTextInputValue('confirm-empty-input').toLowerCase().substring(0, 3) == 'yes']
 }
 
-export async function showEditModal(interaction: MessageComponentInteraction | ChatInputCommandInteraction, edit: string, previousValue?: string): Promise<[ModalSubmitInteraction, string]> {
+export type EditModalOptions = {
+    edit: string,
+    previousValue?: string,
+    required?: boolean
+    minLength?: number
+    maxLength?: number
+}
+
+export async function showEditModal(interaction: MessageComponentInteraction | ChatInputCommandInteraction, 
+    { edit, previousValue, required, minLength, maxLength }: EditModalOptions
+): Promise<[ModalSubmitInteraction, string]> {
+
     const editNormalized = `${edit.toLocaleLowerCase().replaceSpaces('-')}`
     const modalId = `edit-${editNormalized}-modal`
 
@@ -195,11 +298,11 @@ export async function showEditModal(interaction: MessageComponentInteraction | C
     const input = new TextInputBuilder()
         .setCustomId(`${editNormalized}-input`)
         .setLabel(`New ${edit}`)
-        .setPlaceholder(previousValue || edit)
+        .setPlaceholder(previousValue ?? edit)
         .setStyle(TextInputStyle.Short)
-        .setRequired(true)
-        .setMaxLength(120)
-        .setMinLength(1)
+        .setRequired(required ?? true)
+        .setMaxLength(maxLength ?? 120)
+        .setMinLength(minLength ?? 0)
 
     modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(input))
 

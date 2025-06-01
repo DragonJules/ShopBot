@@ -29,32 +29,31 @@ export class CurrencyRemoveFlow extends UserFlow {
     }
 
     initComponents(): void {
-        const currencySelect = new ExtendedStringSelectMenuComponent<Currency>(
-            `${this.id}+select-currency`,
-            'Select a currency',
-            getCurrencies(),
-            (interaction: StringSelectMenuInteraction, selectedCurrency: Currency): void => {
-                this.selectedCurrency = selectedCurrency
-                this.updateInteraction(interaction)
-            },
-            120_000
-        )
+        const currencySelect = new ExtendedStringSelectMenuComponent<Currency>({
+            customId: `${this.id}+select-currency`,
+            placeholder: 'Select a currency',
+            time: 120_000
+        }, getCurrencies(),
+        (interaction: StringSelectMenuInteraction, selectedCurrency: Currency): void => {
+            this.selectedCurrency = selectedCurrency
+            this.updateInteraction(interaction)
+        })
 
-        const submitButton = new ExtendedButtonComponent(`${this.id}+submit`, 
-            new ButtonBuilder()
-                .setLabel('Remove Currency')
-                .setEmoji({name: '⛔'})
-                .setStyle(ButtonStyle.Danger)
-                .setDisabled(this.selectedCurrency == null),
-            async (interaction: ButtonInteraction) => {
-                const [modalSubmitInteraction, confirmed] = await showConfirmationModal(interaction)
-                
-                if (confirmed) return this.success(modalSubmitInteraction)
-                
-                return this.updateInteraction(modalSubmitInteraction)
-            },
-            120_000
-        )
+        const submitButton = new ExtendedButtonComponent({
+            customId: `${this.id}+submit`,
+            label: 'Remove Currency',
+            emoji: {name: '⛔'},
+            style: ButtonStyle.Danger,
+            disabled: this.selectedCurrency == null,
+            time: 120_000,
+        },
+        async (interaction: ButtonInteraction) => {
+            const [modalSubmitInteraction, confirmed] = await showConfirmationModal(interaction)
+            
+            if (confirmed) return this.success(modalSubmitInteraction)
+            
+            return this.updateInteraction(modalSubmitInteraction)
+        })
 
         this.components.set(currencySelect.customId, currencySelect)
         this.components.set(submitButton.customId, submitButton)
@@ -139,24 +138,24 @@ export class EditCurrencyFlow extends UserFlow {
 
     protected override initComponents(): void {
         const currencySelectMenu = new ExtendedStringSelectMenuComponent<Currency>(
-            `${this.id}+select-currency`,
-            'Select a currency',
+            { customId: `${this.id}+select-currency`, placeholder: 'Select a currency', time: 120_000 },
             getCurrencies(),
             (interaction: StringSelectMenuInteraction, selectedCurrency: Currency): void => {
                 this.selectedCurrency = selectedCurrency
                 this.updateInteraction(interaction)
-            },
-            120_000
+            }
         )
     
-        const submitButton = new ExtendedButtonComponent(`${this.id}+submit`, 
-            new ButtonBuilder()
-                .setLabel('Edit Currency')
-                .setEmoji({name: '✅'})
-                .setStyle(ButtonStyle.Success)
-                .setDisabled(this.selectedCurrency == null),
+        const submitButton = new ExtendedButtonComponent(
+            {
+                customId: `${this.id}+submit`,
+                label: 'Edit Currency',
+                emoji: {name: '✅'},
+                style: ButtonStyle.Success,
+                disabled: this.selectedCurrency == null,
+                time: 120_000,
+            },
             (interaction: ButtonInteraction) => this.success(interaction),
-            120_000
         )
 
         this.components.set(currencySelectMenu.customId, currencySelectMenu)
