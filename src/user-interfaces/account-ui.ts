@@ -1,8 +1,9 @@
-import { APIEmbedField, ButtonBuilder, ButtonInteraction, ButtonStyle, Colors, EmbedBuilder, InteractionCallbackResponse, MessageFlags, User } from "discord.js"
-import { getCurrencies, getOrCreateAccount } from "../database/database-handler"
-import { Account } from "../database/database-types"
+import { APIEmbedField, ButtonInteraction, ButtonStyle, Colors, EmbedBuilder, InteractionCallbackResponse, User } from "discord.js"
+import { getOrCreateAccount } from "../database/accounts/accounts-database"
+import { Account } from "../database/accounts/accounts-type"
+import { getCurrencies } from "../database/currencies/currencies-database"
 import { ExtendedButtonComponent, ExtendedComponent } from "./extended-components"
-import { EmbedUserInterface, ObjectValues, PaginatedMultipleEmbedUserInterface, UserInterfaceInteraction } from "./user-interfaces"
+import { ObjectValues, PaginatedMultipleEmbedUserInterface, UserInterfaceInteraction } from "./user-interfaces"
 
 
 export class AccountUserInterface extends PaginatedMultipleEmbedUserInterface {

@@ -1,13 +1,15 @@
-import { bold, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, InteractionCallbackResponse, MessageFlags, StringSelectMenuInteraction } from "discord.js"
-import { createDiscountCode, createShop, getCurrencies, getCurrencyName, getShopName, getShops, removeDiscountCode, removeShop, updateShop, updateShopCurrency, updateShopPosition } from "../database/database-handler"
-import { Currency, DatabaseError, Shop } from "../database/database-types"
+import { bold, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, InteractionCallbackResponse, MessageFlags, StringSelectMenuInteraction } from "discord.js"
+import { getCurrencies, getCurrencyName } from "../database/currencies/currencies-database"
+import { Currency } from "../database/currencies/currencies-types"
+import { DatabaseError } from "../database/database-types"
+import { createDiscountCode, createShop, getShopName, getShops, removeDiscountCode, removeShop, updateShop, updateShopCurrency, updateShopPosition } from "../database/shops/shops-database"
+import { Shop } from "../database/shops/shops-types"
 import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent, showEditModal } from "../user-interfaces/extended-components"
 import { UserInterfaceInteraction } from "../user-interfaces/user-interfaces"
 import { EMOJI_REGEX, ErrorMessages } from "../utils/constants"
 import { PrettyLog } from "../utils/pretty-log"
-import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
+import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/discord"
 import { UserFlow } from "./user-flow"
-import { get } from "node:http"
 
 export class ShopCreateFlow extends UserFlow {
     public id = 'shop-create'

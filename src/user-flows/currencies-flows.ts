@@ -1,11 +1,14 @@
-import { bold, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, italic, MessageFlags, ModalSubmitInteraction, StringSelectMenuInteraction } from "discord.js"
-import { getCurrencies, getCurrencyName, getShopName, getShopsWithCurrency, removeCurrency, takeCurrencyFromAccounts, updateCurrency } from "../database/database-handler"
-import { Currency, DatabaseError } from "../database/database-types"
+import { bold, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, italic, MessageFlags, ModalSubmitInteraction, StringSelectMenuInteraction } from "discord.js"
+import { takeCurrencyFromAccounts } from "../database/accounts/accounts-database"
+import { getCurrencies, getCurrencyName, removeCurrency, updateCurrency } from "../database/currencies/currencies-database"
+import { Currency } from "../database/currencies/currencies-types"
+import { DatabaseError } from "../database/database-types"
+import { getShopName, getShopsWithCurrency } from "../database/shops/shops-database"
 import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent, showConfirmationModal } from "../user-interfaces/extended-components"
 import { UserInterfaceInteraction } from "../user-interfaces/user-interfaces"
 import { EMOJI_REGEX, ErrorMessages } from "../utils/constants"
 import { PrettyLog } from "../utils/pretty-log"
-import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
+import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/discord"
 import { UserFlow } from "./user-flow"
 
 

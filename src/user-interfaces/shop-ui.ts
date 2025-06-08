@@ -1,11 +1,15 @@
-import { ActionRowBuilder, APIEmbedField, bold, ButtonBuilder, ButtonInteraction, ButtonStyle, Colors, EmbedBuilder, GuildMember, InteractionCallbackResponse, MessageFlags, ModalBuilder, ModalSubmitInteraction, roleMention, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from "discord.js"
-import { getCurrencyName, getOrCreateAccount, getProductName, getShopName, getShops, setAccountCurrencyAmount, setAccountItemAmount } from "../database/database-handler"
-import { DatabaseError, Product, ProductActionType, Shop } from "../database/database-types"
-import { logToDiscord, replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
+import { ActionRowBuilder, APIEmbedField, bold, ButtonInteraction, ButtonStyle, Colors, EmbedBuilder, GuildMember, InteractionCallbackResponse, ModalBuilder, ModalSubmitInteraction, roleMention, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from "discord.js"
+import { getOrCreateAccount, setAccountCurrencyAmount, setAccountItemAmount } from "../database/accounts/accounts-database"
+import { getCurrencyName } from "../database/currencies/currencies-database"
+import { DatabaseError } from "../database/database-types"
+import { getProductName, getShopName, getShops } from "../database/shops/shops-database"
+import { Product, PRODUCT_ACTION_TYPE, ProductActionType, Shop } from "../database/shops/shops-types"
+import { ErrorMessages } from "../utils/constants"
+import { logToDiscord, replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/discord"
 import { AccountUserInterface } from "./account-ui"
 import { ExtendedButtonComponent, ExtendedComponent, ExtendedStringSelectMenuComponent } from "./extended-components"
-import { EmbedUserInterface, MessageUserInterface, PaginatedEmbedUserInterface, UserInterfaceInteraction } from "./user-interfaces"
-import { ErrorMessages } from "../utils/constants"
+import { MessageUserInterface, PaginatedEmbedUserInterface, UserInterfaceInteraction } from "./user-interfaces"
+import { assertNeverReached } from "../utils/utils"
 
 export class ShopUserInterface extends PaginatedEmbedUserInterface {
     public override id = 'shop-ui'
@@ -255,7 +259,7 @@ export class BuyProductUserInterface extends MessageUserInterface {
             if (userCurrencyAmount < price) return replyErrorMessage(interaction, `You don't have enough **${getCurrencyName(this.selectedShop.currency.id)!}** to buy this product`)
             
             setAccountCurrencyAmount(interaction.user.id, this.selectedShop.currency.id, userCurrencyAmount - price)
-
+            
             if (this.selectedProduct.action != undefined) return this.buyActionProduct(interaction)
 
             const userProductAmount = user.inventory.get(this.selectedProduct.id)?.amount || 0
@@ -283,7 +287,7 @@ export class BuyProductUserInterface extends MessageUserInterface {
         let actionMessage = ''
 
         switch (this.selectedProduct.action?.type) {
-            case ProductActionType.GiveRole:
+            case PRODUCT_ACTION_TYPE.GiveRole:
                 const roleId = this.selectedProduct.action.options.roleId
                 if (!roleId) return
 
@@ -295,7 +299,7 @@ export class BuyProductUserInterface extends MessageUserInterface {
                 actionMessage = `You were granted the role ${bold(roleMention(roleId))}`
                 break
 
-            case ProductActionType.GiveCurrency:
+            case PRODUCT_ACTION_TYPE.GiveCurrency:
                 const currency = this.selectedProduct.action.options.currencyId
                 if (!currency) return
 

@@ -1,13 +1,15 @@
-import { ActionRowBuilder, bold, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, InteractionCallbackResponse, MessageFlags, ModalBuilder, ModalSubmitInteraction, Role, roleMention, RoleSelectMenuInteraction, Snowflake, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from "discord.js"
-import { addProduct, getCurrencies, getCurrencyName, getProductName, getShopName, getShops, removeProduct, updateProduct } from "../database/database-handler"
-import { createProductAction, Currency, DatabaseError, isProductActionType, Product, ProductAction, ProductActionOptions, ProductActionType, Shop } from "../database/database-types"
+import { bold, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, InteractionCallbackResponse, MessageFlags, roleMention, RoleSelectMenuInteraction, Snowflake, StringSelectMenuInteraction } from "discord.js"
+import { getCurrencies, getCurrencyName } from "../database/currencies/currencies-database"
+import { Currency } from "../database/currencies/currencies-types"
+import { DatabaseError } from "../database/database-types"
+import { addProduct, getProductName, getShopName, getShops, removeProduct, updateProduct } from "../database/shops/shops-database"
+import { createProductAction, Product, ProductAction, ProductActionOptions, PRODUCT_ACTION_TYPE, Shop, ProductActionType, isProductActionType } from "../database/shops/shops-types"
 import { ExtendedButtonComponent, ExtendedComponent, ExtendedRoleSelectMenuComponent, ExtendedStringSelectMenuComponent, showEditModal } from "../user-interfaces/extended-components"
 import { UserInterfaceInteraction } from "../user-interfaces/user-interfaces"
 import { EMOJI_REGEX, ErrorMessages } from "../utils/constants"
 import { PrettyLog } from "../utils/pretty-log"
-import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/utils"
+import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/discord"
 import { UserFlow } from "./user-flow"
-import { get } from "node:http"
 
 export class AddProductFlow extends UserFlow {
     public id = "add-product"
@@ -154,13 +156,13 @@ export class AddActionProductFlow extends AddProductFlow {
                 let actionString = ''
 
                 switch (this.productActionType) {
-                    case ProductActionType.GiveRole:
-                        const roleMentionString = (this.productAction?.options as ProductActionOptions<ProductActionType.GiveRole> | undefined)?.roleId ? roleMention((this.productAction?.options as ProductActionOptions<ProductActionType.GiveRole>).roleId) : 'Unset'
+                    case PRODUCT_ACTION_TYPE.GiveRole:
+                        const roleMentionString = (this.productAction?.options as ProductActionOptions<typeof PRODUCT_ACTION_TYPE.GiveRole> | undefined)?.roleId ? roleMention((this.productAction?.options as ProductActionOptions<typeof PRODUCT_ACTION_TYPE.GiveRole>).roleId) : 'Unset'
                         actionString = `give **[${roleMentionString}]** role`
                         break
-                    case ProductActionType.GiveCurrency:
-                        const productActionAsGiveCurrency = (this.productAction?.options as ProductActionOptions<ProductActionType.GiveCurrency>)
-                        const isProductActionGiveCurrency = this.productAction != null && this.productAction?.options != undefined && (this.productAction?.options as ProductActionOptions<ProductActionType.GiveCurrency>).amount !== undefined && (this.productAction?.options as ProductActionOptions<ProductActionType.GiveCurrency>).currencyId !== undefined && productActionAsGiveCurrency != undefined 
+                    case PRODUCT_ACTION_TYPE.GiveCurrency:
+                        const productActionAsGiveCurrency = (this.productAction?.options as ProductActionOptions<typeof PRODUCT_ACTION_TYPE.GiveCurrency>)
+                        const isProductActionGiveCurrency = this.productAction != null && this.productAction?.options != undefined && (this.productAction?.options as ProductActionOptions<typeof PRODUCT_ACTION_TYPE.GiveCurrency>).amount !== undefined && (this.productAction?.options as ProductActionOptions<typeof PRODUCT_ACTION_TYPE.GiveCurrency>).currencyId !== undefined && productActionAsGiveCurrency != undefined 
 
                         const amountString = (isProductActionGiveCurrency && productActionAsGiveCurrency.amount >= 0) ? productActionAsGiveCurrency.amount : 'Unset'
                         const currency = (isProductActionGiveCurrency && productActionAsGiveCurrency.currencyId) ? getCurrencies().get(productActionAsGiveCurrency.currencyId) : undefined
@@ -183,7 +185,7 @@ export class AddActionProductFlow extends AddProductFlow {
 
         this.componentsByStage.set(AddActionProductFlowStage.SETUP_ACTION, new Map())
         switch (this.productActionType) {
-            case ProductActionType.GiveRole:
+            case PRODUCT_ACTION_TYPE.GiveRole:
                 const roleSelectMenu = new ExtendedRoleSelectMenuComponent(
                     {
                         customId: `${this.id}+select-role`,
@@ -191,7 +193,7 @@ export class AddActionProductFlow extends AddProductFlow {
                         time: 120_000
                     },
                     (interaction: RoleSelectMenuInteraction, selectedRoleId: Snowflake): void => {
-                        this.productAction = createProductAction(ProductActionType.GiveRole, { roleId: selectedRoleId })
+                        this.productAction = createProductAction(PRODUCT_ACTION_TYPE.GiveRole, { roleId: selectedRoleId })
                         this.actionSetupCompleted = true
                         this.updateInteraction(interaction)
                     }
@@ -200,7 +202,7 @@ export class AddActionProductFlow extends AddProductFlow {
                 this.componentsByStage.get(AddActionProductFlowStage.SETUP_ACTION)?.set(roleSelectMenu.customId, roleSelectMenu)
                 break;
         
-            case ProductActionType.GiveCurrency:
+            case PRODUCT_ACTION_TYPE.GiveCurrency:
                 const currencySelectMenu = new ExtendedStringSelectMenuComponent<Currency>(
                     {
                         customId: `${this.id}+select-currency`,
@@ -209,7 +211,7 @@ export class AddActionProductFlow extends AddProductFlow {
                     },
                     getCurrencies(),
                     (interaction: StringSelectMenuInteraction, selected: Currency): void => {
-                        this.productAction = createProductAction(ProductActionType.GiveCurrency, { currencyId: selected.id, amount: -1 })
+                        this.productAction = createProductAction(PRODUCT_ACTION_TYPE.GiveCurrency, { currencyId: selected.id, amount: -1 })
                         this.updateInteraction(interaction)
                     }
                 )
@@ -228,8 +230,8 @@ export class AddActionProductFlow extends AddProductFlow {
                         const amount = parseInt(input)
                         if (isNaN(amount) || amount < 0) return this.updateInteraction(modalSubmit)
 
-                        this.productAction = createProductAction(ProductActionType.GiveCurrency, {
-                            currencyId: (this.productAction!.options as ProductActionOptions<ProductActionType.GiveCurrency>).currencyId,
+                        this.productAction = createProductAction(PRODUCT_ACTION_TYPE.GiveCurrency, {
+                            currencyId: (this.productAction!.options as ProductActionOptions<typeof PRODUCT_ACTION_TYPE.GiveCurrency>).currencyId,
                             amount
                         })
 
@@ -286,7 +288,7 @@ export class AddActionProductFlow extends AddProductFlow {
         if (this.stage == AddActionProductFlowStage.SETUP_ACTION) {
             const setAmountButton = this.components.get(`${this.id}+set-amount`)
             if (setAmountButton instanceof ExtendedButtonComponent) {
-                setAmountButton.toggle(this.productAction != null && this.productAction.type == ProductActionType.GiveCurrency)
+                setAmountButton.toggle(this.productAction != null && this.productAction.type == PRODUCT_ACTION_TYPE.GiveCurrency)
             }
 
             const submitButton = this.components.get(`${this.id}+submit`)

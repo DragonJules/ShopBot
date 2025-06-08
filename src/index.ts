@@ -57,6 +57,6 @@ async function registerEvents(client: Client<boolean>) {
 client.login(config.token)
 
 
-process.on('unhandledRejection', (reason: unknown) => PrettyLog.error(`${reason}`, false))
-process.on('uncaughtException', (reason: unknown) => PrettyLog.error(`${reason}`, false))
-process.on('uncaughtExceptionMonitor', (reason: unknown) => PrettyLog.error(`${reason}`, false))
+// process.on('unhandledRejection', (reason: unknown) => PrettyLog.error(`${reason}`, false))
+// process.on('uncaughtException', (reason: unknown) => PrettyLog.error(`${reason}`, false))
+// process.on('uncaughtExceptionMonitor', (reason: unknown) => PrettyLog.error(`${reason}`, false))

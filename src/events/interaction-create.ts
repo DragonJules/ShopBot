@@ -2,7 +2,7 @@
 
 import { BaseInteraction, ChannelType, ChatInputCommandInteraction, InteractionType } from 'discord.js'
 import { PrettyLog } from '../utils/pretty-log'
-import { replyErrorMessage } from '../utils/utils'
+import { replyErrorMessage } from '../utils/discord'
 
 export const name = 'interactionCreate'
 

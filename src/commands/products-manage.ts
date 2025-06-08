@@ -1,8 +1,8 @@
 import { ChatInputCommandInteraction, Client, PermissionFlagsBits, SlashCommandBuilder } from "discord.js"
 import { AddActionProductFlow, AddProductFlow, EditProductFlow, EditProductOption, RemoveProductFlow } from "../user-flows/product-flows"
 import { ErrorMessages } from "../utils/constants"
-import { replyErrorMessage } from "../utils/utils"
-import { ProductActionType } from "../database/database-types"
+import { replyErrorMessage } from "../utils/discord"
+import { PRODUCT_ACTION_TYPE, ProductActionType } from "../database/shops/shops-types"
 
 export const data = new SlashCommandBuilder()
     .setName('products-manage') 
@@ -40,8 +40,8 @@ export const data = new SlashCommandBuilder()
             .setDescription('The action of the product')
             .setRequired(false)
             .addChoices(
-                { name: 'Give Role', value: ProductActionType.GiveRole },
-                { name: 'Give Currency', value: ProductActionType.GiveCurrency }
+                { name: 'Give Role', value: PRODUCT_ACTION_TYPE.GiveRole },
+                { name: 'Give Currency', value: PRODUCT_ACTION_TYPE.GiveCurrency }
             )
         )
     )

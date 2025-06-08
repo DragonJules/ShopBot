@@ -1,5 +1,7 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelSelectMenuBuilder, ChannelSelectMenuInteraction, ChannelType, ChatInputCommandInteraction, ComponentEmojiResolvable, ComponentType, InteractionCallbackResponse, InteractionCollector, MessageComponentInteraction, MessageComponentType, ModalBuilder, ModalSubmitInteraction, ReadonlyCollection, Role, RoleSelectMenuBuilder, RoleSelectMenuInteraction, Snowflake, StringSelectMenuBuilder, StringSelectMenuInteraction, StringSelectMenuOptionBuilder, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder, UserSelectMenuInteraction } from "discord.js"
-import { Currency, Product, Shop } from "../database/database-types"
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChannelSelectMenuBuilder, ChannelSelectMenuInteraction, ChannelType, ChatInputCommandInteraction, ComponentEmojiResolvable, ComponentType, InteractionCallbackResponse, InteractionCollector, MessageComponentInteraction, MessageComponentType, ModalBuilder, ModalSubmitInteraction, ReadonlyCollection, RoleSelectMenuBuilder, RoleSelectMenuInteraction, Snowflake, StringSelectMenuBuilder, StringSelectMenuInteraction, StringSelectMenuOptionBuilder, TextInputBuilder, TextInputStyle, UserSelectMenuBuilder, UserSelectMenuInteraction } from "discord.js"
+import { Currency } from "../database/currencies/currencies-types"
+import { isSetting, Setting, Settings } from "../database/settings/settings-types"
+import { Product, Shop } from "../database/shops/shops-types"
 import { UserInterfaceComponentBuilder } from "./user-interfaces"
 
 export abstract class ExtendedComponent {
@@ -92,7 +94,7 @@ interface ExtendedSelectMenuOptions {
     time: number
 }
 
-export class ExtendedStringSelectMenuComponent<T extends Currency | Shop | Product | string> extends ExtendedComponent {
+export class ExtendedStringSelectMenuComponent<T extends Currency | Shop | Product | Setting | string> extends ExtendedComponent {
     componentType = ComponentType.StringSelect
     customId: string
     component: StringSelectMenuBuilder
@@ -141,7 +143,7 @@ export class ExtendedStringSelectMenuComponent<T extends Currency | Shop | Produ
                 .setLabel(label)
                 .setValue(key)
 
-            if (typeof value !== 'string' && value.emoji != '') option.setEmoji(value.emoji)
+            if (typeof value !== 'string' && !isSetting(value) && value.emoji != '') option.setEmoji(value.emoji)
 
             options.push(option)
         })

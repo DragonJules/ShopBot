@@ -6,21 +6,23 @@
   "scripts": {
     "build": "tsc",
     "cleanbuild": "rd /s /q \"dist\" && tsc",
-    "dev": "concurrently \"tsc -w\" \"nodemon .\"",
-    "start": "npm run build && node .",
-    "start-nobuild": "node .",
+    "dev": "nodemon src/index.ts",
+    "start": "npm run build && node ./dist/index.js",
+    "serve": "node dist/index.js",
     "deploy": "npm run build && node ./dist/deploy-commands.js",
     "test": "npm run build && node ./dist/test.js",
     "simulate": "npm run build && node ./dist/database/drawing_simulation.js"
   },
   "license": "GPL-3.0",
   "devDependencies": {
-    "@discordjs/rest": "^2.4.2",
+    "@discordjs/rest": "^2.2.0",
     "@types/luxon": "^3.4.2",
-    "@types/uuid": "^10.0.0"
+    "@types/uuid": "^10.0.0",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2"
   },
   "dependencies": {
-    "discord.js": "^14.17.3",
+    "discord.js": "^14.14.1",
     "fs": "^0.0.1-security",
     "luxon": "^3.5.0",
     "uuid": "^11.0.5"

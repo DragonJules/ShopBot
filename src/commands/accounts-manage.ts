@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, Client, PermissionFlagsBits, SlashCommandBuilder } from "discord.js"
 import { AccountGiveFlow, AccountTakeFlow } from "../user-flows/accounts-flows"
 import { AccountUserInterface } from "../user-interfaces/account-ui"
-import { replyErrorMessage } from "../utils/utils"
+import { replyErrorMessage } from "../utils/discord"
 import { ErrorMessages } from "../utils/constants"
 
 export const data = new SlashCommandBuilder()
