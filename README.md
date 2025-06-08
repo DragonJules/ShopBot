@@ -108,22 +108,33 @@ If you have any problem with it, feel free to message me on Discord, or open an 
 
 ## 📝 Documentation
 
-### Here are all the commands available for the bot.
+### Main features and commands (Admin only)
+As mentionned earlier, this bot enables you to create and manage shops, currencies and products. <br>
 
-#### Commands for everyone:
+#### Managing Shops
+The shops have a name, an optionnal description and emoji.
+They also have an assigned currency.
+All of these can be edited after the Shop has been created.
 
-- Show user's account: `/account` 
- 
-- Display the shops: `/shop` 
+You can also create discount codes for the shops.
 
-
-#### Admin commands:
-- Settings
+##### Commands :
 ```
-  /set-log-channel
+  /shops-manage
+    | create <name> <description> <emoji> <reserved-to-role?>
+    | edit <name/description/emoji> <new-value>
+    | reorder
+    | remove
+
+    | create-discount-code <code> <amount>
+    | remove-discount-code
 ```
 
-- Manage Currencies
+#### Managing Currencies
+The currencies have a name and an emoji.
+All of these can be edited after the Currency has been created.
+
+##### Commands :
 ```
   /currencies-manage
     | create <name> <emoji>
@@ -131,16 +142,15 @@ If you have any problem with it, feel free to message me on Discord, or open an 
     | remove
 ```
 
-- Manage Shops
-```
-  /shops-manage
-    | create <name> <description> <emoji> <reserved-to-role?>
-    | edit <name/description/emoji> <new-value>
-    | reorder
-    | remove
-```
+#### Managing Products
+The products have a name, a price, an optionnal description and emoji.
+All of these can be edited after the Product has been created.
+A product is assigned to a specific shop.
 
-- Manage products
+You can create 'Action Products', these are products that will trigger an action when bought.
+It can be used to give money to a user, give the user a role. (That's all for now but I'm willing to add more in the future, feel free to give your suggestions in the [Issues](https://github.com/DragonJules/ShopBot/issues))
+
+##### Commands :
 ```
   /products-manage
     | add <name> <price> <description> <emoji> <action?>
@@ -148,12 +158,20 @@ If you have any problem with it, feel free to message me on Discord, or open an 
     | remove
 ```
 
-- Manage users
+#### Managing Users
+The users have an account and an inventory, initially empty. In addition to being able to view their account and inventory, you can give or take money to users, and empty their account.
+
+##### Commands :
 ```
   /accounts-manage
     | view-account <target>
     | give <target> <amount>
     | take <target> <amount>
+```
+
+#### Edit settings:
+```
+  /settings
 ```
 
 #### How to use admin commands ?
@@ -166,6 +184,16 @@ This for you not to have to remember the name of each currency and shop to manag
 
 The use of those command is made as intuitive as possible using Discord's slash-commands and message components.
 If you encounter any issue with a command, you can open an [issue](https://github.com/DragonJules/ShopBot/issues).
+
+
+### Commands for everyone:
+
+- Show user's account: `/account` 
+ 
+- Display the shops: `/shop` 
+
+<br><br>
+
 
 ## 📸 Screenshots 
 ### What members of the discord can see
