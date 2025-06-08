@@ -1,5 +1,5 @@
 import { ChatInputCommandInteraction, Client, PermissionFlagsBits, SlashCommandBuilder } from "discord.js"
-import { DiscountCodeCreateFlow, DiscountCodeRemoveFlow, EditShopCurrencyFlow, EditShopFlow, EditShopOption, ShopCreateFlow, ShopRemoveFlow, ShopReorderFlow } from "../user-flows/shops-flows"
+import { DiscountCodeCreateFlow, DiscountCodeRemoveFlow, EditShopCurrencyFlow, EditShopFlow, EDIT_SHOP_OPTIONS, ShopCreateFlow, ShopRemoveFlow, ShopReorderFlow } from "../user-flows/shops-flows"
 import { ErrorMessages } from "../utils/constants"
 import { replyErrorMessage } from "../utils/discord"
 
@@ -27,6 +27,10 @@ export const data = new SlashCommandBuilder()
             .setDescription('The emoji of the shop')
             .setRequired(false)
         )
+        .addRoleOption(option => option
+            .setName('reserved-to')
+            .setDescription('Specify if should be reserved to a role')
+        )
     )
     .addSubcommand(subcommand => subcommand
         .setName('remove')
@@ -40,7 +44,7 @@ export const data = new SlashCommandBuilder()
         .setName('edit')
         .setDescription('Edit a shop')
         .addSubcommand(subcommand => subcommand
-            .setName(EditShopOption.NAME)
+            .setName(EDIT_SHOP_OPTIONS.Name)
             .setDescription('Change Name. You will select the shop later')
             .addStringOption(option => option
                 .setName('new-name')
@@ -51,7 +55,7 @@ export const data = new SlashCommandBuilder()
             )
         )
         .addSubcommand(subcommand => subcommand
-            .setName(EditShopOption.DESCRIPTION)
+            .setName(EDIT_SHOP_OPTIONS.Description)
             .setDescription('Change Description. You will select the shop later')
             .addStringOption(option => option
                 .setName('new-description')
@@ -62,12 +66,20 @@ export const data = new SlashCommandBuilder()
             )
         )
         .addSubcommand(subcommand => subcommand
-            .setName(EditShopOption.EMOJI)
+            .setName(EDIT_SHOP_OPTIONS.Emoji)
             .setDescription('Change Emoji. You will select the shop later')
             .addStringOption(option => option
                 .setName('new-emoji')
                 .setDescription('The new emoji of the shop')
                 .setRequired(true)
+            )
+        )
+        .addSubcommand(subcommand => subcommand
+            .setName(EDIT_SHOP_OPTIONS.ReservedTo)
+            .setDescription('Change the role the shop is reserved to. You will select the shop later')
+            .addRoleOption(option => option
+                .setName('reserved-to-role')
+                .setDescription('The new tole the shop will be reserved to. Leave empty to delete')
             )
         )
         .addSubcommand(subcommand => subcommand

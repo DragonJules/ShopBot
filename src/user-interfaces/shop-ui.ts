@@ -1,4 +1,4 @@
-import { ActionRowBuilder, APIEmbedField, bold, ButtonInteraction, ButtonStyle, Colors, EmbedBuilder, GuildMember, InteractionCallbackResponse, ModalBuilder, ModalSubmitInteraction, roleMention, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from "discord.js"
+import { ActionRowBuilder, APIEmbedField, bold, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, Colors, EmbedBuilder, GuildMember, InteractionCallbackResponse, ModalBuilder, ModalSubmitInteraction, roleMention, StringSelectMenuInteraction, TextInputBuilder, TextInputStyle } from "discord.js"
 import { getOrCreateAccount, setAccountCurrencyAmount, setAccountItemAmount } from "../database/accounts/accounts-database"
 import { getCurrencyName } from "../database/currencies/currencies-database"
 import { DatabaseError } from "../database/database-types"
@@ -21,12 +21,15 @@ export class ShopUserInterface extends PaginatedEmbedUserInterface {
     protected override page: number = 0
     protected override response: InteractionCallbackResponse | null = null
 
+    private member: GuildMember | null = null
 
     protected override async predisplay(interaction: UserInterfaceInteraction): Promise<any> {
         const shops = getShops()
         if (!shops.size) return replyErrorMessage(interaction, ErrorMessages.NoShops)
 
         this.selectedShop = shops.entries().next().value?.[1]!
+
+        this.member = interaction.member as GuildMember ?? null
     }
 
     protected override getMessage(): string { return '' }
@@ -35,10 +38,10 @@ export class ShopUserInterface extends PaginatedEmbedUserInterface {
         const selectShopMenu = new ExtendedStringSelectMenuComponent(
             { customId : `${this.id}+select-shop`, placeholder: 'Select a shop', time: 120_000 },
             getShops(),
-            (interaction: StringSelectMenuInteraction, selected: Shop): void => {
+            async (interaction: StringSelectMenuInteraction, selected: Shop) => {
                 this.page = 0
                 this.selectedShop = selected
-                this.updateInteraction(interaction)
+                this.updateInteraction(interaction) 
             }
         )
 
@@ -49,6 +52,7 @@ export class ShopUserInterface extends PaginatedEmbedUserInterface {
                 emoji: {name: '🪙'},
                 style: ButtonStyle.Primary,
                 time: 120_000,
+                disabled: this.isBuyButtonDisabled()
             },
             (interaction: ButtonInteraction) => {
                 if (!this.selectedShop) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
@@ -74,7 +78,7 @@ export class ShopUserInterface extends PaginatedEmbedUserInterface {
         )
 
         
-        buyButton.toggle(this.selectedShop != null && this.selectedShop.products.size > 0)
+        buyButton.toggle(this.selectedShop != null && this.selectedShop.products.size > 0 && !this.isBuyButtonDisabled())
 
         this.components.set(selectShopMenu.customId, selectShopMenu)
         this.components.set(buyButton.customId, buyButton)
@@ -84,9 +88,11 @@ export class ShopUserInterface extends PaginatedEmbedUserInterface {
     protected override initEmbeds(_interaction: UserInterfaceInteraction): void {
         if (!this.selectedShop) return
 
+        const reservedToString = this.selectedShop.reservedTo !== undefined ? ` (${roleMention(this.selectedShop.reservedTo)} only)\n` : ''
+
         const shopEmbed = new EmbedBuilder()
-            .setTitle(getShopName(this.selectedShop.id)!)
-            .setDescription(`${this.selectedShop.description}\n\nProducts:`)
+            .setTitle(`${getShopName(this.selectedShop.id)!}`)
+            .setDescription(`${reservedToString}${this.selectedShop.description}\n\nProducts:`)
             .setColor(Colors.Gold)
 
 
@@ -95,10 +101,10 @@ export class ShopUserInterface extends PaginatedEmbedUserInterface {
         this.embed = shopEmbed
     }
 
-    protected override updateComponents(): void {
+    protected override updateComponents() {
         const buyButton = this.components.get(`${this.id}+buy`)
         if (buyButton instanceof ExtendedButtonComponent && this.selectedShop != null) {
-            buyButton.toggle(this.selectedShop.products.size > 0)
+            buyButton.toggle(this.selectedShop.products.size > 0  && !this.isBuyButtonDisabled())
         }
     }
 
@@ -107,8 +113,10 @@ export class ShopUserInterface extends PaginatedEmbedUserInterface {
 
         if (!shopEmbed || !this.selectedShop) return
 
-        shopEmbed.setTitle(getShopName(this.selectedShop.id)!)
-        shopEmbed.setDescription(`${this.selectedShop.description}\n\nProducts: `)
+        const reservedToString = this.selectedShop.reservedTo !== undefined ? ` (${roleMention(this.selectedShop.reservedTo)} only)\n` : ''
+
+        shopEmbed.setTitle(`${getShopName(this.selectedShop.id)!}`)
+        shopEmbed.setDescription(`${reservedToString}${this.selectedShop.description}\nProducts: `)
 
         shopEmbed.setFields(this.getPageEmbedFields())
 
@@ -138,6 +146,22 @@ export class ShopUserInterface extends PaginatedEmbedUserInterface {
     protected override getInputSize(): number {
         return this.selectedShop ? this.selectedShop.products.size : 0
     }
+
+
+    private isBuyButtonDisabled() {
+        if (!this.selectedShop) return false
+
+        const isReserved = this.selectedShop.reservedTo
+        if (!isReserved) return false
+        
+        if (!this.member) return false
+
+        const isUserAuthorized = this.member.roles.cache.has(this.selectedShop.reservedTo!)
+        const isUserAdmin = this.member.permissions.has('Administrator')
+
+        return !isUserAuthorized && !isUserAdmin 
+    }
+
 }
 
 
@@ -251,6 +275,8 @@ export class BuyProductUserInterface extends MessageUserInterface {
     private async buyProduct(interaction: UserInterfaceInteraction): Promise<unknown> {
         if (!this.selectedProduct) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
         try {
+            if (this.selectedShop.reservedTo && interaction.member instanceof GuildMember && !(interaction.member?.roles.cache.has(this.selectedShop.reservedTo) || interaction.member.permissions.has('Administrator'))) return replyErrorMessage(interaction, "You can't buy products from this shop")
+
             const user = await getOrCreateAccount(interaction.user.id)
             
             const userCurrencyAmount = user.currencies.get(this.selectedShop.currency.id)?.amount || 0

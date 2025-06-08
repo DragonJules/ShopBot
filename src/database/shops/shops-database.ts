@@ -4,6 +4,8 @@ import { getCurrencies } from "../currencies/currencies-database";
 import { save } from "../database-handler";
 import { DatabaseError, DatabaseErrors } from "../database-types";
 import { Product, ProductOptions, ProductOptionsOptional, Shop, ShopOptionsOptional, ShopsDatabase } from "./shops-types";
+import { Snowflake } from 'discord.js';
+import { NO_VALUE } from '../../user-flows/shops-flows';
 
 const shopsDatabase = new ShopsDatabase(shops, 'data/shops.json')
 
@@ -27,7 +29,7 @@ export function getShopName(shopId: string | undefined): string | undefined {
     return `${shop.emoji != '' ? `${shop.emoji} ` : ''}${shop.name}`
 }
 
-export async function createShop(shopName: string, description: string, currencyId: string, emoji: string) {
+export async function createShop(shopName: string, description: string, currencyId: string, emoji: string, reservedTo?: Snowflake) {
     if (shopsDatabase.shops.has(getShopId(shopName) || '')) throw new DatabaseError(DatabaseErrors.ShopAlreadyExists)
     if (!getCurrencies().has(currencyId)) throw new DatabaseError(DatabaseErrors.CurrencyDoesNotExist)
 
@@ -40,6 +42,7 @@ export async function createShop(shopName: string, description: string, currency
         description,
         currency: getCurrencies().get(currencyId)!,
         discountCodes: {},
+        reservedTo,
         products: new Map()
     })
 
@@ -59,13 +62,15 @@ export async function removeShop(shopId: string) {
 export async function updateShop(shopId: string, options: ShopOptionsOptional) {
     if (!shopsDatabase.shops.has(shopId)) throw new DatabaseError(DatabaseErrors.ShopDoesNotExist)
     
-    const { name, description, emoji } = options
+    const { name, description, emoji, reservedTo } = options
 
     const shop = shopsDatabase.shops.get(shopId)!
 
     if (name) shop.name = name
     if (description) shop.description = description
     if (emoji) shop.emoji = emoji
+    if (reservedTo) shop.reservedTo = reservedTo
+    if (reservedTo === NO_VALUE) shop.reservedTo = undefined
 
     await save(shopsDatabase)
 }

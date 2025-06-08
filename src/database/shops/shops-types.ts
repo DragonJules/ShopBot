@@ -62,12 +62,12 @@ export interface Shop {
     description: string
     currency: Currency
     discountCodes: {[code: string]: number}
+    reservedTo?: Snowflake
     products: Map<UUID, Product>
 }
 
 export type ShopOptions = Omit<Shop, 'id' | 'products' | 'currency' | 'discountCodes'>
 export type ShopOptionsOptional = Partial<ShopOptions>
-
 
 
 export interface ShopsDatabaseJSONBody extends DatabaseJSONBody {

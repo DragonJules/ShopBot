@@ -1,4 +1,4 @@
-import { bold, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, InteractionCallbackResponse, MessageFlags, StringSelectMenuInteraction } from "discord.js"
+import { bold, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, InteractionCallbackResponse, MessageFlags, roleMention, Snowflake, StringSelectMenuInteraction } from "discord.js"
 import { getCurrencies, getCurrencyName } from "../database/currencies/currencies-database"
 import { Currency } from "../database/currencies/currencies-types"
 import { DatabaseError } from "../database/database-types"
@@ -10,6 +10,7 @@ import { EMOJI_REGEX, ErrorMessages } from "../utils/constants"
 import { PrettyLog } from "../utils/pretty-log"
 import { replyErrorMessage, updateAsErrorMessage, updateAsSuccessMessage } from "../utils/discord"
 import { UserFlow } from "./user-flow"
+import { assertNeverReached } from "../utils/utils"
 
 export class ShopCreateFlow extends UserFlow {
     public id = 'shop-create'
@@ -19,6 +20,7 @@ export class ShopCreateFlow extends UserFlow {
     private shopName: string | null = null
     private shopEmoji: string | null = null
     private shopDescription: string | null = null
+    private shopReservedTo: Snowflake | undefined = undefined
 
     public override async start(interaction: ChatInputCommandInteraction): Promise<unknown> {
         const currencies = getCurrencies()
@@ -28,6 +30,7 @@ export class ShopCreateFlow extends UserFlow {
         const shopDescription = interaction.options.getString('description')?.replaceSpaces()  || ''
         const emojiOption = interaction.options.getString('emoji')
         const shopEmoji = emojiOption?.match(EMOJI_REGEX)?.[0] || ''
+        const shopReservedTo = interaction.options.getRole('reserved-to')?.id
 
         if (!shopName) return replyErrorMessage(interaction, ErrorMessages.InsufficientParameters)
 
@@ -36,6 +39,7 @@ export class ShopCreateFlow extends UserFlow {
         this.shopName = shopName
         this.shopEmoji = shopEmoji
         this.shopDescription = shopDescription
+        this.shopReservedTo = shopReservedTo
 
         this.initComponents()
         this.updateComponents()
@@ -123,7 +127,7 @@ export class ShopCreateFlow extends UserFlow {
             if (!this.shopName) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
             if (!this.selectedCurrency) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
             
-            const newShop = await createShop(this.shopName, this.shopDescription || '', this.selectedCurrency.id, this.shopEmoji || '')
+            const newShop = await createShop(this.shopName, this.shopDescription || '', this.selectedCurrency.id, this.shopEmoji || '', this.shopReservedTo)
 
             return await updateAsSuccessMessage(interaction, `You successfully created the shop ${bold(getShopName(newShop.id) || '')} with the currency ${bold(getCurrencyName(newShop.currency.id) || '')}. \n-# Use \`/shops-manage remove\` to remove it`)
         } catch (error) {
@@ -330,10 +334,29 @@ export class ShopReorderFlow extends UserFlow {
     }
 }
 
-export enum EditShopOption {
-    NAME = 'name',
-    DESCRIPTION = 'description',
-    EMOJI = 'emoji'
+export const NO_VALUE = 'no-value'
+
+export const EDIT_SHOP_OPTIONS = {
+    Name: 'name',
+    Description: 'description',
+    Emoji: 'emoji',
+    ReservedTo: 'reserved-to-role'
+} as const;
+
+type EditShopOption = typeof EDIT_SHOP_OPTIONS[keyof typeof EDIT_SHOP_OPTIONS]
+
+function isShopOption(subcommand: string): subcommand is EditShopOption { return Object.values(EDIT_SHOP_OPTIONS).includes(subcommand as EditShopOption) }
+function getShopOptionName(option: EditShopOption): string { 
+    switch (option) {
+        case EDIT_SHOP_OPTIONS.Name:
+        case EDIT_SHOP_OPTIONS.Description:
+        case EDIT_SHOP_OPTIONS.Emoji:
+            return option
+        case EDIT_SHOP_OPTIONS.ReservedTo:
+            return 'reservedTo'
+        default:
+            assertNeverReached(option)
+    }
 }
 
 export class EditShopFlow extends UserFlow {
@@ -344,16 +367,24 @@ export class EditShopFlow extends UserFlow {
 
     private updateOption: EditShopOption | null = null
     private updateOptionValue: string | null = null
+    private updateOptionValueDisplay: string | null = null
 
     public override async start(interaction: ChatInputCommandInteraction): Promise<unknown> {
         const shops = getShops()
         if (!shops.size) return replyErrorMessage(interaction, ErrorMessages.NoShops)
 
         const subcommand = interaction.options.getSubcommand()
-        if (!subcommand || !Object.values(EditShopOption).includes(subcommand as EditShopOption)) return replyErrorMessage(interaction, ErrorMessages.InvalidSubcommand)
+        if (!subcommand || !isShopOption(subcommand)) return replyErrorMessage(interaction, ErrorMessages.InvalidSubcommand)
         this.updateOption = subcommand as EditShopOption
-
-        this.updateOptionValue = this.getUpdateValue(interaction, subcommand)
+        
+        try {
+            this.updateOptionValue = this.getUpdateValue(interaction, subcommand) 
+        }
+        catch (error) {
+            return replyErrorMessage(interaction, (error instanceof Error) ? error.message : undefined)
+        }
+        
+        this.updateOptionValueDisplay = this.getUpdateValueDisplay(interaction, subcommand) || this.updateOptionValue
 
         this.initComponents()
         this.updateComponents()
@@ -364,7 +395,7 @@ export class EditShopFlow extends UserFlow {
     }
 
     protected override getMessage(): string {
-        return `Edit **[${getShopName(this.selectedShop?.id) || 'Select Shop'}]**.\n**New ${this.updateOption}**: ${bold(`${this.updateOptionValue}`)}`
+        return `Edit **[${getShopName(this.selectedShop?.id) || 'Select Shop'}]**.\n**New ${this.updateOption}**: ${bold(`${this.updateOptionValueDisplay}`)}`
     }
 
     protected override initComponents(): void {
@@ -408,13 +439,13 @@ export class EditShopFlow extends UserFlow {
 
         try {
             if (!this.selectedShop) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
-            if (!this.updateOption || !this.updateOptionValue) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
+            if (!this.updateOption || !this.updateOptionValue || !this.updateOptionValueDisplay) return updateAsErrorMessage(interaction, ErrorMessages.InsufficientParameters)
             
             const oldName = getShopName(this.selectedShop?.id) || ''
 
-            await updateShop(this.selectedShop.id, { [this.updateOption.toString()]: this.updateOptionValue })
+            await updateShop(this.selectedShop.id, { [getShopOptionName(this.updateOption)]: this.updateOptionValue })
 
-            return await updateAsSuccessMessage(interaction, `You successfully edited the shop ${bold(oldName)}.\n New ${bold(this.updateOption)}: ${bold(this.updateOptionValue)}`)
+            return await updateAsSuccessMessage(interaction, `You successfully edited the shop ${bold(oldName)}.\n New ${bold(this.updateOption)}: ${bold(this.updateOptionValueDisplay)}`)
         }
         catch (error) {
             return await updateAsErrorMessage(interaction, (error instanceof DatabaseError) ? error.message : undefined)
@@ -422,18 +453,41 @@ export class EditShopFlow extends UserFlow {
     }
 
 
-    private getUpdateValue(interaction: ChatInputCommandInteraction, subcommand: string): string {
+    private getUpdateValue(interaction: ChatInputCommandInteraction, subcommand: EditShopOption): string {
+        let updateValue: string | undefined
+
         switch (subcommand) {
-            case EditShopOption.NAME:
-                return interaction.options.getString('new-name')?.replaceSpaces() || ''
-            case EditShopOption.DESCRIPTION:
-                return interaction.options.getString('new-description')?.replaceSpaces() || ''
-            case EditShopOption.EMOJI:
+            case EDIT_SHOP_OPTIONS.Name:
+                updateValue = interaction.options.getString('new-name')?.replaceSpaces()
+                break
+            case EDIT_SHOP_OPTIONS.Description:
+                updateValue = interaction.options.getString('new-description')?.replaceSpaces()
+                break
+            case EDIT_SHOP_OPTIONS.Emoji:
                 const emojiOption = interaction.options.getString('new-emoji')
-                return emojiOption?.match(EMOJI_REGEX)?.[0] || ''
+                updateValue = emojiOption?.match(EMOJI_REGEX)?.[0] || NO_VALUE
+                break
+            case EDIT_SHOP_OPTIONS.ReservedTo:
+                updateValue = interaction.options.getRole('reserved-to-role')?.id || NO_VALUE
+                break
             default:
-                PrettyLog.warning(`Unknown edit shop option: ${subcommand}`)
-                return ''
+                assertNeverReached(subcommand)
+        }
+
+        if (!updateValue) throw new Error(ErrorMessages.InsufficientParameters)
+
+        return updateValue
+    }
+
+    private getUpdateValueDisplay(interaction: ChatInputCommandInteraction, subcommand: EditShopOption): string | null {
+        switch (subcommand) {
+            case EDIT_SHOP_OPTIONS.ReservedTo:
+                const role = interaction.options.getRole('reserved-to-role')
+                if (!role) return 'None'
+                return roleMention(role.id)
+            
+            default:
+                return null
         }
     }
 }

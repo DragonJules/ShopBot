@@ -113,7 +113,7 @@ As mentionned earlier, this bot enables you to create and manage shops, currenci
 
 #### Managing Shops
 The shops have a name, an optionnal description and emoji.
-They also have an assigned currency.
+They also have an assigned currency. Shops can be reserved for a certain role.
 All of these can be edited after the Shop has been created.
 
 You can also create discount codes for the shops.
@@ -122,7 +122,7 @@ You can also create discount codes for the shops.
 ```
   /shops-manage
     | create <name> <description> <emoji> <reserved-to-role?>
-    | edit <name/description/emoji> <new-value>
+    | edit <name/description/emoji/reserved-to-role> <new-value>
     | reorder
     | remove
 
@@ -231,7 +231,7 @@ I will after that add the following features, some of which have been suggested 
 - ✅ Editable shops, products and currencies
 - ❓ API to automate actions like: filling accounts; managing currencies, shops and products 
 - ✅ Automatic action products (e.g. give a certain amount of currency to a user, give a role to a user, if you have more suggestions feel free to [give them here](https://github.com/DragonJules/ShopBot/issues))
-- Shops reserved for specific roles
+- ✅ Shops reserved for specific roles
 
 The roadmap is now visible [here](https://github.com/DragonJules/ShopBot/blob/main/roadmap.md).
 <br>
