@@ -5,7 +5,7 @@
 ### Features
 - [ ] API to automate actions like: filling accounts; managing currencies, shops and products 
 - [ ] Shops reserved for specific roles
-- [ ] New settings system
+- [x] New settings system
 - [ ] Products with a set stock
 
 ### Code refactoring
