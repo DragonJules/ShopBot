@@ -13,3 +13,5 @@
 - [x] Improve UI Implementation
 
 ## Roadmap
+1. products with set stock
+2. api
