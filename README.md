@@ -263,10 +263,6 @@ If you do not agree with these terms, **do not use this software**.
 
 By submitting a pull request, you agree that your contributions will be licensed under the same GPL-3.0 License as the rest of the project.
 
-### Reporting Abuse
-
-If you discover that this bot is being used for illegal or abusive purposes, please report it by opening an issue [here](https://github.com/your-repo/issues).
-
 ### Notice
 
 This project is **not affiliated with, endorsed by, or associated with Discord Inc.** All trademarks and copyrights related to Discord are owned by Discord Inc.
