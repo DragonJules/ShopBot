@@ -269,11 +269,11 @@ This project is **not affiliated with, endorsed by, or associated with Discord I
 
 ## ⭐ Star History
 
-<a href="https://www.star-history.com/#DragonJules/ShopBot&Date">
+<a href="https://www.star-history.com/#roules-dev/ShopBot&Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=DragonJules/ShopBot&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=DragonJules/ShopBot&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=DragonJules/ShopBot&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=roules-dev/ShopBot&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=roules-dev/ShopBot&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=roules-dev/ShopBot&type=Date" />
  </picture>
 </a>
 
